@@ -71,6 +71,13 @@
       "when": 1794596784223,
       "tag": "0009_orange_natasha_romanoff",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794603754875,
+      "tag": "0010_majestic_ultragirl",
+      "breakpoints": true
     }
   ]
 }

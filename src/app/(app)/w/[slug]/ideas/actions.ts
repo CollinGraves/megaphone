@@ -6,7 +6,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { ideas, impactMetrics, initiatives, type Idea } from "@/db/schema";
 import { ideaToInitiativeDefaults } from "@/lib/ideas";
-import { TRIAL_INITIATIVE_LIMIT } from "@/lib/taxonomy";
+import { initiativeCapMessage, initiativeLimit } from "@/lib/plans";
 import type { ActionState } from "@/lib/utils";
 import { logActivity, type WorkspaceContext } from "@/lib/workspace";
 import { ActionError, authorize, revalidateWorkspace, runAction, zId, zOptText } from "../_lib/action-utils";
@@ -107,16 +107,13 @@ export async function convertIdea(_prev: ActionState, form: FormData): Promise<A
       includeEstimate: field(form, "includeEstimate") === "1",
     });
 
-    if (ctx.org.plan === "trial") {
+    if (initiativeLimit(ctx.org.plan) != null) {
       const [{ n }] = await db
         .select({ n: sql<number>`count(*)::int` })
         .from(initiatives)
         .where(and(eq(initiatives.orgId, ctx.org.id), isNull(initiatives.archivedAt)));
-      if (n >= TRIAL_INITIATIVE_LIMIT) {
-        throw new ActionError(
-          `Free workspaces can track up to ${TRIAL_INITIATIVE_LIMIT} initiatives, and this one is full. Archive an initiative or talk to North Labs to unlock your full AI portfolio.`,
-        );
-      }
+      const capped = initiativeCapMessage(ctx.org.plan, n);
+      if (capped) throw new ActionError(capped);
     }
 
     const defaults = ideaToInitiativeDefaults(idea);

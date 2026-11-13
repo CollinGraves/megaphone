@@ -294,6 +294,13 @@ export const apiKeys = pgTable(
   (t) => [index("api_keys_user_idx").on(t.userId)],
 );
 
+/** Processed Stripe webhook events (idempotency). */
+export const stripeEvents = pgTable("stripe_events", {
+  id: text("id").primaryKey(),
+  type: text("type").notNull(),
+  processedAt: createdAt(),
+});
+
 /** Fixed-window rate-limit counters (serverless-safe; old windows are pruned by the ingest cron). */
 export const rateLimits = pgTable("rate_limits", {
   key: text("key").primaryKey(),
@@ -492,7 +499,7 @@ export const companyStack = pgTable(
 
 /* ─────────────────────────────── Workspaces ─────────────────────────────── */
 
-export const orgPlan = pgEnum("org_plan", ["engagement", "trial", "pro", "enterprise"]);
+export const orgPlan = pgEnum("org_plan", ["engagement", "trial", "pro", "enterprise", "team", "business"]);
 export const orgStatus = pgEnum("org_status", ["active", "suspended"]);
 export const orgRole = pgEnum("org_role", ["owner", "admin", "editor", "viewer"]);
 
@@ -532,9 +539,18 @@ export const organizations = pgTable("organizations", {
   intakeToken: text("intake_token").unique(),
   /** Email domains allowed to submit ideas through the intake link (e.g. ["acme.com"]). Empty = any work email. */
   intakeAllowedDomains: text("intake_allowed_domains").array().notNull().default(sql`'{}'::text[]`),
-  // Reserved for self-service billing
+  // ── Self-service billing (Stripe) ──
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  /** Stripe subscription status: active, trialing, past_due, unpaid, canceled, incomplete… */
+  subscriptionStatus: text("subscription_status"),
+  billingInterval: text("billing_interval"), // month | year
+  currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
+  /** Who created the workspace through self-serve sign-up (null for North Labs provisioning). */
+  createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
+  /** Onboarding checklist hidden by an admin. */
+  onboardingDismissedAt: timestamp("onboarding_dismissed_at", { withTimezone: true }),
   provisionedById: text("provisioned_by_id").references(() => user.id, { onDelete: "set null" }),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
