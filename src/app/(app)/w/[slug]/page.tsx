@@ -1,13 +1,16 @@
-import { AlertTriangle, ArrowRight, BellRing, Download, Pin, Plus, Rocket, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowRight, BellRing, LibraryBig, Pin, Plus, Rocket, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ButtonLink, Card, CardBody, CardHeader, EmptyState, PageHeader, Stat } from "@/components/ui";
+import { loadActivation } from "@/lib/onboarding";
 import { RISK_TIERS, STAGES, categoryLabel } from "@/lib/taxonomy";
 import { cn, formatNumber, formatUsd, timeAgo } from "@/lib/utils";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { ActivityFeed } from "./_components/activity-feed";
 import { AccessBadge, HealthBadge, STAGE_BAR, ScorePill, StageBadge, platformLabel } from "./_components/badges";
+import { ExportCsvButton } from "./_components/export-button";
+import { OnboardingPanel } from "./_components/onboarding";
 import { loadActivity } from "./_lib/activity";
 import { loadOpenAlerts } from "./_lib/alerts";
 import { loadOrgDependencies, systemUsage } from "./_lib/dependencies";
@@ -23,23 +26,20 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
   const ctx = await getWorkspaceOrNotFound(slug);
   const base = `/w/${ctx.org.slug}`;
 
-  const [portfolio, deps, alerts, activity, register] = await Promise.all([
+  const [portfolio, deps, alerts, activity, register, activation] = await Promise.all([
     loadPortfolio(ctx.org),
     loadOrgDependencies(ctx.org.id),
     loadOpenAlerts(ctx.org.id, { limit: 20 }),
     loadActivity(ctx.org.id, { limit: 8 }),
     loadRegister(ctx.org),
+    loadActivation(ctx.org.id),
   ]);
   const governance = summarizeRegister(register.items);
   const { items, totals, roiActual, roiEstimated } = portfolio;
 
   const actions = (
     <>
-      {ctx.can("export") && items.length > 0 ? (
-        <ButtonLink href={`${base}/export`} variant="secondary" prefetch={false}>
-          <Download className="size-4" /> Export CSV
-        </ButtonLink>
-      ) : null}
+      {items.length > 0 ? <ExportCsvButton ctx={ctx} /> : null}
       {ctx.can("initiative:write") ? (
         <ButtonLink href={`${base}/initiatives/new`}>
           <Plus className="size-4" /> New initiative
@@ -52,15 +52,21 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
     return (
       <>
         <PageHeader eyebrow="AI portfolio" title="Dashboard" actions={actions} />
+        <OnboardingPanel ctx={ctx} activation={activation} />
         <EmptyState
           icon={<Rocket className="size-8" />}
           title="No initiatives yet"
           description="Track every AI initiative in one place — what problem it solves, where it is, what data it needs and the value it delivers."
           action={
             ctx.can("initiative:write") ? (
-              <ButtonLink href={`${base}/initiatives/new`}>
-                <Plus className="size-4" /> Add the first initiative
-              </ButtonLink>
+              <div className="flex flex-wrap justify-center gap-2">
+                <ButtonLink href={`${base}/initiatives/templates`}>
+                  <LibraryBig className="size-4" /> Start from a template
+                </ButtonLink>
+                <ButtonLink href={`${base}/initiatives/new`} variant="secondary">
+                  <Plus className="size-4" /> Add your own
+                </ButtonLink>
+              </div>
             ) : undefined
           }
         />
@@ -119,6 +125,8 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
         description={`Every AI initiative across ${ctx.org.name}, regardless of platform — status, value and data readiness at a glance.`}
         actions={actions}
       />
+
+      <OnboardingPanel ctx={ctx} activation={activation} />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat

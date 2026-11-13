@@ -1,4 +1,4 @@
-import { Archive, Download, ListChecks, Pin, Plus, Search } from "lucide-react";
+import { Archive, LibraryBig, ListChecks, Pin, Plus, Search } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ButtonLink, Card, EmptyState, Input, PageHeader, Select, Table, Td, Th, buttonClass } from "@/components/ui";
@@ -6,6 +6,7 @@ import { HEALTH, STAGES } from "@/lib/taxonomy";
 import { cn, formatUsd } from "@/lib/utils";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { HealthBadge, PLATFORM_OPTIONS, PlatformList, ScorePill, StageBadge } from "../_components/badges";
+import { ExportCsvButton } from "../_components/export-button";
 import { loadPortfolio } from "../_lib/portfolio";
 
 export const metadata: Metadata = { title: "Initiatives" };
@@ -56,9 +57,10 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
         description={archived ? "Archived initiatives are hidden from the dashboard and rankings." : "Ranked by weighted priority score. Pinned initiatives have a manual rank override. Actual / yr is the annualized run-rate from recorded actuals."}
         actions={
           <>
-            {ctx.can("export") && !archived ? (
-              <ButtonLink href={`${base}/export`} variant="secondary" prefetch={false}>
-                <Download className="size-4" /> Export CSV
+            {!archived ? <ExportCsvButton ctx={ctx} /> : null}
+            {ctx.can("initiative:write") && !archived ? (
+              <ButtonLink href={`${base}/initiatives/templates`} variant="secondary">
+                <LibraryBig className="size-4" /> Start from a template
               </ButtonLink>
             ) : null}
             {ctx.can("initiative:write") && !archived ? (
@@ -125,12 +127,17 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
         <EmptyState
           icon={<ListChecks className="size-8" />}
           title="No initiatives yet"
-          description="Add each AI initiative — from early ideas to production systems — to build a single source of truth."
+          description="Add each AI initiative — from early ideas to production systems — to build a single source of truth. Not sure where to start? Pick from common use cases."
           action={
             ctx.can("initiative:write") ? (
-              <ButtonLink href={`${base}/initiatives/new`}>
-                <Plus className="size-4" /> New initiative
-              </ButtonLink>
+              <div className="flex flex-wrap justify-center gap-2">
+                <ButtonLink href={`${base}/initiatives/templates`}>
+                  <LibraryBig className="size-4" /> Start from a template
+                </ButtonLink>
+                <ButtonLink href={`${base}/initiatives/new`} variant="secondary">
+                  <Plus className="size-4" /> New initiative
+                </ButtonLink>
+              </div>
             ) : undefined
           }
         />

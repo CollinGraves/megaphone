@@ -18,6 +18,9 @@ import {
   SubmissionSchema,
   suggestedPlatforms,
   templateById,
+  templateFitsIndustry,
+  templateInitiativeValues,
+  templateMatches,
   type Answers,
 } from ".";
 
@@ -211,5 +214,43 @@ describe("starter templates", () => {
     expect(suggestedPlatforms(crm, ["anthropic", "openai"])).toEqual(["anthropic"]);
     expect(suggestedPlatforms(crm, [])).toEqual([]);
     expect(suggestedPlatforms(crm, ["databricks"])).toEqual([]);
+  });
+});
+
+describe("template library helpers", () => {
+  it("filters by industry: general templates fit everyone, specific ones only their industries", () => {
+    const general = templateById("knowledge_assistant")!;
+    const specific = STARTER_TEMPLATES.find((t) => t.industries?.includes("healthcare"))!;
+    expect(templateFitsIndustry(general, null)).toBe(true);
+    expect(templateFitsIndustry(general, "retail")).toBe(true);
+    expect(templateFitsIndustry(specific, "healthcare")).toBe(true);
+    expect(templateFitsIndustry(specific, "retail")).toBe(false);
+    expect(templateFitsIndustry(specific, null)).toBe(false);
+  });
+
+  it("searches title, problem, solution, function and value drivers", () => {
+    const tpl = templateById("sales_account_research")!;
+    expect(templateMatches(tpl, "")).toBe(true);
+    expect(templateMatches(tpl, "ACCOUNT")).toBe(true);
+    expect(templateMatches(tpl, "selling time")).toBe(true);
+    expect(templateMatches(tpl, "sales")).toBe(true);
+    expect(templateMatches(tpl, "warehouse robots")).toBe(false);
+  });
+
+  it("maps a template onto idea-stage initiative fields", () => {
+    const tpl = templateById("sales_account_research")!;
+    const v = templateInitiativeValues(tpl, ["salesforce", "openai"]);
+    expect(v).toMatchObject({
+      title: tpl.title,
+      problemStatement: tpl.problem,
+      stage: "idea",
+      businessUnit: "Sales",
+      platforms: ["salesforce"],
+      valueScore: tpl.scores.value,
+      riskScore: tpl.scores.risk,
+      tags: ["template", "effort-low"],
+    });
+    expect(v.proposedSolution).toContain("Typical value drivers:");
+    expect(templateInitiativeValues(templateById("knowledge_assistant")!).businessUnit).toBe("Company-wide");
   });
 });
