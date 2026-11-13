@@ -6,6 +6,8 @@ import { ButtonLink, Card, CardBody, CardHeader, EmptyState, Input, PageHeader, 
 import { PENDING_STALE_DAYS, daysBetween, isoDate } from "@/lib/governance";
 import { APPROVAL_STATUSES, HUMAN_OVERSIGHT_LEVELS, RISK_TIERS, SENSITIVITIES, STAGES, labelFrom } from "@/lib/taxonomy";
 import { cn, formatDate, timeAgo } from "@/lib/utils";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
+import { hasFeature } from "@/lib/plans";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { SensitivityBadge, StageBadge, platformLabel } from "../_components/badges";
 import { filterQuery, filterRegister, loadRegister, parseRegisterFilters, summarizeRegister } from "./data";
@@ -30,6 +32,9 @@ export default async function GovernancePage({ params, searchParams }: PageProps
   const ctx = await getWorkspaceOrNotFound(slug);
   const base = `/w/${ctx.org.slug}`;
   const canApprove = ctx.can("governance:approve");
+  const canBilling = ctx.can("billing:manage");
+  const workflow = hasFeature(ctx.org.plan, "governance_workflow");
+  const canExport = hasFeature(ctx.org.plan, "governance_export");
 
   const { items, policy, today } = await loadRegister(ctx.org);
   const filters = parseRegisterFilters(sp);
@@ -54,9 +59,13 @@ export default async function GovernancePage({ params, searchParams }: PageProps
       description={`Every AI use case across ${ctx.org.name}, whatever platform it runs on — risk tier, human oversight, data sensitivity and approval in one inventory.`}
       actions={
         ctx.can("export") && items.length > 0 ? (
-          <ButtonLink href={`${base}/governance/export${filterQuery(filters)}`} variant="secondary" prefetch={false}>
-            <Download className="size-4" /> Export inventory{filtered ? " (filtered)" : ""}
-          </ButtonLink>
+          canExport ? (
+            <ButtonLink href={`${base}/governance/export${filterQuery(filters)}`} variant="secondary" prefetch={false}>
+              <Download className="size-4" /> Export inventory{filtered ? " (filtered)" : ""}
+            </ButtonLink>
+          ) : (
+            <UpgradePrompt feature="governance_export" slug={ctx.org.slug} canManageBilling={canBilling} compact title="Inventory export" className="max-w-xs sm:justify-end" />
+          )
         ) : null
       }
     />
@@ -194,7 +203,19 @@ export default async function GovernancePage({ params, searchParams }: PageProps
             </CardBody>
           </Card>
 
-          {canApprove ? (
+          {!workflow ? (
+            <Card>
+              <CardHeader title="Reviews & approvals" />
+              <CardBody>
+                <UpgradePrompt
+                  feature="governance_workflow"
+                  slug={ctx.org.slug}
+                  canManageBilling={canBilling}
+                  description="Editors request reviews, owners and admins approve them, policy can require approval before pilot or production, and approvers get weekly reminders when reviews come due."
+                />
+              </CardBody>
+            </Card>
+          ) : canApprove ? (
             <Card>
               <CardHeader title="Approvals queue" description={queue.length ? "Oldest request first" : "Nothing waiting for your review"} />
               {queue.length ? (

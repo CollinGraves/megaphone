@@ -258,7 +258,7 @@ export default async function HomePage() {
         <section id="workspace" className="mx-auto max-w-7xl scroll-mt-16 px-4 py-20 sm:px-6">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
-              <div className="text-sm font-semibold uppercase tracking-wide text-radar-700">{BRAND} Workspace · for North Labs clients</div>
+              <div className="text-sm font-semibold uppercase tracking-wide text-radar-700">{BRAND} Workspace · for companies</div>
               <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">Your company&apos;s AI portfolio, in one place</h2>
               <p className="mt-3 text-slate-600">
                 Most companies have AI work spread across Claude, ChatGPT, Copilot, Gemini and in-house builds, with no
@@ -281,7 +281,13 @@ export default async function HomePage() {
                 ))}
               </ul>
               <div className="mt-8 flex flex-wrap gap-3">
-                <ButtonLink href="/contact?from=workspace" size="lg">
+                <ButtonLink href={`/sign-up?src=landing_workspace&next=${encodeURIComponent("/workspaces/new")}`} size="lg">
+                  Start free
+                </ButtonLink>
+                <ButtonLink href="/pricing" variant="secondary" size="lg">
+                  See pricing
+                </ButtonLink>
+                <ButtonLink href="/contact?from=workspace" variant="ghost" size="lg">
                   Talk to North Labs
                 </ButtonLink>
               </div>

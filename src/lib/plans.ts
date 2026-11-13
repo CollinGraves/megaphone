@@ -135,3 +135,61 @@ export function initiativeCapMessage(dbPlan: DbPlan | string, activeCount: numbe
 /** Monthly-equivalent price for display. */
 export const monthlyEquivalent = (plan: PlanDefinition, interval: BillingInterval) =>
   interval === "year" && plan.annualPrice != null ? Math.round(plan.annualPrice / 12) : plan.monthlyPrice;
+
+/* ───────────────────────────── Self-serve billing helpers ───────────────────────────── */
+
+export const SELF_SERVE_PLANS = ["team", "business"] as const satisfies readonly SelfServePlan[];
+export const BILLING_INTERVALS = ["month", "year"] as const satisfies readonly BillingInterval[];
+
+export const isSelfServePlan = (v: unknown): v is SelfServePlan => v === "team" || v === "business";
+export const isBillingInterval = (v: unknown): v is BillingInterval => v === "month" || v === "year";
+
+/** Short label for a DB plan value (badges, admin tables). */
+export function planLabel(dbPlan: DbPlan | string | null | undefined): string {
+  if (dbPlan === "enterprise") return "Enterprise";
+  if (dbPlan === "engagement") return "Managed";
+  return planFor(dbPlan).name;
+}
+
+/** List price for one billing period of a self-serve plan, in USD. */
+export const listPrice = (plan: SelfServePlan, interval: BillingInterval): number =>
+  interval === "year" ? PLANS[plan].annualPrice : PLANS[plan].monthlyPrice;
+
+/** What paying annually saves versus twelve monthly payments (USD/year). */
+export const annualSavings = (plan: SelfServePlan): number => PLANS[plan].monthlyPrice * 12 - PLANS[plan].annualPrice;
+
+/**
+ * Monthly recurring revenue contributed by a workspace at list price: monthly price, or the annual
+ * price ÷ 12. Zero for Free, managed (invoiced by North Labs) and unknown plans.
+ */
+export function mrrFor(dbPlan: DbPlan | string, interval: BillingInterval | string | null | undefined): number {
+  const plan = dbPlan === "pro" ? "business" : dbPlan;
+  if (!isSelfServePlan(plan)) return 0;
+  return interval === "year" ? PLANS[plan].annualPrice / 12 : PLANS[plan].monthlyPrice;
+}
+
+/** Plan ranking for "is this an upgrade?" comparisons. Managed sits above everything. */
+export function planRank(dbPlan: DbPlan | string | null | undefined): number {
+  return { free: 0, team: 1, business: 2, managed: 3 }[planFor(dbPlan).id];
+}
+
+/** The next self-serve plan up (for upsells), or null at the top. */
+export function nextPlan(dbPlan: DbPlan | string): PlanDefinition | null {
+  const id = planFor(dbPlan).id;
+  return id === "free" ? PLANS.team : id === "team" ? PLANS.business : null;
+}
+
+export const FEATURE_LABELS: Record<Feature, { name: string; description: string }> = {
+  intake_link: { name: "Company-wide idea intake link", description: "A shareable link anyone at your company can use to submit AI ideas, no account needed." },
+  export_csv: { name: "Portfolio CSV export", description: "Download the prioritized portfolio with impact, costs and data dependencies." },
+  mcp_workspace: { name: "Workspace tools over MCP", description: "Query initiatives, ideas and impact from Claude, Cursor or ChatGPT." },
+  mcp_write: { name: "MCP write access", description: "Submit ideas and record impact from your AI assistant." },
+  governance_workflow: { name: "Governance approvals", description: "Review requests, approvals, an approval gate before pilot / production and review reminders." },
+  governance_export: { name: "AI use-case inventory export", description: "An auditor-ready CSV of every AI use case, its risk tier, oversight and approval." },
+};
+
+/** User-facing error when a server action needs a feature the workspace's plan doesn't include. */
+export function featureGateMessage(dbPlan: DbPlan | string, feature: Feature): string {
+  const needed = planForFeature(feature);
+  return `${FEATURE_LABELS[feature].name} is available on the ${needed.name} plan and above. This workspace is on ${planFor(dbPlan).name}; an owner or admin can upgrade in Plan & billing.`;
+}

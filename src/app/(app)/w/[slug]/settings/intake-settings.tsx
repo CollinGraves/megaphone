@@ -3,9 +3,11 @@ import { ExternalLink, Link2, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { ActionForm, ConfirmSubmit, SubmitButton } from "@/components/forms";
 import { Badge, Card, CardBody, CardHeader, Field, Input } from "@/components/ui";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { db } from "@/db";
 import { memberships, user } from "@/db/schema";
 import { workDomainsFrom } from "@/lib/ideas";
+import { hasFeature } from "@/lib/plans";
 import type { WorkspaceContext } from "@/lib/workspace";
 import { CopyButton, InlineForm } from "../_components/client";
 import { intakeUrl } from "../ideas/_lib/server";
@@ -16,6 +18,33 @@ export async function IntakeSettings({ ctx }: { ctx: WorkspaceContext }) {
   const { org } = ctx;
   const canSettings = ctx.can("settings:manage");
   const token = org.intakeToken;
+
+  if (!hasFeature(org.plan, "intake_link")) {
+    return (
+      <Card id="intake" className="scroll-mt-24">
+        <CardHeader
+          title="Idea intake link"
+          description={`A shareable link where anyone at ${org.name} can submit an AI idea with their work email — no account needed. Members can always submit ideas from inside the workspace.`}
+          action={token ? <Badge tone="amber">Paused</Badge> : <Badge>Off</Badge>}
+        />
+        <CardBody className="space-y-3">
+          <UpgradePrompt feature="intake_link" slug={org.slug} canManageBilling={ctx.can("billing:manage")}>
+            {token ? (
+              <p className="mt-1.5 text-sm text-amber-800">Your existing link is paused and isn’t accepting ideas. Upgrade to switch it back on — the URL stays the same.</p>
+            ) : null}
+          </UpgradePrompt>
+          {token && canSettings ? (
+            <InlineForm action={disableIntakeLink}>
+              <input type="hidden" name="slug" value={org.slug} />
+              <ConfirmSubmit message="Turn off the intake link for good? Upgrading later creates a new link." className="text-red-600 hover:bg-red-50">
+                Turn off the paused link
+              </ConfirmSubmit>
+            </InlineForm>
+          ) : null}
+        </CardBody>
+      </Card>
+    );
+  }
   const url = token ? intakeUrl(token) : null;
   const domains = org.intakeAllowedDomains;
 

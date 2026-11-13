@@ -6,6 +6,7 @@ import { initiatives, organizations } from "@/db/schema";
 import { BRAND } from "./brand";
 import { emailLayout, escapeHtml, sendEmail } from "./email";
 import { appUrl } from "./env";
+import { hasFeature } from "./plans";
 import { reminderCount, selectReminders, type ReminderDigest } from "./governance-reminders";
 
 function section(title: string, items: { id: string; title: string; days: number }[], describe: (days: number) => string, base: string) {
@@ -44,8 +45,13 @@ ${section("Review due soon", d.dueSoon, (k) => (k === 0 ? "due today" : `due in 
 export async function sendGovernanceReminders(now = new Date()) {
   const today = now.toISOString().slice(0, 10);
   const orgs = await db.select().from(organizations).where(eq(organizations.status, "active"));
-  const tally = { workspaces: orgs.length, notified: 0, emails: 0, failed: 0 };
+  const tally = { workspaces: orgs.length, notified: 0, emails: 0, failed: 0, skippedPlan: 0 };
   for (const org of orgs) {
+    // Reminders are part of the approval workflow (Business and managed plans).
+    if (!hasFeature(org.plan, "governance_workflow")) {
+      tally.skippedPlan++;
+      continue;
+    }
     const rows = await db
       .select({
         id: initiatives.id,

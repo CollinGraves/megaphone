@@ -9,6 +9,7 @@ import { Card } from "@/components/ui";
 import { db } from "@/db";
 import { memberships, organizations } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth/session";
+import { hasFeature } from "@/lib/plans";
 import { IntakeForm } from "./intake-form";
 import { TOKEN_RE } from "./token";
 import { BRAND } from "@/lib/brand";
@@ -19,11 +20,13 @@ export const dynamic = "force-dynamic";
 const findIntakeOrg = cache(async (token: string) => {
   if (!TOKEN_RE.test(token)) return null;
   const [org] = await db
-    .select({ id: organizations.id, name: organizations.name, slug: organizations.slug, intakeAllowedDomains: organizations.intakeAllowedDomains })
+    .select({ id: organizations.id, name: organizations.name, slug: organizations.slug, plan: organizations.plan, intakeAllowedDomains: organizations.intakeAllowedDomains })
     .from(organizations)
     .where(and(eq(organizations.intakeToken, token), eq(organizations.status, "active")))
     .limit(1);
-  return org ?? null;
+  // The intake link is a paid feature: a workspace that downgraded keeps its token, but the link is paused.
+  if (!org || !hasFeature(org.plan, "intake_link")) return null;
+  return org;
 });
 
 export async function generateMetadata({ params }: PageProps<"/intake/[token]">): Promise<Metadata> {

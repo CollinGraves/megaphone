@@ -1,5 +1,7 @@
 import { csvCell, yesNo } from "@/lib/governance";
 import { APPROVAL_STATUSES, BUILD_APPROACHES, HUMAN_OVERSIGHT_LEVELS, RISK_TIERS, SENSITIVITIES, STAGES, labelFrom } from "@/lib/taxonomy";
+import { upgradeRequiredResponse } from "@/lib/billing/responses";
+import { hasFeature } from "@/lib/plans";
 import { ForbiddenError, logActivity, requireWorkspaceCapability } from "@/lib/workspace";
 import { platformLabel } from "../../_components/badges";
 import { filterRegister, loadRegister, parseRegisterFilters } from "../data";
@@ -18,6 +20,7 @@ export async function GET(req: Request, { params }: RouteContext<"/w/[slug]/gove
     if (err instanceof ForbiddenError) return new Response("Not found", { status: 404 });
     throw err;
   }
+  if (!hasFeature(ctx.org.plan, "governance_export")) return upgradeRequiredResponse(req, ctx, "governance_export");
 
   const { items, policy } = await loadRegister(ctx.org);
   const url = new URL(req.url);

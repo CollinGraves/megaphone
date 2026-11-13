@@ -14,12 +14,14 @@ import {
   isApproved,
   isoDate,
   maxSensitivity,
-  normalizePolicy,
   reviewState,
   stageRequiresApproval,
   suggestRiskTier,
   yesNo,
 } from "@/lib/governance";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
+import { enforcedGovernancePolicy } from "@/lib/billing/entitlements";
+import { hasFeature } from "@/lib/plans";
 import { HUMAN_OVERSIGHT_LEVELS, RISK_TIERS, STAGES, labelFrom } from "@/lib/taxonomy";
 import { cn, formatDate, timeAgo } from "@/lib/utils";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
@@ -47,7 +49,9 @@ export async function GovernanceSection({
   canApprove: boolean;
 }) {
   const ctx = await getWorkspaceOrNotFound(slug);
-  const policy = normalizePolicy(org.governancePolicy);
+  // Classification is on every plan; the review/approval workflow and the stage gate need governance_workflow.
+  const workflow = hasFeature(org.plan, "governance_workflow");
+  const policy = enforcedGovernancePolicy(org);
   const today = isoDate(new Date());
   const peopleIds = [i.approvalRequestedById, i.approvalDecidedById].filter((x): x is string => Boolean(x));
   const [deps, timeline, people] = await Promise.all([
@@ -67,8 +71,8 @@ export async function GovernanceSection({
   // After a reopen the request/decision columns keep their old values; only show them while they apply.
   const currentRequest = i.approvalStatus !== "not_submitted" ? i.approvalRequestedAt : null;
   const classificationComplete = i.riskTier !== "unclassified" && i.customerFacing != null && i.affectsIndividuals != null && i.humanOversight != null;
-  const requestable = canEdit && !i.archivedAt && canRequestReview(i, today);
-  const decidable = canApprove && !i.archivedAt && canDecide(i.approvalStatus);
+  const requestable = workflow && canEdit && !i.archivedAt && canRequestReview(i, today);
+  const decidable = workflow && canApprove && !i.archivedAt && canDecide(i.approvalStatus);
   const nextGated = policy.approvalRequiredStages.find((s) => STAGES.findIndex((x) => x.slug === s) > STAGES.findIndex((x) => x.slug === i.stage));
   const hidden = (
     <>
@@ -252,6 +256,16 @@ export async function GovernanceSection({
           </ol>
           {gatedStages.length > 0 ? (
             <p className="mt-3 text-xs text-slate-500">Workspace policy: approval required before {gatedStages.join(" and ")}.</p>
+          ) : null}
+          {!workflow ? (
+            <UpgradePrompt
+              feature="governance_workflow"
+              slug={slug}
+              canManageBilling={ctx.can("billing:manage")}
+              compact
+              title="Review requests and approvals"
+              className="mt-3"
+            />
           ) : null}
         </div>
 

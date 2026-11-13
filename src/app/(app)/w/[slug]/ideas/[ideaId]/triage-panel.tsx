@@ -1,9 +1,10 @@
 import { ArrowRightCircle, Copy, XCircle } from "lucide-react";
+import Link from "next/link";
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { Alert, Card, CardBody, CardHeader, Checkbox, Field, Input, Select, Textarea } from "@/components/ui";
 import type { Idea } from "@/db/schema";
 import { DEFAULT_TIME_SAVED_SHARE, ideaToInitiativeDefaults } from "@/lib/ideas";
-import { IDEA_STATUSES, TRIAL_INITIATIVE_LIMIT, labelFrom } from "@/lib/taxonomy";
+import { IDEA_STATUSES, labelFrom } from "@/lib/taxonomy";
 import { formatNumber } from "@/lib/utils";
 import { convertIdea, declineIdea, markDuplicate, reviewIdea } from "../actions";
 
@@ -18,13 +19,17 @@ export function TriagePanel({
   idea,
   businessUnits,
   candidates,
-  trialFull,
+  capMessage,
+  billingHref,
 }: {
   slug: string;
   idea: Idea;
   businessUnits: string[];
   candidates: DuplicateCandidates;
-  trialFull: boolean;
+  /** Set when the workspace is at its plan's initiative limit. */
+  capMessage: string | null;
+  /** Plan & billing link for people who can upgrade. */
+  billingHref: string | null;
 }) {
   const defaults = ideaToInitiativeDefaults(idea);
   const closed = idea.status === "declined" || idea.status === "duplicate";
@@ -49,9 +54,16 @@ export function TriagePanel({
           <p className="mt-0.5 text-sm text-slate-500">
             Creates an initiative in the <span className="font-medium text-slate-700">Idea</span> stage, prefilled with the problem, sizing and submitter, and marks this idea accepted.
           </p>
-          {trialFull ? (
+          {capMessage ? (
             <Alert tone="warning" className="mt-3">
-              This free workspace already tracks {TRIAL_INITIATIVE_LIMIT} initiatives, the trial limit. Archive one or talk to North Labs before converting more ideas.
+              {capMessage}{" "}
+              {billingHref ? (
+                <Link href={billingHref} className="font-medium underline">
+                  See plans
+                </Link>
+              ) : (
+                "Ask a workspace owner or admin to upgrade."
+              )}
             </Alert>
           ) : null}
           <ActionForm action={convertIdea} className="mt-3 space-y-3">

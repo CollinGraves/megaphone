@@ -78,6 +78,9 @@ export async function AppHeader({ user }: { user: CurrentUser }) {
                   </Link>
                 ) : null}
               </nav>
+              <Link href="/workspaces/new" className="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">
+                Create a workspace
+              </Link>
               <Link href="/settings" className="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">
                 Settings &amp; preferences
               </Link>

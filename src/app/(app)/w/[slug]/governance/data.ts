@@ -6,7 +6,6 @@ import {
   governanceIssues,
   isoDate,
   maxSensitivity,
-  normalizePolicy,
   reviewState,
   suggestRiskTier,
   type GovernanceIssue,
@@ -15,6 +14,7 @@ import {
   type TierSuggestion,
 } from "@/lib/governance";
 import { RISK_TIERS } from "@/lib/taxonomy";
+import { enforcedGovernancePolicy } from "@/lib/billing/entitlements";
 
 export type RegisterRow = Initiative & {
   maxSensitivity: Sensitivity | null;
@@ -28,7 +28,8 @@ export type RegisterRow = Initiative & {
 
 /** Every active (non-archived) initiative with its governance facts, issues and suggested tier. */
 export async function loadRegister(org: Organization) {
-  const policy = normalizePolicy(org.governancePolicy);
+  // Without governance_workflow the approval gate is off, so "missing required approval" isn't flagged.
+  const policy = enforcedGovernancePolicy(org);
   const today = isoDate(new Date());
   const rows = await db
     .select()

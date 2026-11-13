@@ -8,7 +8,7 @@ import { Alert, ButtonLink, Card, CardBody, CardHeader } from "@/components/ui";
 import { db } from "@/db";
 import { ideas, initiatives, user, type Idea } from "@/db/schema";
 import { MAX_HOURS_PER_WEEK, SIGNAL_LABELS, WEEKS_PER_YEAR, estimateAnnualHours, frequencyLabel, ideaSignal } from "@/lib/ideas";
-import { TRIAL_INITIATIVE_LIMIT } from "@/lib/taxonomy";
+import { initiativeCapMessage, initiativeLimit } from "@/lib/plans";
 import { formatDate, formatNumber, timeAgo } from "@/lib/utils";
 import { getWorkspaceOrNotFound, type WorkspaceContext } from "@/lib/workspace";
 import { StageBadge } from "../../_components/badges";
@@ -47,7 +47,8 @@ export default async function IdeaPage({ params, searchParams }: PageProps<"/w/[
   const canTriage = ctx.can("ideas:triage");
   const triageOpen = canTriage && idea.status !== "accepted";
 
-  const [linkedInitiative, duplicateOf, triager, history, businessUnits, candidateInitiatives, candidateIdeas, trialCount] = await Promise.all([
+  const capped = initiativeLimit(ctx.org.plan) != null;
+  const [linkedInitiative, duplicateOf, triager, history, businessUnits, candidateInitiatives, candidateIdeas, activeCount] = await Promise.all([
     idea.initiativeId
       ? db
           .select({ id: initiatives.id, title: initiatives.title, stage: initiatives.stage, archivedAt: initiatives.archivedAt })
@@ -82,7 +83,7 @@ export default async function IdeaPage({ params, searchParams }: PageProps<"/w/[
           .orderBy(desc(ideas.createdAt))
           .limit(150)
       : [],
-    triageOpen && ctx.org.plan === "trial"
+    triageOpen && capped
       ? db
           .select({ n: sql<number>`count(*)::int` })
           .from(initiatives)
@@ -169,7 +170,8 @@ export default async function IdeaPage({ params, searchParams }: PageProps<"/w/[
               idea={idea}
               businessUnits={businessUnits}
               candidates={{ initiatives: candidateInitiatives, ideas: candidateIdeas }}
-              trialFull={ctx.org.plan === "trial" && trialCount >= TRIAL_INITIATIVE_LIMIT}
+              capMessage={capped ? initiativeCapMessage(ctx.org.plan, activeCount) : null}
+              billingHref={ctx.can("billing:manage") ? `${base}/billing?upgrade=initiatives` : null}
             />
           ) : null}
         </div>

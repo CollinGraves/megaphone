@@ -22,6 +22,9 @@ export async function SiteHeader({ dark = false }: { dark?: boolean }) {
           <Link href="/#workspace" className={link}>
             For companies
           </Link>
+          <Link href="/pricing" className={link}>
+            Pricing
+          </Link>
           <Link href="/contact" className={link}>
             Talk to North Labs
           </Link>
@@ -60,6 +63,9 @@ export function SiteFooter() {
           </Link>
           <Link href="/assessment?src=footer" className="hover:text-slate-900">
             AI readiness assessment
+          </Link>
+          <Link href="/pricing" className="hover:text-slate-900">
+            Pricing
           </Link>
           <Link href="/contact" className="hover:text-slate-900">
             Contact

@@ -20,9 +20,10 @@ import {
   systemCategory,
   systems,
 } from "@/db/schema";
-import { isApproved, isRegulatedData, isoDate, maxSensitivity, normalizePolicy, sensitivityRank, stageChangeBlocked } from "@/lib/governance";
+import { isApproved, isRegulatedData, isoDate, maxSensitivity, sensitivityRank, stageChangeBlocked } from "@/lib/governance";
 import { ACCESS_STATUSES, HEALTH, SENSITIVITIES, STAGES, labelFrom } from "@/lib/taxonomy";
 import { initiativeCapMessage, initiativeLimit } from "@/lib/plans";
+import { enforcedGovernancePolicy } from "@/lib/billing/entitlements";
 import { strs, type ActionState } from "@/lib/utils";
 import { logActivity } from "@/lib/workspace";
 import { PLATFORM_OPTIONS } from "../_components/badges";
@@ -151,7 +152,7 @@ export async function saveInitiative(_prev: ActionState, form: FormData): Promis
       const existing = await getOwnedInitiative(ctx, id);
       // Governance gate: entering a stage the policy gates needs an approval in force.
       const blocked = stageChangeBlocked({
-        policy: normalizePolicy(ctx.org.governancePolicy),
+        policy: enforcedGovernancePolicy(ctx.org),
         fromStage: existing.stage,
         toStage: values.stage,
         approvalStatus: existing.approvalStatus,
@@ -165,7 +166,7 @@ export async function saveInitiative(_prev: ActionState, form: FormData): Promis
       initiativeId = existing.id;
     } else {
       const blocked = stageChangeBlocked({
-        policy: normalizePolicy(ctx.org.governancePolicy),
+        policy: enforcedGovernancePolicy(ctx.org),
         fromStage: null,
         toStage: values.stage,
         approvalStatus: "not_submitted",
