@@ -181,11 +181,39 @@ work and school accounts only. The same email rules apply as for the email form 
 personal ones blocked if `REQUIRE_WORK_EMAIL=true`), and an existing account with the same verified email is linked
 rather than duplicated.
 
+### MCP server (use AI Radar from Claude, Cursor, ChatGPT…)
+
+`/api/mcp` is a remote [Model Context Protocol](https://modelcontextprotocol.io) server (Streamable HTTP, via
+`mcp-handler`). People create API keys in **Settings → API & MCP**:
+
+- A key acts as its user. It can optionally be connected to one workspace and is read-only or read-write.
+- Only a SHA-256 hash is stored, and the key is shown once.
+- On every call the user's *current* workspace role is re-checked, so removing someone from a workspace immediately
+  cuts their key's workspace access. Revoked keys get `401`.
+
+Tools:
+
+| Tool | Needs |
+|---|---|
+| `radar_search_stories`, `radar_top_stories`, `radar_get_story` | any key |
+| `radar_my_company` (company stack + upcoming deadlines) | any key |
+| `workspace_portfolio_summary`, `workspace_list_initiatives`, `workspace_get_initiative` | workspace key |
+| `workspace_list_ideas`, `workspace_radar_alerts`, `workspace_governance_register` | workspace key |
+| `workspace_submit_idea` | workspace key, read-write, `ideas:submit` |
+| `workspace_record_impact` | workspace key, read-write, `impact:write` |
+
+Connect from Claude Code with
+`claude mcp add --transport http ai-radar https://<app>/api/mcp --header "Authorization: Bearer radar_…"`, or from
+stdio clients via `npx mcp-remote <url> --header "Authorization: Bearer radar_…"` (the settings page generates both).
+claude.ai and ChatGPT "custom connectors" need OAuth rather than a static key; that's a follow-up (see roadmap).
+
 ## Roadmap / next steps
 
 - Self-serve Workspace sign-up with Stripe billing (`organizations.plan`, `stripe*` columns are already reserved).
 - CRM sync (webhook or API) for leads and engagement.
 - SAML SSO for enterprise workspaces (Google/Microsoft OAuth is in place; Better Auth has an SSO plugin for SAML).
+- OAuth for the MCP server (so it can be added as a claude.ai / ChatGPT connector without pasting a key) and per-key
+  rate limits.
 - Peer signals from the graph ("3 manufacturers your size adopted X this quarter").
 - Slack/Teams delivery for digests and initiative alerts.
 - A broader news API (e.g. Event Registry or NewsAPI) to extend coverage beyond the curated registry.

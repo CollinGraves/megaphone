@@ -269,6 +269,31 @@ export const leadProfiles = pgTable("lead_profiles", {
   updatedAt: updatedAt(),
 });
 
+/**
+ * API keys for the MCP server (and future API). Only a SHA-256 hash is stored; the key is shown once.
+ * A key acts as its user; if `orgId` is set it can also use that workspace (with the user's live role).
+ */
+export const apiKeys = pgTable(
+  "api_keys",
+  {
+    id: id(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    orgId: text("org_id").references(() => organizations.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    /** First characters of the key, for display ("radar_ab12…"). */
+    prefix: text("prefix").notNull(),
+    keyHash: text("key_hash").notNull().unique(),
+    /** "read" and optionally "write". */
+    scopes: text("scopes").array().notNull().default(sql`'{read}'::text[]`),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("api_keys_user_idx").on(t.userId)],
+);
+
 /** Free AI readiness assessment (public lead magnet). Anonymous until claimed by a signed-in user. */
 export const assessments = pgTable(
   "assessments",
