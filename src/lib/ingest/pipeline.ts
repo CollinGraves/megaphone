@@ -25,6 +25,8 @@ import {
   slugify,
   titleSimilarity,
 } from "./heuristics";
+import { linkStoryVendors, recordStoryGraph } from "@/lib/graph/entities";
+import { refreshAllCompanyStacks } from "@/lib/graph/stack";
 import { classifyBatch, type CandidateStory } from "./llm";
 import { truncate } from "./parse";
 
@@ -43,6 +45,7 @@ export type IngestStats = {
   alertsCreated: number;
   llmBatches: number;
   llmFailures: number;
+  stacksRefreshed: number;
 };
 
 const emptyStats = (): IngestStats => ({
@@ -56,6 +59,7 @@ const emptyStats = (): IngestStats => ({
   alertsCreated: 0,
   llmBatches: 0,
   llmFailures: 0,
+  stacksRefreshed: 0,
 });
 
 /* ───────────────────────────── Step 1: fetch ───────────────────────────── */
@@ -247,6 +251,7 @@ async function processHeuristically(batch: PendingArticle[], candidates: Candida
         members: [article],
         classifiedBy: "heuristic",
       });
+      await linkStoryVendors(story.id, story.vendors);
       candidates.unshift({ ...story, articleCount: 1 });
       touched.add(story.id);
       stats.storiesCreated++;
@@ -306,6 +311,16 @@ async function processWithModel(batch: PendingArticle[], candidates: Candidate[]
       members,
       classifiedBy: "llm",
     });
+    try {
+      await recordStoryGraph(story.id, story.vendors, {
+        entities: g.entities,
+        facts: g.facts,
+        followsUpStoryId: g.follows_up_story_id && candidateIds.has(g.follows_up_story_id) ? g.follows_up_story_id : null,
+      });
+    } catch (err) {
+      // The graph is an enrichment layer; never lose a story because of it.
+      console.error("[ingest] graph extraction failed for story", story.id, err);
+    }
     candidates.unshift({ ...story });
     candidateIds.add(story.id);
     touched.add(story.id);
@@ -433,6 +448,7 @@ export async function runIngestion(opts: { trigger: string; sourceIds?: string[]
     if (!opts.skipFetch) await fetchSources(stats, { sourceIds: opts.sourceIds });
     const touched = await processPendingArticles(stats);
     stats.alertsCreated = await generateInitiativeAlerts(touched);
+    stats.stacksRefreshed = await refreshAllCompanyStacks();
     await db.update(ingestionRuns).set({ finishedAt: new Date(), stats }).where(eq(ingestionRuns.id, run.id));
     return stats;
   } catch (err) {

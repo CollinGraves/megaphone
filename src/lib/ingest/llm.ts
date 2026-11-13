@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
+import { entityKind, factPredicate } from "@/db/schema";
 import { CATEGORIES, CATEGORY_SLUGS, INDUSTRY_SLUGS, VENDORS, VENDOR_SLUGS } from "@/lib/taxonomy";
 
 export const DEFAULT_MODEL = "claude-opus-5-5";
@@ -35,6 +36,30 @@ const ClassificationSchema = z.object({
       vendors: z.array(z.enum(VENDOR_SLUGS as [string, ...string[]])),
       industries: z.array(z.enum(INDUSTRY_SLUGS as [string, ...string[]])),
       importance: z.number().int().min(1).max(5),
+      entities: z
+        .array(
+          z.object({
+            name: z.string().describe("Canonical name, e.g. 'GPT-4o', 'Microsoft 365 Copilot', 'EU AI Act', 'Walmart'."),
+            kind: z.enum(entityKind.enumValues),
+            vendor: z.enum(VENDOR_SLUGS as [string, ...string[]]).nullable().describe("Maker of a product/model, if in the vendor list."),
+          }),
+        )
+        .describe("Up to 6 specific things the story is materially about. Empty if none."),
+      facts: z
+        .array(
+          z.object({
+            subject: z.string().describe("Must match the name of one of this story's entities."),
+            predicate: z.enum(factPredicate.enumValues),
+            object: z.string().nullable().describe("Entity name for 'adopted' (what was adopted) or 'supersedes' (what is replaced)."),
+            value: z.string().nullable().describe("For 'price': the new price, e.g. '$2.50 / 1M input tokens'."),
+            effective_date: z.string().nullable().describe("YYYY-MM-DD, only if the article states the date."),
+          }),
+        )
+        .describe("Only facts explicitly stated in the articles. Empty if none."),
+      follows_up_story_id: z
+        .string()
+        .nullable()
+        .describe("Id of an EXISTING story this one is a direct follow-up or update to (same underlying topic, new facts). Null otherwise."),
     }),
   ),
 });
@@ -60,6 +85,18 @@ Importance (be stingy, most stories are 2–3):
 3 = notable, relevant to people following that area
 2 = minor or niche
 1 = trivia
+
+For each new story, also extract structure for our knowledge graph:
+- entities: the specific vendors, products, models, companies (e.g. an enterprise adopting AI) and regulations the story is materially about. Use canonical names, at most 6.
+- facts: only facts explicitly stated in the articles, never inferred:
+  - price: a new or changed price for a product/model (value = the price).
+  - retires_on / deprecated_on: the date a model, API or product is retired or deprecated.
+  - effective_on: the date a regulation, policy or contract term takes effect.
+  - available_on: the date something becomes generally available.
+  - adopted: a company (subject) adopted or deployed a product/vendor (object).
+  - supersedes: a new model/product (subject) replaces an older one (object).
+  Dates must be YYYY-MM-DD and stated in the article (use the 1st of the month if only a month is given). Omit a fact rather than guess.
+- follows_up_story_id: if the story is a direct update to one of the existing stories (e.g. a retirement date announced for a model launched earlier), give that story's id.
 
 Write titles and summaries in a neutral, factual voice. Do not invent facts beyond what the articles say.`;
 

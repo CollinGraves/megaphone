@@ -90,6 +90,8 @@ export const EnrichmentPayload = z.object({
   linkedin_url: optionalString,
   description: optionalString,
   source: optionalString,
+  /** Technographics: tools/platforms the company uses, e.g. ["Salesforce", "Snowflake"]. */
+  technologies: z.array(z.string().trim().min(1).max(120)).max(100).optional(),
   contacts: z
     .array(
       z.object({
@@ -143,6 +145,10 @@ export async function applyEnrichment(input: z.infer<typeof EnrichmentPayload>, 
         set: { title: c.title ?? null, email: c.email?.toLowerCase() ?? null, linkedinUrl: c.linkedin_url ?? null },
       });
     contacts++;
+  }
+  if (input.technologies?.length) {
+    const { addEnrichedTechnologies } = await import("./graph/stack");
+    await addEnrichedTechnologies(domain, input.technologies);
   }
   // Backfill company size on users who haven't set one yet.
   if (updates.sizeRange) {

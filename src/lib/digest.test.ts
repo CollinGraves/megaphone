@@ -31,3 +31,14 @@ describe("safeNextPath", async () => {
     for (const bad of ["https://evil.com", "//evil.com", "/\\evil.com", undefined, ["/a"]]) expect(safeNextPath(bad, "/feed")).toBe("/feed");
   });
 });
+
+describe("diversify", async () => {
+  const { diversify } = await import("./digest");
+  const s = (id: string, vendor: string, source: string) => ({ id, vendors: [vendor], primarySourceName: source });
+  it("caps stories per vendor and per source, keeping preferred ones first", () => {
+    const list = [s("a", "google", "G Blog"), s("b", "google", "G Blog"), s("c", "google", "G Blog"), s("d", "openai", "TechCrunch"), s("e", "openai", "Verge")];
+    expect(diversify(list, 10).map((x) => x.id)).toEqual(["a", "b", "d", "e"]);
+    expect(diversify(list, 10, new Set(["c"])).map((x) => x.id)).toEqual(["c", "a", "d", "e"]);
+    expect(diversify(list, 2).map((x) => x.id)).toEqual(["a", "b"]);
+  });
+});

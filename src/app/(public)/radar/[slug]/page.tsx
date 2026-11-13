@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { StoryCard } from "@/components/stories/story-card";
+import { StoryTimeline } from "@/components/stories/story-timeline";
+import { getStackContext, stackReasons, storyContext } from "@/lib/graph/personalize";
 import { Badge, ButtonLink, Card, ImportanceMeter } from "@/components/ui";
 import { getCurrentUser } from "@/lib/auth/session";
 import { appUrl } from "@/lib/env";
@@ -30,7 +32,9 @@ export default async function StoryPage({ params }: PageProps<"/radar/[slug]">) 
   const found = await getStoryBySlug(slug);
   if (!found) notFound();
   const { story, coverage } = found;
-  const [related, user] = await Promise.all([getRelatedStories(story), getCurrentUser()]);
+  const [related, user, graph] = await Promise.all([getRelatedStories(story), getCurrentUser(), storyContext(story.id)]);
+  const stack = user ? await getStackContext(user) : null;
+  const reason = (await stackReasons([story], stack)).get(story.id);
   await track("story_view", { userId: user?.id, storyId: story.id });
 
   const jsonLd = {
@@ -61,6 +65,9 @@ export default async function StoryPage({ params }: PageProps<"/radar/[slug]">) 
               Covered by {story.articleCount} source{story.articleCount === 1 ? "" : "s"}
             </span>
           </div>
+          {reason ? (
+            <div className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-radar-50 px-2 py-1 text-sm font-medium text-radar-800">{reason}</div>
+          ) : null}
           <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-4xl">{story.title}</h1>
           <div className="mt-4 flex flex-wrap gap-1.5">
             {story.categories.map((c) => (
@@ -93,6 +100,8 @@ export default async function StoryPage({ params }: PageProps<"/radar/[slug]">) 
               Read the original at {story.primarySourceName} <ExternalLink className="size-4" />
             </ButtonLink>
           </div>
+
+          <StoryTimeline ctx={graph} />
 
           {coverage.length > 1 ? (
             <section className="mt-10">

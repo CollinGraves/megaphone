@@ -151,11 +151,42 @@ Run `npm run db:backfill-companies` once after deploying to tag existing users w
 Enriched contacts are for North Labs' own outreach and are never emailed by AI Radar. Check your outreach against
 CAN-SPAM, GDPR and similar rules for the regions you sell into.
 
+### Company graph (temporal)
+
+AI Radar keeps a small time-aware knowledge graph in Postgres (`src/lib/graph`):
+
+- **Entities**: vendors, products, models, companies and regulations, plus which stories mention them (`story_entities`).
+- **Facts with validity**: prices, retirement/deprecation dates, regulatory effective dates, GA dates, adoptions and
+  replacements (`entity_facts`). A newer fact for the same subject/predicate closes the old one (`valid_to`,
+  `superseded_by_id`) and links the two stories as an arc (`story_links`).
+- **Extraction**: Claude extracts entities, facts (only explicitly stated ones, with stated dates) and follow-up
+  links in the same structured call that classifies each story. The keyword fallback links vendor entities only, so
+  deadlines and arcs require `ANTHROPIC_API_KEY`.
+- **Company stacks** (`company_stack`, per email domain): inferred from enrichment technographics
+  (`technologies` in the enrichment payload), the company's Workspace platforms and systems, and vendors followed by
+  2+ colleagues (aggregate only, never attributed). Anyone at the company can confirm, remove or add tools. Human
+  decisions are never overwritten by re-inference.
+- **What readers see**: "Because Acme uses Salesforce" on matching stories (feed, story pages, digest),
+  stack-aware feed and digest selection, an upcoming-deadlines card and digest block (with a "Heads up" subject line
+  when a stack deadline is ≤14 days away), and a timeline on each story page showing current vs. superseded facts.
+
+After deploying: `npm run db:backfill-graph` links existing stories and computes stacks (ingestion keeps them fresh).
+`npm run db:seed-graph-demo` adds clearly-labelled fictional demo stories locally (it refuses non-local databases).
+
+### Single sign-on
+
+"Continue with Google Workspace" and "Continue with Microsoft 365" appear on sign-in and sign-up. Each turns on
+when its client ID and secret are set (see `.env.example`). Until then it shows as coming soon. Microsoft defaults to
+work and school accounts only. The same email rules apply as for the email form (disposable addresses blocked;
+personal ones blocked if `REQUIRE_WORK_EMAIL=true`), and an existing account with the same verified email is linked
+rather than duplicated.
+
 ## Roadmap / next steps
 
 - Self-serve Workspace sign-up with Stripe billing (`organizations.plan`, `stripe*` columns are already reserved).
 - CRM sync (webhook or API) for leads and engagement.
-- SSO (SAML/OIDC) for enterprise workspaces; Better Auth has plugins for both.
+- SAML SSO for enterprise workspaces (Google/Microsoft OAuth is in place; Better Auth has an SSO plugin for SAML).
+- Peer signals from the graph ("3 manufacturers your size adopted X this quarter").
 - Slack/Teams delivery for digests and initiative alerts.
 - A broader news API (e.g. Event Registry or NewsAPI) to extend coverage beyond the curated registry.
 - Embedding-based deduplication (pgvector on Supabase) if volume outgrows the LLM batch approach.

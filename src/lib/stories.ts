@@ -9,6 +9,9 @@ export type StoryFilters = {
   industries?: string[];
   /** When true, a story matches if it hits ANY of the selected categories/vendors/industries. */
   matchAny?: boolean;
+  /** Extra OR-ed relevance (company stack): stories tagged with these vendors or touching these graph entities. */
+  alsoVendors?: string[];
+  alsoMatch?: SQL;
   minImportance?: number;
   sinceDays?: number;
   search?: string;
@@ -31,7 +34,13 @@ function buildWhere(f: StoryFilters): SQL | undefined {
   if (f.categories?.length) interest.push(arrayOverlaps(stories.categories, f.categories));
   if (f.vendors?.length) interest.push(arrayOverlaps(stories.vendors, f.vendors));
   if (f.industries?.length) interest.push(arrayOverlaps(stories.industries, f.industries));
-  if (interest.length) clauses.push(f.matchAny ? or(...interest) : and(...interest));
+  const extra: SQL[] = [];
+  if (f.alsoVendors?.length) extra.push(arrayOverlaps(stories.vendors, f.alsoVendors));
+  if (f.alsoMatch) extra.push(f.alsoMatch);
+  if (interest.length || extra.length) {
+    const base = interest.length ? (f.matchAny ? or(...interest) : and(...interest)) : undefined;
+    clauses.push(extra.length ? or(base, ...extra) : base);
+  }
   return and(...clauses);
 }
 

@@ -15,7 +15,9 @@
     "db:seed-demo": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/seed-demo.ts",
     "ingest": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/ingest.ts",
     "digest": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/send-digests.ts",
-    "db:backfill-companies": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/backfill-companies.ts"
+    "db:backfill-companies": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/backfill-companies.ts",
+    "db:backfill-graph": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/backfill-graph.ts",
+    "db:seed-graph-demo": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/seed-graph-demo.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ExternalLink, Layers } from "lucide-react";
+import { Building2, ExternalLink, Layers } from "lucide-react";
 import type { Story } from "@/db/schema";
 import { categoryLabel, vendorLabel } from "@/lib/taxonomy";
 import { cn, timeAgo } from "@/lib/utils";
@@ -11,11 +11,14 @@ export function StoryCard({
   saved,
   showSave = false,
   compact = false,
+  reason,
 }: {
   story: Story;
   saved?: boolean;
   showSave?: boolean;
   compact?: boolean;
+  /** Why this story is relevant to the reader's company, e.g. "Because Acme uses Salesforce". */
+  reason?: string;
 }) {
   return (
     <article className={cn("group rounded-xl border border-slate-200 bg-white p-5 shadow-xs transition-shadow hover:shadow-sm", compact && "p-4")}>
@@ -37,6 +40,11 @@ export function StoryCard({
           </span>
         ) : null}
       </div>
+      {reason ? (
+        <div className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-radar-50 px-2 py-0.5 text-xs font-medium text-radar-800">
+          <Building2 className="size-3.5" /> {reason}
+        </div>
+      ) : null}
       <h3 className={cn("mt-2 font-semibold leading-snug text-slate-900", compact ? "text-[15px]" : "text-lg")}>
         <Link href={`/radar/${story.slug}`} className="hover:text-radar-700">
           {story.title}

@@ -323,6 +323,117 @@ export const companyContacts = pgTable(
   (t) => [uniqueIndex("company_contacts_unique_idx").on(t.domain, t.fullName)],
 );
 
+/* ───────────────────────────── Temporal graph ───────────────────────────── */
+
+export const entityKind = pgEnum("entity_kind", ["vendor", "product", "model", "company", "regulation"]);
+
+/** Things the news is about: vendors, products, models, companies, regulations. */
+export const entities = pgTable(
+  "entities",
+  {
+    id: id(),
+    kind: entityKind("kind").notNull(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    /** Taxonomy vendor slug: the vendor itself, or the maker of a product/model. */
+    vendorSlug: text("vendor_slug"),
+    aliases: text("aliases").array().notNull().default(sql`'{}'::text[]`),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("entities_kind_slug_idx").on(t.kind, t.slug), index("entities_vendor_idx").on(t.vendorSlug)],
+);
+
+export const storyEntities = pgTable(
+  "story_entities",
+  {
+    storyId: text("story_id")
+      .notNull()
+      .references(() => stories.id, { onDelete: "cascade" }),
+    entityId: text("entity_id")
+      .notNull()
+      .references(() => entities.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.storyId, t.entityId] }), index("story_entities_entity_idx").on(t.entityId)],
+);
+
+export const factPredicate = pgEnum("fact_predicate", [
+  "price", // value = price description; valid while current
+  "retires_on", // validFrom = retirement/shutdown date
+  "deprecated_on", // validFrom = deprecation date
+  "effective_on", // regulation or policy obligations take effect
+  "available_on", // general availability / launch date
+  "adopted", // subject (company) adopted object (product/vendor)
+  "supersedes", // subject (model/product) replaces object
+]);
+
+/**
+ * Time-bounded facts. A new fact for the same (subject, predicate, object) closes the previous one
+ * (sets validTo and supersededById), so the graph always knows what is current and what changed.
+ */
+export const entityFacts = pgTable(
+  "entity_facts",
+  {
+    id: id(),
+    subjectId: text("subject_id")
+      .notNull()
+      .references(() => entities.id, { onDelete: "cascade" }),
+    predicate: factPredicate("predicate").notNull(),
+    objectId: text("object_id").references(() => entities.id, { onDelete: "cascade" }),
+    value: text("value"),
+    /** When the fact becomes true (e.g. the retirement date). Null = from when it was reported. */
+    validFrom: date("valid_from"),
+    /** When it stopped being true (set when superseded). */
+    validTo: date("valid_to"),
+    observedAt: timestamp("observed_at", { withTimezone: true }).notNull().defaultNow(),
+    storyId: text("story_id").references(() => stories.id, { onDelete: "set null" }),
+    supersededById: text("superseded_by_id"),
+  },
+  (t) => [
+    index("entity_facts_subject_idx").on(t.subjectId, t.predicate),
+    index("entity_facts_valid_from_idx").on(t.validFrom),
+  ],
+);
+
+/** Story arcs: a later story that updates or follows up on an earlier one. */
+export const storyLinks = pgTable(
+  "story_links",
+  {
+    storyId: text("story_id")
+      .notNull()
+      .references(() => stories.id, { onDelete: "cascade" }),
+    relatedStoryId: text("related_story_id")
+      .notNull()
+      .references(() => stories.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(), // follow_up | supersedes
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.storyId, t.relatedStoryId] }), index("story_links_related_idx").on(t.relatedStoryId)],
+);
+
+export const stackStatus = pgEnum("stack_status", ["inferred", "confirmed", "rejected"]);
+
+/** What a company (by email domain) runs on, with when we learned it and how sure we are. */
+export const companyStack = pgTable(
+  "company_stack",
+  {
+    domain: text("domain")
+      .notNull()
+      .references(() => companies.domain, { onDelete: "cascade" }),
+    entityId: text("entity_id")
+      .notNull()
+      .references(() => entities.id, { onDelete: "cascade" }),
+    /** enrichment | workspace | colleagues | user */
+    source: text("source").notNull(),
+    confidence: doublePrecision("confidence").notNull().default(0.5),
+    status: stackStatus("status").notNull().default("inferred"),
+    reviewedById: text("reviewed_by_id").references(() => user.id, { onDelete: "set null" }),
+    validFrom: timestamp("valid_from", { withTimezone: true }).notNull().defaultNow(),
+    validTo: timestamp("valid_to", { withTimezone: true }),
+    updatedAt: updatedAt(),
+  },
+  (t) => [primaryKey({ columns: [t.domain, t.entityId] })],
+);
+
 /* ─────────────────────────────── Workspaces ─────────────────────────────── */
 
 export const orgPlan = pgEnum("org_plan", ["engagement", "trial", "pro", "enterprise"]);
@@ -673,6 +784,8 @@ export const systemsRelations = relations(systems, ({ many }) => ({
 }));
 
 export type Company = typeof companies.$inferSelect;
+export type Entity = typeof entities.$inferSelect;
+export type EntityFact = typeof entityFacts.$inferSelect;
 export type Story = typeof stories.$inferSelect;
 export type Source = typeof sources.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;

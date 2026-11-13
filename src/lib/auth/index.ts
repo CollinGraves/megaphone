@@ -10,6 +10,7 @@ import { classifyEmail, companyDomain, emailDomain } from "@/lib/email-domains";
 import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
 import { ensureCompany, requestEnrichment } from "@/lib/enrichment";
 import { appUrl } from "@/lib/env";
+import { socialProvidersEnabled } from "./providers";
 
 const adminEmails = () =>
   (process.env.PLATFORM_ADMIN_EMAILS ?? "")
@@ -65,6 +66,32 @@ export const auth = betterAuth({
       });
     },
   },
+  // Google Workspace and Microsoft 365 sign-in. Each is enabled once its credentials are set.
+  // Redirect URIs: {APP_URL}/api/auth/callback/google and {APP_URL}/api/auth/callback/microsoft
+  socialProviders: {
+    ...(socialProvidersEnabled().google
+      ? {
+          google: {
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            prompt: "select_account" as const,
+          },
+        }
+      : {}),
+    ...(socialProvidersEnabled().microsoft
+      ? {
+          microsoft: {
+            clientId: process.env.MICROSOFT_CLIENT_ID!,
+            clientSecret: process.env.MICROSOFT_CLIENT_SECRET!,
+            // "organizations" = work and school accounts only (no personal Outlook.com / Hotmail).
+            tenantId: process.env.MICROSOFT_TENANT_ID || "organizations",
+            prompt: "select_account" as const,
+          },
+        }
+      : {}),
+  },
+  // Someone who signed up with email/password can later use Google/Microsoft with the same verified address.
+  account: { accountLinking: { enabled: true, trustedProviders: ["google", "microsoft"] } },
   session: {
     expiresIn: 60 * 60 * 24 * 30,
     updateAge: 60 * 60 * 24,
@@ -88,6 +115,12 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
+        // Applies the same email policy to Google/Microsoft sign-ups as to the email form.
+        before: async (candidate) => {
+          const kind = classifyEmail(candidate.email);
+          if (kind === "disposable" || kind === "invalid") return false;
+          if (kind === "personal" && requireWorkEmail()) return false;
+        },
         after: async (created) => {
           const email = created.email.toLowerCase();
           const isWork = classifyEmail(email) === "work";

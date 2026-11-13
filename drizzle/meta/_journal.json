@@ -36,6 +36,13 @@
       "when": 1794591774469,
       "tag": "0004_groovy_angel",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794592773748,
+      "tag": "0005_wild_doorman",
+      "breakpoints": true
     }
   ]
 }

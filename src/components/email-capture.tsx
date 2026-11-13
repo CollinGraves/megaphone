@@ -63,12 +63,12 @@ export function EmailCapture({ source, dark = false, className }: { source: stri
           </span>
         ) : kind === "personal" && nudged ? (
           <span className={dark ? "text-amber-300" : "text-amber-700"}>
-            Tip: your work email gets you coverage tailored to your company and industry.
+            Tip: with your company email we tailor your radar to your company&apos;s tools and their deadlines.
           </span>
         ) : kind === "disposable" ? (
           <span className={dark ? "text-red-300" : "text-red-700"}>Please use a permanent work email.</span>
         ) : (
-          "Free. Use your work email. Unsubscribe anytime."
+          "Free. Use your company email for news tailored to your stack."
         )}
       </p>
     </form>

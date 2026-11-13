@@ -7,6 +7,9 @@ import { StoryCard } from "@/components/stories/story-card";
 import { Alert, Badge, ButtonLink, Card, EmptyState, Input } from "@/components/ui";
 import { db } from "@/db";
 import { InviteColleaguesCard } from "@/components/invite-colleagues";
+import { DeadlinesCard } from "@/components/stack/deadlines-card";
+import { StackCard } from "@/components/stack/stack-card";
+import { getStackContext, stackReasons, stackRelevance, upcomingDeadlines } from "@/lib/graph/personalize";
 import { VerifyEmailBanner } from "@/components/verify-email-banner";
 import { user as userTable, userPreferences } from "@/db/schema";
 import { requireUser } from "@/lib/auth/session";
@@ -45,12 +48,24 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
       : Promise.resolve([{ n: 0 }]),
   ]);
   const p = prefs ?? { categories: [], vendors: [], industries: [], minImportance: 2, digestFrequency: "weekly" as const };
+  const stack = await getStackContext(user);
 
   let stories =
     tab === "saved"
       ? await listSavedStories(user.id)
       : await listStories({
-          ...(tab === "for-you" ? { categories: p.categories, vendors: p.vendors, industries: p.industries, matchAny: true, minImportance: p.minImportance, sinceDays: 30 } : {}),
+          ...(tab === "for-you"
+            ? {
+                categories: p.categories,
+                vendors: p.vendors,
+                industries: p.industries,
+                matchAny: true,
+                // Company stack: anything touching the tools the company runs on is in scope too.
+                alsoMatch: stackRelevance(stack),
+                minImportance: p.minImportance,
+                sinceDays: 30,
+              }
+            : {}),
           ...(tab === "top" ? { sinceDays: 7, order: "top" as const, minImportance: 3 } : {}),
           ...(tab === "latest" ? { sinceDays: 30 } : {}),
           search: q || undefined,
@@ -59,7 +74,16 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
         });
   const hasMore = tab !== "saved" && stories.length > PAGE_SIZE;
   stories = stories.slice(0, PAGE_SIZE);
-  const saved = await savedStoryIds(user.id, stories.map((s) => s.id));
+  const [saved, reasons, deadlines] = await Promise.all([
+    savedStoryIds(user.id, stories.map((s) => s.id)),
+    stackReasons(stories, stack),
+    upcomingDeadlines({
+      entityIds: stack?.entityIds,
+      vendorSlugs: [...new Set([...(stack?.vendorSlugs ?? []), ...p.vendors])],
+      includeRegulation: p.categories.includes("regulation"),
+      limit: 5,
+    }),
+  ]);
   const qs = (overrides: Record<string, string | number | undefined>) => {
     const sp = new URLSearchParams();
     const merged = { tab, q: q || undefined, ...overrides };
@@ -116,7 +140,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
                 action={tab === "for-you" ? <ButtonLink href="/settings" variant="secondary">Edit interests</ButtonLink> : undefined}
               />
             ) : (
-              stories.map((s) => <StoryCard key={s.id} story={s} showSave saved={saved.has(s.id)} />)
+              stories.map((s) => <StoryCard key={s.id} story={s} showSave saved={saved.has(s.id)} reason={reasons.get(s.id)} />)
             )}
           </div>
           {page > 1 || hasMore ? (
@@ -154,6 +178,8 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
               Email digest: <span className="font-medium text-slate-700">{p.digestFrequency === "off" ? "off" : p.digestFrequency}</span>
             </p>
           </Card>
+          <DeadlinesCard deadlines={deadlines} companyName={stack?.companyName} />
+          {stack ? <StackCard ctx={stack} /> : null}
           {user.companyDomain ? (
             <InviteColleaguesCard domain={user.companyDomain} company={user.company ?? user.companyDomain} colleagues={colleagues?.n ?? 0} />
           ) : null}

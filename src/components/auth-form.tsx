@@ -7,7 +7,9 @@ import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { recordSignupContext } from "@/app/(auth)/actions";
 import { authClient } from "@/lib/auth/client";
 import { classifyEmail, emailDomain, guessCompanyName } from "@/lib/email-domains";
+import type { SocialProviders } from "@/lib/auth/providers";
 import { safeNextPath } from "@/lib/safe-redirect";
+import { SsoButtons } from "./sso-buttons";
 import { Alert, Button, Card, Checkbox, Field, Input } from "./ui";
 
 export function AuthForm({
@@ -17,6 +19,8 @@ export function AuthForm({
   requireWorkEmail = false,
   referral,
   source,
+  providers,
+  errorMessage,
 }: {
   mode: "sign-in" | "sign-up";
   next?: string;
@@ -24,6 +28,8 @@ export function AuthForm({
   requireWorkEmail?: boolean;
   referral?: string;
   source?: string;
+  providers: SocialProviders;
+  errorMessage?: string;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -56,15 +62,24 @@ export function AuthForm({
   }
 
   const nextQuery = next ? `?next=${encodeURIComponent(next)}` : "";
+  const newUserParams = new URLSearchParams({ src: source ?? "sso", ...(referral ? { ref: referral } : {}) });
+  const ssoNewUserUrl = next ? safeNextPath(next, "/onboarding") : `/onboarding?${newUserParams.toString()}`;
   return (
     <Card className="p-6">
       <h1 className="text-lg font-semibold text-slate-900">{isSignUp ? "Create your free AI Radar" : "Welcome back"}</h1>
       <p className="mt-1 text-sm text-slate-500">
         {isSignUp
-          ? "A personalized feed and digest of the AI news that matters to your business."
+          ? "Use your company email and we'll tailor your radar to your company's stack, deadlines and industry."
           : "Sign in to your feed and workspaces."}
       </p>
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
+      <div className="mt-6">
+        {errorMessage ? <Alert tone="error" className="mb-3">{errorMessage}</Alert> : null}
+        <SsoButtons providers={providers} callbackURL={safeNextPath(next, "/feed")} newUserCallbackURL={ssoNewUserUrl} />
+        <div className="my-5 flex items-center gap-3 text-xs text-slate-400">
+          <span className="h-px flex-1 bg-slate-200" /> or with your work email <span className="h-px flex-1 bg-slate-200" />
+        </div>
+      </div>
+      <form onSubmit={onSubmit} className="space-y-4">
         {error ? <Alert tone="error">{error}</Alert> : null}
         <Field label={isSignUp ? "Work email" : "Email"} htmlFor="email">
           <Input
@@ -92,8 +107,8 @@ export function AuthForm({
                   <>AI Radar is for business teams. Please use your work email.</>
                 ) : (
                   <>
-                    <strong>Looks like a personal address.</strong> Your work email gets you coverage tailored to your
-                    company&apos;s industry and stack, and lets colleagues share your radar.
+                    <strong>Looks like a personal address.</strong> With your company email we tailor your radar to the
+                    tools your company runs on, warn you about their deadlines, and let colleagues share it.
                   </>
                 )}
               </div>

@@ -80,7 +80,7 @@ export default async function HomePage() {
               </h1>
               <p className="mt-6 max-w-xl text-lg text-slate-300">
                 Model launches, price changes, deprecations and regulation, filtered to your industry and the platforms your
-                company runs on. One short digest, with what happened and why it matters.
+                company runs on, with a heads-up before deadlines hit the tools you use. One short digest.
               </p>
               <EmailCapture source="hero" dark className="mt-8" />
               <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-400">
@@ -123,6 +123,7 @@ export default async function HomePage() {
                 {[
                   "Ranked by significance, not by who published first",
                   "Every story links to the original sources",
+                  "Deadline alerts for the tools your company uses",
                   "Vendor-neutral: no pay-to-play rankings",
                 ].map((t) => (
                   <li key={t} className="flex gap-2">
@@ -280,7 +281,7 @@ const FAQ = [
   },
   {
     q: "Why do you ask for my work email?",
-    a: "Your company tells us your industry and likely tech stack, so we can rank the stories that matter to you, and it lets colleagues share your radar. We never sell your information. North Labs may occasionally reach out if it looks like we could help, and you can opt out anytime.",
+    a: "Your company email lets us build a profile of the tools your company runs on, which you can confirm or correct. We use it to flag news that affects those tools (\"Because Acme uses Salesforce\") and to warn you before retirements, deprecations and regulatory deadlines. It also lets colleagues share your radar. We never sell your information. North Labs may occasionally reach out if it looks like we could help, and you can opt out anytime.",
   },
   {
     q: "How is this different from other AI newsletters?",

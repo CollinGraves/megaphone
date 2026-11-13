@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { classifyEmail, companyDomain, emailDomain } from "@/lib/email-domains";
 import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
 import { appUrl } from "@/lib/env";
+import { addStackItem, setStackItemStatus } from "@/lib/graph/stack";
 import { track } from "@/lib/tracking";
 import type { ActionState } from "@/lib/utils";
 
@@ -73,4 +74,39 @@ export async function inviteColleagues(_prev: ActionState, form: FormData): Prom
   if (toInvite.length) parts.push(`Invited ${toInvite.length} colleague${toInvite.length === 1 ? "" : "s"}.`);
   if (existing.size) parts.push(`${existing.size} already ${existing.size === 1 ? "uses" : "use"} AI Radar.`);
   return { ok: true, message: parts.join(" ") };
+}
+
+/* ───────────────────────── Company stack (graph) ───────────────────────── */
+
+async function stackActor() {
+  const current = await getCurrentUser();
+  if (!current?.companyDomain) throw new Error("Only work-email accounts have a company stack.");
+  return { current, domain: current.companyDomain };
+}
+
+function revalidateStack() {
+  revalidatePath("/feed");
+  revalidatePath("/settings");
+}
+
+export async function confirmStackItem(form: FormData) {
+  const { current, domain } = await stackActor();
+  await setStackItemStatus(domain, String(form.get("entityId") ?? ""), "confirmed", current.id);
+  revalidateStack();
+}
+
+export async function rejectStackItem(form: FormData) {
+  const { current, domain } = await stackActor();
+  await setStackItemStatus(domain, String(form.get("entityId") ?? ""), "rejected", current.id);
+  revalidateStack();
+}
+
+export async function addStackItemAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const { current, domain } = await stackActor();
+  const name = String(form.get("name") ?? "").trim();
+  if (name.length < 2 || name.length > 80) return { error: "Enter a tool or platform name." };
+  const entity = await addStackItem(domain, name, current.id);
+  if (!entity) return { error: "Couldn't add that tool." };
+  revalidateStack();
+  return { ok: true, message: `Added ${entity.name}.` };
 }

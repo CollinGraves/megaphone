@@ -7,12 +7,17 @@ import { db } from "@/db";
 import { companies, userPreferences } from "@/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import { guessCompanyName } from "@/lib/email-domains";
+import { applySignupContext } from "@/lib/signup-context";
 import { completeOnboarding } from "../settings/actions";
 
 export const metadata: Metadata = { title: "Set up your radar" };
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({ searchParams }: PageProps<"/onboarding">) {
   const user = await requireUser("/onboarding");
+  // Google/Microsoft sign-ups land here directly; record where they came from.
+  const sp = await searchParams;
+  const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : undefined);
+  if (one(sp.src) || one(sp.ref)) await applySignupContext(user, { source: one(sp.src), ref: one(sp.ref) });
   const [[prefs], [company]] = await Promise.all([
     db.select().from(userPreferences).where(eq(userPreferences.userId, user.id)).limit(1),
     user.companyDomain

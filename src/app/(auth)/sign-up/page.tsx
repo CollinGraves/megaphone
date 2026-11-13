@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth-form";
 import { requireWorkEmail } from "@/lib/auth";
+import { socialProvidersEnabled } from "@/lib/auth/providers";
 import { getCurrentUser } from "@/lib/auth/session";
 import { safeNextPath } from "@/lib/safe-redirect";
 
 export const metadata: Metadata = { title: "Create your free AI Radar" };
 export const dynamic = "force-dynamic";
 
+const SSO_ERROR = "That sign-in didn't work. If you used a personal account, try your company Google or Microsoft account, or sign up with your work email.";
 const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : undefined);
 
 export default async function SignUpPage({ searchParams }: PageProps<"/sign-up">) {
@@ -23,6 +25,8 @@ export default async function SignUpPage({ searchParams }: PageProps<"/sign-up">
       requireWorkEmail={requireWorkEmail()}
       referral={one(params.ref)}
       source={source}
+      providers={socialProvidersEnabled()}
+      errorMessage={one(params.error) ? SSO_ERROR : undefined}
     />
   );
 }
