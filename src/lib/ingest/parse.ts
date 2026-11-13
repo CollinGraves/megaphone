@@ -78,9 +78,8 @@ export function canonicalizeUrl(raw: string): string {
       if (/^(utm_|ref$|ref_src$|source$|fbclid$|gclid$|mc_cid$|mc_eid$|guccounter)/i.test(key)) u.searchParams.delete(key);
     }
     u.hostname = u.hostname.toLowerCase();
-    let out = u.toString();
-    if (out.endsWith("/") && u.pathname !== "/") out = out.slice(0, -1);
-    return out;
+    if (u.pathname.length > 1 && u.pathname.endsWith("/")) u.pathname = u.pathname.replace(/\/+$/, "");
+    return u.toString();
   } catch {
     return raw.trim();
   }

@@ -6,7 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "typecheck": "next typegen && tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/seed-sources.ts",
+    "db:seed-demo": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/seed-demo.ts",
+    "ingest": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/ingest.ts",
+    "digest": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/send-digests.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
