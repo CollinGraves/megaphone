@@ -1,0 +1,479 @@
+import { AlertTriangle, ArrowRight, BellRing, Download, Pin, Plus, Rocket, ShieldCheck } from "lucide-react";
+import type { Metadata } from "next";
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { ButtonLink, Card, CardBody, CardHeader, EmptyState, PageHeader, Stat } from "@/components/ui";
+import { RISK_TIERS, STAGES, categoryLabel } from "@/lib/taxonomy";
+import { cn, formatNumber, formatUsd, timeAgo } from "@/lib/utils";
+import { getWorkspaceOrNotFound } from "@/lib/workspace";
+import { ActivityFeed } from "./_components/activity-feed";
+import { AccessBadge, HealthBadge, STAGE_BAR, ScorePill, StageBadge, platformLabel } from "./_components/badges";
+import { loadActivity } from "./_lib/activity";
+import { loadOpenAlerts } from "./_lib/alerts";
+import { loadOrgDependencies, systemUsage } from "./_lib/dependencies";
+import { formatPct } from "./_lib/format";
+import { loadPortfolio } from "./_lib/portfolio";
+import { loadRegister, summarizeRegister } from "./governance/data";
+import { TIER_BAR } from "./governance/governance-ui";
+
+export const metadata: Metadata = { title: "Dashboard" };
+
+export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) {
+  const { slug } = await params;
+  const ctx = await getWorkspaceOrNotFound(slug);
+  const base = `/w/${ctx.org.slug}`;
+
+  const [portfolio, deps, alerts, activity, register] = await Promise.all([
+    loadPortfolio(ctx.org),
+    loadOrgDependencies(ctx.org.id),
+    loadOpenAlerts(ctx.org.id, { limit: 20 }),
+    loadActivity(ctx.org.id, { limit: 8 }),
+    loadRegister(ctx.org),
+  ]);
+  const governance = summarizeRegister(register.items);
+  const { items, totals, roiActual, roiEstimated } = portfolio;
+
+  const actions = (
+    <>
+      {ctx.can("export") && items.length > 0 ? (
+        <ButtonLink href={`${base}/export`} variant="secondary" prefetch={false}>
+          <Download className="size-4" /> Export CSV
+        </ButtonLink>
+      ) : null}
+      {ctx.can("initiative:write") ? (
+        <ButtonLink href={`${base}/initiatives/new`}>
+          <Plus className="size-4" /> New initiative
+        </ButtonLink>
+      ) : null}
+    </>
+  );
+
+  if (items.length === 0) {
+    return (
+      <>
+        <PageHeader eyebrow="AI portfolio" title="Dashboard" actions={actions} />
+        <EmptyState
+          icon={<Rocket className="size-8" />}
+          title="No initiatives yet"
+          description="Track every AI initiative in one place — what problem it solves, where it is, what data it needs and the value it delivers."
+          action={
+            ctx.can("initiative:write") ? (
+              <ButtonLink href={`${base}/initiatives/new`}>
+                <Plus className="size-4" /> Add the first initiative
+              </ButtonLink>
+            ) : undefined
+          }
+        />
+      </>
+    );
+  }
+
+  const active = items.filter((i) => i.stage !== "retired");
+  const inProduction = active.filter((i) => i.stage === "production").length;
+  const inPilot = active.filter((i) => i.stage === "pilot").length;
+  const needsAttention = active.filter((i) => i.health !== "on_track").length;
+  const realization = totals.estimatedAnnualUsd > 0 ? totals.actualRunRateUsd / totals.estimatedAnnualUsd : null;
+
+  // Pipeline: counts per stage split by health.
+  const pipeline = STAGES.map((s) => {
+    const inStage = items.filter((i) => i.stage === s.slug);
+    return {
+      ...s,
+      total: inStage.length,
+      on_track: inStage.filter((i) => i.health === "on_track").length,
+      at_risk: inStage.filter((i) => i.health === "at_risk").length,
+      blocked: inStage.filter((i) => i.health === "blocked").length,
+      value: inStage.reduce((sum, i) => sum + i.impact.estimatedAnnualUsd, 0),
+    };
+  });
+  const maxStage = Math.max(1, ...pipeline.map((p) => p.total));
+
+  const platformCounts = new Map<string, number>();
+  for (const i of active) for (const p of i.platforms) platformCounts.set(p, (platformCounts.get(p) ?? 0) + 1);
+  const platformMix = [...platformCounts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+  // One entry per story, listing every affected initiative.
+  const alertStories = [...Map.groupBy(alerts, (a) => a.storySlug).values()].slice(0, 4);
+
+  const top = active.filter((i) => i.rank != null).slice(0, 6);
+
+  const impactRows = active
+    .filter((i) => i.impact.hasEstimate || i.impact.hasActuals)
+    .sort((a, b) => Math.max(b.impact.estimatedAnnualUsd, b.impact.actualRunRateUsd) - Math.max(a.impact.estimatedAnnualUsd, a.impact.actualRunRateUsd))
+    .slice(0, 8);
+  const maxImpact = Math.max(1, ...impactRows.flatMap((i) => [i.impact.estimatedAnnualUsd, i.impact.actualRunRateUsd]));
+
+  const usage = [...systemUsage(deps).values()].sort((a, b) => b.initiativeCount - a.initiativeCount || a.systemName.localeCompare(b.systemName));
+  const hotspots = usage.slice(0, 6);
+  const maxUsage = Math.max(1, ...hotspots.map((h) => h.initiativeCount));
+  const accessIssues = deps
+    .filter((d) => d.accessStatus === "blocked" || d.accessStatus === "requested")
+    .sort((a, b) => (a.accessStatus === b.accessStatus ? 0 : a.accessStatus === "blocked" ? -1 : 1))
+    .slice(0, 6);
+
+  return (
+    <>
+      <PageHeader
+        eyebrow="AI portfolio"
+        title="Dashboard"
+        description={`Every AI initiative across ${ctx.org.name}, regardless of platform — status, value and data readiness at a glance.`}
+        actions={actions}
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat
+          label="Active initiatives"
+          value={active.length}
+          hint={
+            <>
+              {inProduction} in production · {inPilot} in pilot
+              {needsAttention ? <span className="text-amber-700"> · {needsAttention} need attention</span> : null}
+            </>
+          }
+        />
+        <Stat
+          label="Value delivered (annualized)"
+          value={formatUsd(totals.actualRunRateUsd, true)}
+          hint={
+            <>
+              vs {formatUsd(totals.estimatedAnnualUsd, true)} estimated
+              {realization != null ? ` · ${formatPct(realization)} realized` : ""}
+              <br />
+              {formatUsd(totals.actualTrailing12Usd, true)} realized in the last 12 months
+            </>
+          }
+        />
+        <Stat
+          label="Hours saved / year"
+          value={formatNumber(totals.actualRunRateHours, true)}
+          hint={`Run-rate from actuals · ${formatNumber(totals.estimatedAnnualHours, true)} estimated`}
+        />
+        <Stat
+          label="First-year ROI"
+          value={roiActual.roi != null ? formatPct(roiActual.roi) : roiEstimated.roi != null ? formatPct(roiEstimated.roi) : "—"}
+          hint={
+            roiActual.roi != null
+              ? `On actuals across ${roiActual.count} initiative${roiActual.count === 1 ? "" : "s"} with cost data${roiEstimated.roi != null ? ` · ${formatPct(roiEstimated.roi)} projected portfolio-wide` : ""}`
+              : roiEstimated.roi != null
+                ? `Projected from estimates across ${roiEstimated.count} initiatives with cost data`
+                : "Add build and run costs to initiatives to see ROI"
+          }
+        />
+      </div>
+
+      <GovernanceCard base={base} summary={governance} canApprove={ctx.can("governance:approve")} />
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-5 [&>*]:min-w-0">
+        <Card className="xl:col-span-3">
+          <CardHeader title="Pipeline by stage" description="Initiative count per stage, split by health" />
+          <CardBody className="space-y-3">
+            {pipeline.map((p) => (
+              <Link
+                key={p.slug}
+                href={`${base}/initiatives?stage=${p.slug}`}
+                className="group grid grid-cols-[6.5rem_1fr_auto] items-center gap-3 rounded-md text-sm"
+              >
+                <span className="flex items-center gap-2 text-slate-700 group-hover:text-slate-900">
+                  <span className={cn("size-2 rounded-sm", STAGE_BAR[p.slug])} aria-hidden />
+                  {p.label}
+                </span>
+                <span className="flex h-6 overflow-hidden rounded-md bg-slate-50 ring-1 ring-inset ring-slate-100" aria-hidden>
+                  {p.total > 0 ? (
+                    <span className="flex h-full" style={{ width: `${(p.total / maxStage) * 100}%` }}>
+                      {p.slug === "retired" ? (
+                        <span className="h-full grow bg-slate-300" />
+                      ) : (
+                        <>
+                          <span className="h-full bg-radar-500" style={{ flexGrow: p.on_track }} />
+                          <span className="h-full bg-amber-400" style={{ flexGrow: p.at_risk }} />
+                          <span className="h-full bg-red-500" style={{ flexGrow: p.blocked }} />
+                        </>
+                      )}
+                    </span>
+                  ) : null}
+                </span>
+                <span className="w-24 text-right tabular-nums text-slate-900">
+                  <span className="font-semibold">{p.total}</span>
+                  {p.value > 0 ? <span className="ml-1.5 text-xs text-slate-500">{formatUsd(p.value, true)}</span> : null}
+                </span>
+              </Link>
+            ))}
+            <div className="flex flex-wrap gap-4 pt-1 text-xs text-slate-500">
+              <Legend className="bg-radar-500">On track</Legend>
+              <Legend className="bg-amber-400">At risk</Legend>
+              <Legend className="bg-red-500">Blocked</Legend>
+              <span className="ml-auto">$ = estimated annual value</span>
+            </div>
+            {platformMix.length > 0 ? (
+              <div className="border-t border-slate-100 pt-4">
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Platform mix (active initiatives)</h3>
+                <div className="flex flex-wrap gap-2">
+                  {platformMix.map(([slug, n]) => (
+                    <Link
+                      key={slug}
+                      href={`${base}/initiatives?platform=${slug}`}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 hover:border-slate-300"
+                    >
+                      {platformLabel(slug)}
+                      <span className="font-semibold tabular-nums text-slate-900">{n}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </CardBody>
+        </Card>
+
+        <Card className="xl:col-span-2">
+          <CardHeader
+            title="Top priorities"
+            description="Ranked by weighted priority score"
+            action={
+              <Link href={`${base}/initiatives`} className="text-sm font-medium text-radar-700 hover:underline">
+                All
+              </Link>
+            }
+          />
+          <ol className="divide-y divide-slate-100">
+            {top.map((i) => (
+              <li key={i.id}>
+                <Link href={`${base}/initiatives/${i.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50">
+                  <span className="w-6 shrink-0 text-center text-sm font-semibold tabular-nums text-slate-400" title={i.overridden ? "Rank set manually" : undefined}>
+                    {i.rank}
+                    {i.overridden ? <Pin className="mx-auto size-3 text-radar-600" aria-label="pinned" /> : null}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-slate-900">{i.title}</span>
+                    <span className="mt-1 flex flex-wrap items-center gap-1.5">
+                      <StageBadge stage={i.stage} />
+                      {i.health !== "on_track" ? <HealthBadge health={i.health} /> : null}
+                    </span>
+                  </span>
+                  <ScorePill score={i.score} />
+                </Link>
+              </li>
+            ))}
+          </ol>
+          {top.some((i) => i.overridden) ? (
+            <p className="flex items-center gap-1 px-5 pb-3 text-xs text-slate-500">
+              <Pin className="size-3 text-radar-600" /> rank pinned manually
+            </p>
+          ) : null}
+        </Card>
+      </div>
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-5 [&>*]:min-w-0">
+        <Card className="xl:col-span-3">
+          <CardHeader title="Impact by initiative" description="Annualized value: estimate vs. actual run-rate" />
+          <CardBody>
+            {impactRows.length === 0 ? (
+              <p className="text-sm text-slate-500">No impact metrics yet. Add estimated value on an initiative to see it here.</p>
+            ) : (
+              <ul className="space-y-4">
+                {impactRows.map((i) => (
+                  <li key={i.id}>
+                    <div className="flex items-baseline justify-between gap-3 text-sm">
+                      <Link href={`${base}/initiatives/${i.id}`} className="truncate font-medium text-slate-900 hover:text-radar-700 hover:underline">
+                        {i.title}
+                      </Link>
+                      <span className="shrink-0 tabular-nums text-slate-500">
+                        <span className="font-semibold text-slate-900">{i.impact.hasActuals ? formatUsd(i.impact.actualRunRateUsd, true) : "—"}</span> / {formatUsd(i.impact.estimatedAnnualUsd, true)}
+                      </span>
+                    </div>
+                    <div className="mt-1.5 space-y-1" aria-hidden>
+                      <div className="h-2 rounded-full bg-slate-100">
+                        <div className="h-2 rounded-full bg-slate-300" style={{ width: `${(i.impact.estimatedAnnualUsd / maxImpact) * 100}%` }} />
+                      </div>
+                      <div className="h-2 rounded-full bg-slate-100">
+                        <div className="h-2 rounded-full bg-radar-500" style={{ width: `${(i.impact.actualRunRateUsd / maxImpact) * 100}%` }} />
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="mt-4 flex gap-4 text-xs text-slate-500">
+              <Legend className="bg-slate-300">Estimated</Legend>
+              <Legend className="bg-radar-500">Actual (annualized run-rate)</Legend>
+            </div>
+          </CardBody>
+        </Card>
+
+        <Card className="xl:col-span-2">
+          <CardHeader
+            title="Data dependency hotspots"
+            description="Systems of record the portfolio relies on most"
+            action={
+              <Link href={`${base}/systems`} className="text-sm font-medium text-radar-700 hover:underline">
+                Systems
+              </Link>
+            }
+          />
+          <CardBody className="space-y-5">
+            {hotspots.length === 0 ? (
+              <p className="text-sm text-slate-500">No data dependencies recorded yet.</p>
+            ) : (
+              <ul className="space-y-2.5">
+                {hotspots.map((h) => (
+                  <li key={h.systemId} className="grid grid-cols-[7.5rem_1fr_auto] items-center gap-3 text-sm">
+                    <Link href={`${base}/systems/${h.systemId}`} className="truncate font-medium text-slate-800 hover:text-radar-700 hover:underline">
+                      {h.systemName}
+                    </Link>
+                    <span className="h-2 rounded-full bg-slate-100" aria-hidden>
+                      <span className="block h-2 rounded-full bg-ink-700" style={{ width: `${(h.initiativeCount / maxUsage) * 100}%` }} />
+                    </span>
+                    <span className="w-8 text-right tabular-nums text-slate-900">{h.initiativeCount}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {accessIssues.length > 0 ? (
+              <div>
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Access blockers & pending requests</h3>
+                <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200">
+                  {accessIssues.map((d) => (
+                    <li key={d.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                      <div className="min-w-0">
+                        <div className="truncate font-medium text-slate-800">{d.systemName}</div>
+                        <Link href={`${base}/initiatives/${d.initiativeId}`} className="block truncate text-xs text-slate-500 hover:text-radar-700 hover:underline">
+                          {d.initiativeTitle}
+                        </Link>
+                      </div>
+                      <AccessBadge status={d.accessStatus} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </CardBody>
+        </Card>
+      </div>
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-5 [&>*]:min-w-0">
+        <Card className="xl:col-span-3">
+          <CardHeader
+            title="Recent Radar alerts"
+            description="Market news that affects platforms your initiatives run on"
+            action={
+              <Link href={`${base}/alerts`} className="inline-flex items-center gap-1 text-sm font-medium text-radar-700 hover:underline">
+                All alerts <ArrowRight className="size-3.5" />
+              </Link>
+            }
+          />
+          {alerts.length === 0 ? (
+            <CardBody>
+              <p className="flex items-center gap-2 text-sm text-slate-500">
+                <BellRing className="size-4" /> No open alerts. We’ll flag pricing changes, deprecations and security news for your platforms here.
+              </p>
+            </CardBody>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {alertStories.map(([a, ...rest]) => (
+                <li key={a.storySlug} className="px-5 py-3.5">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                    {a.storyCategories.slice(0, 2).map((c) => (
+                      <span key={c} className="font-medium text-amber-700">
+                        {categoryLabel(c)}
+                      </span>
+                    ))}
+                    <span>· {timeAgo(a.storyPublishedAt)}</span>
+                  </div>
+                  <Link href={`/radar/${a.storySlug}`} className="mt-0.5 block text-sm font-medium text-slate-900 hover:text-radar-700 hover:underline">
+                    {a.storyTitle}
+                  </Link>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Affects{" "}
+                    {[a, ...rest].map((x, idx) => (
+                      <span key={x.id}>
+                        {idx > 0 ? ", " : ""}
+                        <Link href={`${base}/initiatives/${x.initiativeId}`} className="font-medium text-slate-700 hover:underline">
+                          {x.initiativeTitle}
+                        </Link>
+                      </span>
+                    ))}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+
+        <Card className="xl:col-span-2">
+          <CardHeader title="Recent activity" />
+          <CardBody>
+            <ActivityFeed rows={activity} slug={ctx.org.slug} />
+          </CardBody>
+        </Card>
+      </div>
+    </>
+  );
+}
+
+function Legend({ className, children }: { className: string; children: ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className={cn("size-2 rounded-sm", className)} aria-hidden />
+      {children}
+    </span>
+  );
+}
+
+function GovernanceCard({ base, summary, canApprove }: { base: string; summary: ReturnType<typeof summarizeRegister>; canApprove: boolean }) {
+  const total = Math.max(1, summary.total);
+  const classified = summary.total - (summary.byTier.unclassified ?? 0);
+  return (
+    <Card className="mt-6">
+      <div className="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:gap-8">
+        <div className="min-w-0 lg:w-80 lg:shrink-0">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+              <ShieldCheck className="size-4 text-radar-600" /> AI governance
+            </h2>
+            <span className="text-xs text-slate-500">
+              {classified}/{summary.total} classified
+            </span>
+          </div>
+          <Link href={`${base}/governance`} className="mt-2 flex h-2.5 overflow-hidden rounded-full bg-slate-100" aria-label="Risk tier mix">
+            {RISK_TIERS.map((t) =>
+              summary.byTier[t.slug] ? (
+                <span key={t.slug} className={cn("h-full", TIER_BAR[t.slug])} style={{ width: `${(summary.byTier[t.slug] / total) * 100}%` }} title={`${t.label}: ${summary.byTier[t.slug]}`} />
+              ) : null,
+            )}
+          </Link>
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500">
+            {RISK_TIERS.filter((t) => summary.byTier[t.slug]).map((t) => (
+              <Legend key={t.slug} className={TIER_BAR[t.slug]}>
+                {t.label.replace(" risk", "")} <span className="font-semibold tabular-nums text-slate-800">{summary.byTier[t.slug]}</span>
+              </Legend>
+            ))}
+          </div>
+        </div>
+        <dl className="grid flex-1 grid-cols-3 gap-3 text-sm">
+          <GovernanceFigure label={canApprove ? "Awaiting your review" : "Pending reviews"} value={summary.pending} tone={summary.pending ? "amber" : undefined} href={`${base}/governance?status=pending`} />
+          <GovernanceFigure label="Needs attention" value={summary.needsAttention} tone={summary.needsAttention ? "amber" : undefined} href={`${base}/governance?attention=1`} />
+          <GovernanceFigure label="Reviews overdue" value={summary.overdue} tone={summary.overdue ? "red" : undefined} href={`${base}/governance?issue=review_overdue`} />
+        </dl>
+        <Link href={`${base}/governance`} className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-radar-700 hover:underline">
+          Use-case register <ArrowRight className="size-3.5" />
+        </Link>
+      </div>
+    </Card>
+  );
+}
+
+function GovernanceFigure({ label, value, href, tone }: { label: string; value: number; href: string; tone?: "amber" | "red" }) {
+  return (
+    <Link href={href} className="min-w-0 rounded-lg px-2 py-1 hover:bg-slate-50">
+      <dt className="text-xs leading-tight text-slate-500">{label}</dt>
+      <dd
+        className={cn(
+          "mt-0.5 flex items-center gap-1 text-xl font-semibold tabular-nums",
+          tone === "red" ? "text-red-700" : tone === "amber" ? "text-amber-700" : "text-slate-900",
+        )}
+      >
+        {value}
+        {tone && value > 0 ? <AlertTriangle className="size-3.5" aria-hidden /> : null}
+      </dd>
+    </Link>
+  );
+}

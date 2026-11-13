@@ -1,0 +1,1 @@
+CREATE INDEX "user_company_domain_idx" ON "user" USING btree ("company_domain");
