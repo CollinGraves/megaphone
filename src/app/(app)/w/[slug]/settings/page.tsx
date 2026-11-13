@@ -1,3 +1,5 @@
+import { GovernanceSettings } from "./governance-settings";
+import { IntakeSettings } from "./intake-settings";
 import { and, asc, desc, eq, gt, isNull } from "drizzle-orm";
 import type { Metadata } from "next";
 import { ActionForm, ConfirmSubmit, SubmitButton } from "@/components/forms";
@@ -282,6 +284,11 @@ export default async function SettingsPage({ params }: PageProps<"/w/[slug]/sett
           </Card>
         </div>
       ) : null}
+
+      <div className="mt-6 space-y-6">
+        <GovernanceSettings ctx={ctx} />
+        <IntakeSettings ctx={ctx} />
+      </div>
     </>
   );
 }

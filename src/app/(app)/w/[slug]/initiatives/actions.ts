@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
@@ -20,7 +20,7 @@ import {
   systemCategory,
   systems,
 } from "@/db/schema";
-import { ACCESS_STATUSES, HEALTH, STAGES, labelFrom } from "@/lib/taxonomy";
+import { ACCESS_STATUSES, HEALTH, STAGES, TRIAL_INITIATIVE_LIMIT, labelFrom } from "@/lib/taxonomy";
 import { strs, type ActionState } from "@/lib/utils";
 import { logActivity } from "@/lib/workspace";
 import { PLATFORM_OPTIONS } from "../_components/badges";
@@ -152,6 +152,17 @@ export async function saveInitiative(_prev: ActionState, form: FormData): Promis
       if (changes.length) await logActivity(ctx, "initiative.updated", { title: values.title, changes }, existing.id);
       initiativeId = existing.id;
     } else {
+      if (ctx.org.plan === "trial") {
+        const [{ n }] = await db
+          .select({ n: sql<number>`count(*)::int` })
+          .from(initiatives)
+          .where(and(eq(initiatives.orgId, ctx.org.id), isNull(initiatives.archivedAt)));
+        if (n >= TRIAL_INITIATIVE_LIMIT) {
+          return {
+            error: `Free workspaces can track up to ${TRIAL_INITIATIVE_LIMIT} initiatives. Talk to North Labs to unlock your full AI portfolio.`,
+          };
+        }
+      }
       const [created] = await db
         .insert(initiatives)
         .values({ ...values, orgId: ctx.org.id, createdById: ctx.user.id })

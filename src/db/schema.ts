@@ -269,6 +269,30 @@ export const leadProfiles = pgTable("lead_profiles", {
   updatedAt: updatedAt(),
 });
 
+/** Free AI readiness assessment (public lead magnet). Anonymous until claimed by a signed-in user. */
+export const assessments = pgTable(
+  "assessments",
+  {
+    id: id(),
+    /** Secret used to claim an anonymous assessment after sign-up. */
+    claimToken: text("claim_token").notNull().unique(),
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+    /** questionId -> chosen option index */
+    answers: jsonb("answers").$type<Record<string, number>>().notNull(),
+    /** Company context: industry, size, role, functions, tools in use. */
+    context: jsonb("context").$type<Record<string, unknown>>().notNull(),
+    /** Per-dimension 0–100 scores plus "overall". */
+    scores: jsonb("scores").$type<Record<string, number>>().notNull(),
+    level: text("level").notNull(),
+    /** Starter workspace created from the results, if any. */
+    orgId: text("org_id").references(() => organizations.id, { onDelete: "set null" }),
+    source: text("source"),
+    createdAt: createdAt(),
+    claimedAt: timestamp("claimed_at", { withTimezone: true }),
+  },
+  (t) => [index("assessments_user_idx").on(t.userId)],
+);
+
 /** "Talk to North Labs" form submissions (public site). */
 export const contactRequests = pgTable("contact_requests", {
   id: id(),
@@ -440,6 +464,13 @@ export const orgPlan = pgEnum("org_plan", ["engagement", "trial", "pro", "enterp
 export const orgStatus = pgEnum("org_status", ["active", "suspended"]);
 export const orgRole = pgEnum("org_role", ["owner", "admin", "editor", "viewer"]);
 
+export type GovernancePolicy = {
+  /** Initiatives can't move into these stages until their governance review is approved. */
+  approvalRequiredStages: ("pilot" | "production")[];
+  /** Approved initiatives are due for re-review after this many months. */
+  reviewIntervalMonths: number;
+};
+
 export type ScoringWeights = {
   value: number;
   feasibility: number;
@@ -460,6 +491,15 @@ export const organizations = pgTable("organizations", {
     .$type<ScoringWeights>()
     .notNull()
     .default({ value: 0.4, feasibility: 0.3, alignment: 0.2, risk: 0.1 }),
+  /** Governance policy: which stages require an approved review, and how often approvals are re-reviewed. */
+  governancePolicy: jsonb("governance_policy")
+    .$type<GovernancePolicy>()
+    .notNull()
+    .default({ approvalRequiredStages: [], reviewIntervalMonths: 12 }),
+  /** Secret token for the shareable idea-intake link (/intake/<token>). Null = link disabled. */
+  intakeToken: text("intake_token").unique(),
+  /** Email domains allowed to submit ideas through the intake link (e.g. ["acme.com"]). Empty = any work email. */
+  intakeAllowedDomains: text("intake_allowed_domains").array().notNull().default(sql`'{}'::text[]`),
   // Reserved for self-service billing
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
@@ -559,6 +599,9 @@ export const initiativeStage = pgEnum("initiative_stage", [
   "production",
   "retired",
 ]);
+export const riskTier = pgEnum("risk_tier", ["unclassified", "minimal", "limited", "high", "prohibited"]);
+export const humanOversight = pgEnum("human_oversight", ["none", "spot_check", "review_all", "human_decides"]);
+export const approvalStatus = pgEnum("approval_status", ["not_submitted", "pending", "approved", "conditional", "rejected"]);
 export const initiativeHealth = pgEnum("initiative_health", ["on_track", "at_risk", "blocked"]);
 export const buildApproach = pgEnum("build_approach", ["buy", "configure", "build", "partner"]);
 
@@ -594,6 +637,22 @@ export const initiatives = pgTable(
     targetDate: date("target_date"),
     launchedAt: date("launched_at"),
     tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
+    // ── Governance ──
+    riskTier: riskTier("risk_tier").notNull().default("unclassified"),
+    customerFacing: boolean("customer_facing"),
+    /** Makes or informs decisions about individuals (hiring, credit, health, education, benefits…). */
+    affectsIndividuals: boolean("affects_individuals"),
+    humanOversight: humanOversight("human_oversight"),
+    approvalStatus: approvalStatus("approval_status").notNull().default("not_submitted"),
+    approvalRequestedAt: timestamp("approval_requested_at", { withTimezone: true }),
+    approvalRequestedById: text("approval_requested_by_id").references(() => user.id, { onDelete: "set null" }),
+    approvalDecidedAt: timestamp("approval_decided_at", { withTimezone: true }),
+    approvalDecidedById: text("approval_decided_by_id").references(() => user.id, { onDelete: "set null" }),
+    approvalConditions: text("approval_conditions"),
+    reviewDueOn: date("review_due_on"),
+    governanceNotes: text("governance_notes"),
+    /** The idea this initiative was converted from, if any. */
+    sourceIdeaId: text("source_idea_id"),
     createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     createdAt: createdAt(),
@@ -716,6 +775,46 @@ export const activityLog = pgTable(
   (t) => [index("activity_org_idx").on(t.orgId, t.createdAt)],
 );
 
+export const ideaStatus = pgEnum("idea_status", ["new", "under_review", "accepted", "declined", "duplicate"]);
+export const ideaUrgency = pgEnum("idea_urgency", ["low", "medium", "high"]);
+
+/** Ideas submitted by employees (inside the workspace or via the shareable intake link), triaged into initiatives. */
+export const ideas = pgTable(
+  "ideas",
+  {
+    id: id(),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    problem: text("problem").notNull(),
+    desiredOutcome: text("desired_outcome"),
+    department: text("department"),
+    /** How often the task happens, e.g. "daily", "weekly". */
+    frequency: text("frequency"),
+    peopleAffected: integer("people_affected"),
+    /** Rough time spent on the task today, per person per week. */
+    hoursPerWeek: doublePrecision("hours_per_week"),
+    systemsInvolved: text("systems_involved"),
+    urgency: ideaUrgency("urgency").notNull().default("medium"),
+    submitterName: text("submitter_name").notNull(),
+    submitterEmail: text("submitter_email").notNull(),
+    submittedById: text("submitted_by_id").references(() => user.id, { onDelete: "set null" }),
+    /** "workspace" (signed-in member) or "intake_link". */
+    channel: text("channel").notNull().default("workspace"),
+    status: ideaStatus("status").notNull().default("new"),
+    triageNotes: text("triage_notes"),
+    declineReason: text("decline_reason"),
+    triagedById: text("triaged_by_id").references(() => user.id, { onDelete: "set null" }),
+    triagedAt: timestamp("triaged_at", { withTimezone: true }),
+    initiativeId: text("initiative_id").references(() => initiatives.id, { onDelete: "set null" }),
+    duplicateOfId: text("duplicate_of_id"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("ideas_org_status_idx").on(t.orgId, t.status)],
+);
+
 /** Radar stories that affect a specific initiative (vendor overlap on high-signal categories). */
 export const initiativeAlerts = pgTable(
   "initiative_alerts",
@@ -790,6 +889,8 @@ export type Story = typeof stories.$inferSelect;
 export type Source = typeof sources.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;
 export type Initiative = typeof initiatives.$inferSelect;
+export type Idea = typeof ideas.$inferSelect;
+export type Assessment = typeof assessments.$inferSelect;
 export type System = typeof systems.$inferSelect;
 export type ImpactMetric = typeof impactMetrics.$inferSelect;
 export type ImpactMeasurement = typeof impactMeasurements.$inferSelect;

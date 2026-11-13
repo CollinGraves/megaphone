@@ -16,14 +16,17 @@ export const CAPABILITIES = [
   "members:manage",
   "settings:manage",
   "export",
+  "ideas:submit",
+  "ideas:triage",
+  "governance:approve",
 ] as const;
 export type Capability = (typeof CAPABILITIES)[number];
 
 const ROLE_RANK: Record<OrgRole, number> = { viewer: 0, editor: 1, admin: 2, owner: 3 };
 
 const ROLE_CAPABILITIES: Record<OrgRole, readonly Capability[]> = {
-  viewer: ["workspace:view", "comment:write", "export"],
-  editor: ["workspace:view", "comment:write", "export", "initiative:write", "system:write", "impact:write"],
+  viewer: ["workspace:view", "comment:write", "export", "ideas:submit"],
+  editor: ["workspace:view", "comment:write", "export", "ideas:submit", "ideas:triage", "initiative:write", "system:write", "impact:write"],
   admin: [
     "workspace:view",
     "comment:write",
@@ -34,6 +37,9 @@ const ROLE_CAPABILITIES: Record<OrgRole, readonly Capability[]> = {
     "impact:write",
     "members:manage",
     "settings:manage",
+    "ideas:submit",
+    "ideas:triage",
+    "governance:approve",
   ],
   owner: CAPABILITIES,
 };

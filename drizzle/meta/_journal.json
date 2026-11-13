@@ -43,6 +43,13 @@
       "when": 1794592773748,
       "tag": "0005_wild_doorman",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794593881823,
+      "tag": "0006_wet_king_cobra",
+      "breakpoints": true
     }
   ]
 }

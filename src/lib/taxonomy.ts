@@ -161,3 +161,47 @@ export const ORG_ROLES = [
 
 export const labelFrom = (list: readonly { slug: string; label: string }[], slug: string | null | undefined) =>
   list.find((o) => o.slug === slug)?.label ?? slug ?? "—";
+
+/* ───────────────────────────── Governance ───────────────────────────── */
+
+export const RISK_TIERS = [
+  { slug: "unclassified", label: "Unclassified", description: "Not yet assessed" },
+  { slug: "minimal", label: "Minimal risk", description: "Internal productivity, no decisions about people, no sensitive data" },
+  { slug: "limited", label: "Limited risk", description: "Customer-facing or generated content; needs transparency to users" },
+  { slug: "high", label: "High risk", description: "Decisions affecting people's rights, safety, employment, credit, health or education" },
+  { slug: "prohibited", label: "Prohibited", description: "Uses the company (or regulation) does not allow" },
+] as const;
+
+export const HUMAN_OVERSIGHT_LEVELS = [
+  { slug: "none", label: "Fully automated" },
+  { slug: "spot_check", label: "Spot-checked by people" },
+  { slug: "review_all", label: "Every output reviewed" },
+  { slug: "human_decides", label: "AI assists, a person decides" },
+] as const;
+
+export const APPROVAL_STATUSES = [
+  { slug: "not_submitted", label: "Not submitted" },
+  { slug: "pending", label: "Pending review" },
+  { slug: "approved", label: "Approved" },
+  { slug: "conditional", label: "Approved with conditions" },
+  { slug: "rejected", label: "Not approved" },
+] as const;
+
+/* ───────────────────────────── Idea intake ───────────────────────────── */
+
+export const IDEA_STATUSES = [
+  { slug: "new", label: "New" },
+  { slug: "under_review", label: "Under review" },
+  { slug: "accepted", label: "Accepted" },
+  { slug: "declined", label: "Declined" },
+  { slug: "duplicate", label: "Duplicate" },
+] as const;
+
+export const IDEA_URGENCY = [
+  { slug: "low", label: "Nice to have" },
+  { slug: "medium", label: "Important" },
+  { slug: "high", label: "Urgent" },
+] as const;
+
+/** Free "trial" workspaces (e.g. created from the readiness assessment) are capped. */
+export const TRIAL_INITIATIVE_LIMIT = 5;

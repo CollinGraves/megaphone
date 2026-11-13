@@ -23,6 +23,7 @@ import { loadMetrics, loadPortfolio, rollupFor } from "../../_lib/portfolio";
 import { listSystems } from "../../_lib/queries";
 import { addComment, deleteComment, deleteInitiative, setArchived } from "../actions";
 import { DependenciesSection } from "./dependencies-section";
+import { GovernanceSection } from "./governance-section";
 import { ImpactSection } from "./impact-section";
 
 async function loadInitiative(orgId: string, id: string) {
@@ -161,6 +162,14 @@ export default async function InitiativePage({ params }: PageProps<"/w/[slug]/in
             systems={orgSystems}
             canEdit={canEdit}
             canCreateSystem={ctx.can("system:write")}
+          />
+
+          <GovernanceSection
+            slug={ctx.org.slug}
+            org={ctx.org}
+            initiative={initiative}
+            canEdit={canEdit}
+            canApprove={ctx.can("governance:approve")}
           />
 
           <Card>
