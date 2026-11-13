@@ -112,6 +112,13 @@ src/
 The model defaults to `claude-opus-5-5` at low effort, with server-side refusal fallbacks enabled. Override it with
 `AI_RADAR_MODEL`; for high-volume ingestion, Claude Haiku 5.5 (`claude-haiku-5-5`) is much cheaper.
 
+**Build briefs** (`/w/<slug>/initiatives/<id>/build`) turn an initiative into a build plan: options compared against the
+company's existing stack, a recommended path, data plan, a draft system prompt, test cases, risks, rollout and
+developer tickets (Markdown and Jira CSV downloads). Generation runs after the request returns (`after()`) at medium
+effort, and uses `AI_RADAR_BRIEF_MODEL` if set. Without an API key a deterministic template brief is produced
+instead. Monthly allowances: Free 3, Team 15, Business 60, managed unlimited. Coding agents fetch the brief with
+`workspace_get_build_spec` and report back with `workspace_report_progress` over MCP.
+
 Source health (last success, errors, consecutive failures) is visible in **Admin → Sources**. Some publishers
 (e.g. Reddit, The Verge, Wired) block some cloud IP ranges. Those sources show up as failing rather than being silently
 dropped.
@@ -235,6 +242,8 @@ Tools:
 | `workspace_list_ideas`, `workspace_radar_alerts`, `workspace_governance_register` | workspace key |
 | `workspace_submit_idea` | workspace key, read-write, `ideas:submit` |
 | `workspace_record_impact` | workspace key, read-write, `impact:write` |
+| `workspace_get_build_spec` (latest build brief as Markdown or JSON) | workspace key |
+| `workspace_report_progress` (post a build update, optionally change stage under the governance policy) | workspace key, read-write, `initiative:write` |
 
 Connect from Claude Code with
 `claude mcp add --transport http ai-radar https://<app>/api/mcp --header "Authorization: Bearer radar_…"`, or from

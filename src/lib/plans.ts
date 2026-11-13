@@ -26,6 +26,8 @@ export type PlanDefinition = {
   tagline: string;
   /** null = unlimited */
   initiativeLimit: number | null;
+  /** AI build briefs per rolling 30 days (each costs model usage); null = unlimited. */
+  briefsPerMonth: number | null;
   features: readonly Feature[];
   /** USD list prices; null for Free / custom. */
   monthlyPrice: number | null;
@@ -41,11 +43,13 @@ export const PLANS = {
     name: "Free",
     tagline: "Get your first AI initiatives organized.",
     initiativeLimit: 5,
+    briefsPerMonth: 3,
     features: [],
     monthlyPrice: 0,
     annualPrice: 0,
     highlights: [
       "Up to 5 initiatives",
+      "3 AI build briefs / month",
       "Impact tracking and prioritization",
       "Systems & data dependencies",
       "Radar alerts for your stack",
@@ -58,11 +62,13 @@ export const PLANS = {
     name: "Team",
     tagline: "Run your company's AI portfolio in one place.",
     initiativeLimit: 25,
+    briefsPerMonth: 15,
     features: ["intake_link", "export_csv", "mcp_workspace"],
     monthlyPrice: 399,
     annualPrice: 3990,
     highlights: [
       "Up to 25 initiatives",
+      "15 AI build briefs / month",
       "Everything in Free",
       "Company-wide idea intake link",
       "Portfolio CSV export",
@@ -74,11 +80,13 @@ export const PLANS = {
     name: "Business",
     tagline: "Govern and scale AI across the company.",
     initiativeLimit: null,
+    briefsPerMonth: 60,
     features: ALL,
     monthlyPrice: 999,
     annualPrice: 9990,
     highlights: [
       "Unlimited initiatives",
+      "60 AI build briefs / month",
       "Everything in Team",
       "Governance approvals & review reminders",
       "Approval gate before pilot / production",
@@ -91,6 +99,7 @@ export const PLANS = {
     name: "Managed by North Labs",
     tagline: "The easy button: we run it with you.",
     initiativeLimit: null,
+    briefsPerMonth: null,
     features: ALL,
     monthlyPrice: null,
     annualPrice: null,
@@ -193,3 +202,6 @@ export function featureGateMessage(dbPlan: DbPlan | string, feature: Feature): s
   const needed = planForFeature(feature);
   return `${FEATURE_LABELS[feature].name} is available on the ${needed.name} plan and above. This workspace is on ${planFor(dbPlan).name}; an owner or admin can upgrade in Plan & billing.`;
 }
+
+/** Briefs allowed per rolling 30 days, or null for unlimited. */
+export const briefsPerMonth = (dbPlan: DbPlan | string) => planFor(dbPlan).briefsPerMonth;

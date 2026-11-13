@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import { ActionForm, ConfirmSubmit, SubmitButton } from "@/components/forms";
 import { Alert, Badge, ButtonLink, Card, CardBody, CardHeader, Textarea } from "@/components/ui";
 import { db } from "@/db";
-import { comments, dataDependencies, initiatives, systems, user } from "@/db/schema";
+import { buildBriefs, comments, dataDependencies, initiatives, systems, user } from "@/db/schema";
 import { firstYearCost } from "@/lib/impact";
 import { scoreBreakdown } from "@/lib/scoring";
 import { BUILD_APPROACHES, labelFrom } from "@/lib/taxonomy";
@@ -50,7 +50,7 @@ export default async function InitiativePage({ params }: PageProps<"/w/[slug]/in
   const base = `/w/${ctx.org.slug}`;
   const canEdit = ctx.can("initiative:write");
 
-  const [portfolio, deps, orgSystems, alerts, thread, activity] = await Promise.all([
+  const [portfolio, deps, orgSystems, alerts, thread, activity, [latestBrief]] = await Promise.all([
     loadPortfolio(ctx.org),
     db
       .select({
@@ -76,6 +76,12 @@ export default async function InitiativePage({ params }: PageProps<"/w/[slug]/in
       .where(eq(comments.initiativeId, initiative.id))
       .orderBy(desc(comments.createdAt)),
     loadActivity(ctx.org.id, { initiativeId: initiative.id, limit: 15 }),
+    db
+      .select({ version: buildBriefs.version, status: buildBriefs.status, createdAt: buildBriefs.createdAt })
+      .from(buildBriefs)
+      .where(eq(buildBriefs.initiativeId, initiative.id))
+      .orderBy(desc(buildBriefs.version))
+      .limit(1),
   ]);
 
   const item = portfolio.items.find((i) => i.id === initiative.id);
@@ -268,6 +274,22 @@ export default async function InitiativePage({ params }: PageProps<"/w/[slug]/in
                 </Link>
                 .
               </p>
+            </CardBody>
+          </Card>
+
+          <Card className="border-radar-200 bg-radar-50/40">
+            <CardHeader
+              title="Build plan"
+              description={
+                latestBrief
+                  ? `Brief v${latestBrief.version} · ${latestBrief.status === "ready" ? `updated ${timeAgo(latestBrief.createdAt)}` : latestBrief.status}`
+                  : "Turn this into something working: options, data plan, prompt, tests and tickets."
+              }
+            />
+            <CardBody>
+              <ButtonLink href={`/w/${ctx.org.slug}/initiatives/${initiative.id}/build`} variant={latestBrief ? "secondary" : "primary"} size="sm" className="w-full">
+                {latestBrief ? "Open build plan" : "Create a build plan"}
+              </ButtonLink>
             </CardBody>
           </Card>
 

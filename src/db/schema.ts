@@ -866,6 +866,59 @@ export const ideas = pgTable(
   ],
 );
 
+export const briefStatus = pgEnum("brief_status", ["generating", "ready", "failed"]);
+
+/** AI-generated build briefs for an initiative (versioned; latest = highest version). */
+export const buildBriefs = pgTable(
+  "build_briefs",
+  {
+    id: id(),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    initiativeId: text("initiative_id")
+      .notNull()
+      .references(() => initiatives.id, { onDelete: "cascade" }),
+    version: integer("version").notNull(),
+    status: briefStatus("status").notNull().default("generating"),
+    /** Structured brief (see src/lib/build/schema.ts). Null while generating or on failure. */
+    content: jsonb("content").$type<Record<string, unknown>>(),
+    /** "claude-…" or "template" (no API key configured). */
+    generator: text("generator"),
+    error: text("error"),
+    /** Optional extra guidance from the requester (e.g. "must run inside Teams"). */
+    guidance: text("guidance"),
+    createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (t) => [uniqueIndex("build_briefs_version_idx").on(t.initiativeId, t.version), index("build_briefs_org_idx").on(t.orgId, t.createdAt)],
+);
+
+export const buildUpdateStatus = pgEnum("build_update_status", ["planned", "in_progress", "blocked", "done"]);
+
+/** Build progress reported by people or by coding agents over MCP. */
+export const buildUpdates = pgTable(
+  "build_updates",
+  {
+    id: id(),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    initiativeId: text("initiative_id")
+      .notNull()
+      .references(() => initiatives.id, { onDelete: "cascade" }),
+    status: buildUpdateStatus("status").notNull(),
+    message: text("message").notNull(),
+    link: text("link"),
+    /** "mcp" or "app". */
+    source: text("source").notNull().default("app"),
+    createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("build_updates_initiative_idx").on(t.initiativeId, t.createdAt)],
+);
+
 /** Radar stories that affect a specific initiative (vendor overlap on high-signal categories). */
 export const initiativeAlerts = pgTable(
   "initiative_alerts",
