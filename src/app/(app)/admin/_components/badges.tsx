@@ -35,7 +35,7 @@ export function ScoreBadge({ score, className }: { score: LeadScore; className?:
     <span
       title={title}
       className={cn(
-        "inline-flex min-w-12 items-center justify-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums ring-1 ring-inset",
+        "relative inline-flex min-w-12 items-center justify-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums ring-1 ring-inset",
         TIER_STYLES[score.tier],
         className,
       )}

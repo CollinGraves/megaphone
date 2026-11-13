@@ -1,4 +1,5 @@
-import { aliasedTable, and, desc, eq, ilike, inArray, isNotNull, isNull, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, isNotNull, isNull, or, sql, type SQL } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import {
   contactRequests,
@@ -292,8 +293,8 @@ const latest = (...dates: (Date | null)[]) =>
  * aggregates engagement per (user, type) in SQL. Scores are then computed in memory.
  */
 export async function listLeads(filters: LeadFilters & { userIds?: string[] } = {}, now: Date = new Date()): Promise<LeadRow[]> {
-  const owner = aliasedTable(user, "owner");
-  const crUser = aliasedTable(user, "cr_user");
+  const owner = alias(user, "owner");
+  const crUser = alias(user, "cr_user");
 
   const cr = db
     .select({

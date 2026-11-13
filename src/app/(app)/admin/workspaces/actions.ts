@@ -57,8 +57,18 @@ function revalidateOrg(orgId: string, slug?: string) {
 
 /* ───────────────────────────── Provisioning ───────────────────────────── */
 
+export type ProvisionValues = {
+  industry: string;
+  plan: string;
+  defaultHourlyRate: string;
+  ownerEmail: string;
+  consultantIds: string[];
+};
+
 export type ProvisionState = {
   error?: string;
+  /** Echoed back on error so the form keeps what was typed (React resets forms after an action). */
+  values?: ProvisionValues;
   org?: { id: string; name: string; slug: string };
   invite?: { email: string; status: "added" | "invited"; url?: string };
   inviteError?: string;
@@ -76,20 +86,24 @@ const provisionSchema = z.object({
 
 export async function provisionWorkspace(_prev: ProvisionState, form: FormData): Promise<ProvisionState> {
   const me = await requirePlatformAdmin();
-  const parsed = provisionSchema.safeParse({
-    name: form.get("name") ?? "",
-    slug: form.get("slug") ?? "",
-    industry: form.get("industry") ?? "",
-    plan: form.get("plan"),
-    defaultHourlyRate: form.get("defaultHourlyRate") || 75,
+  const values: ProvisionValues = {
+    industry: String(form.get("industry") ?? ""),
+    plan: String(form.get("plan") ?? ""),
+    defaultHourlyRate: String(form.get("defaultHourlyRate") ?? ""),
     ownerEmail: String(form.get("ownerEmail") ?? "").trim(),
     consultantIds: form.getAll("consultantIds").filter((v): v is string => typeof v === "string"),
+  };
+  const parsed = provisionSchema.safeParse({
+    ...values,
+    name: form.get("name") ?? "",
+    slug: form.get("slug") ?? "",
+    defaultHourlyRate: values.defaultHourlyRate || 75,
   });
-  if (!parsed.success) return { error: firstIssue(parsed.error) };
+  if (!parsed.success) return { error: firstIssue(parsed.error), values };
   const input = parsed.data;
 
   const [taken] = await db.select({ id: organizations.id }).from(organizations).where(eq(organizations.slug, input.slug)).limit(1);
-  if (taken) return { error: `The slug “${input.slug}” is already in use.` };
+  if (taken) return { error: `The slug “${input.slug}” is already in use.`, values };
 
   const consultants = await staffConsultantIds(input.consultantIds);
   const org = await db.transaction(async (tx) => {

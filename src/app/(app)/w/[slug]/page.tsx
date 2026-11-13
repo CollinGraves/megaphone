@@ -1,4 +1,4 @@
-import { ArrowRight, BellRing, Download, Plus, Rocket } from "lucide-react";
+import { ArrowRight, BellRing, Download, Pin, Plus, Rocket } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -7,7 +7,7 @@ import { STAGES, categoryLabel } from "@/lib/taxonomy";
 import { cn, formatNumber, formatUsd, timeAgo } from "@/lib/utils";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { ActivityFeed } from "./_components/activity-feed";
-import { AccessBadge, HealthBadge, STAGE_BAR, ScorePill, StageBadge } from "./_components/badges";
+import { AccessBadge, HealthBadge, STAGE_BAR, ScorePill, StageBadge, platformLabel } from "./_components/badges";
 import { loadActivity } from "./_lib/activity";
 import { loadOpenAlerts } from "./_lib/alerts";
 import { loadOrgDependencies, systemUsage } from "./_lib/dependencies";
@@ -24,7 +24,7 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
   const [portfolio, deps, alerts, activity] = await Promise.all([
     loadPortfolio(ctx.org),
     loadOrgDependencies(ctx.org.id),
-    loadOpenAlerts(ctx.org.id, { limit: 4 }),
+    loadOpenAlerts(ctx.org.id, { limit: 20 }),
     loadActivity(ctx.org.id, { limit: 8 }),
   ]);
   const { items, totals, roiActual, roiEstimated } = portfolio;
@@ -83,6 +83,13 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
     };
   });
   const maxStage = Math.max(1, ...pipeline.map((p) => p.total));
+
+  const platformCounts = new Map<string, number>();
+  for (const i of active) for (const p of i.platforms) platformCounts.set(p, (platformCounts.get(p) ?? 0) + 1);
+  const platformMix = [...platformCounts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+  // One entry per story, listing every affected initiative.
+  const alertStories = [...Map.groupBy(alerts, (a) => a.storySlug).values()].slice(0, 4);
 
   const top = active.filter((i) => i.rank != null).slice(0, 6);
 
@@ -167,9 +174,15 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
                 <span className="flex h-6 overflow-hidden rounded-md bg-slate-50 ring-1 ring-inset ring-slate-100" aria-hidden>
                   {p.total > 0 ? (
                     <span className="flex h-full" style={{ width: `${(p.total / maxStage) * 100}%` }}>
-                      <span className="h-full bg-radar-500" style={{ flexGrow: p.on_track }} />
-                      <span className="h-full bg-amber-400" style={{ flexGrow: p.at_risk }} />
-                      <span className="h-full bg-red-500" style={{ flexGrow: p.blocked }} />
+                      {p.slug === "retired" ? (
+                        <span className="h-full grow bg-slate-300" />
+                      ) : (
+                        <>
+                          <span className="h-full bg-radar-500" style={{ flexGrow: p.on_track }} />
+                          <span className="h-full bg-amber-400" style={{ flexGrow: p.at_risk }} />
+                          <span className="h-full bg-red-500" style={{ flexGrow: p.blocked }} />
+                        </>
+                      )}
                     </span>
                   ) : null}
                 </span>
@@ -185,6 +198,23 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
               <Legend className="bg-red-500">Blocked</Legend>
               <span className="ml-auto">$ = estimated annual value</span>
             </div>
+            {platformMix.length > 0 ? (
+              <div className="border-t border-slate-100 pt-4">
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Platform mix (active initiatives)</h3>
+                <div className="flex flex-wrap gap-2">
+                  {platformMix.map(([slug, n]) => (
+                    <Link
+                      key={slug}
+                      href={`${base}/initiatives?platform=${slug}`}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 hover:border-slate-300"
+                    >
+                      {platformLabel(slug)}
+                      <span className="font-semibold tabular-nums text-slate-900">{n}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </CardBody>
         </Card>
 
@@ -204,7 +234,7 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
                 <Link href={`${base}/initiatives/${i.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50">
                   <span className="w-6 shrink-0 text-center text-sm font-semibold tabular-nums text-slate-400" title={i.overridden ? "Rank set manually" : undefined}>
                     {i.rank}
-                    {i.overridden ? <span className="text-radar-600">*</span> : null}
+                    {i.overridden ? <Pin className="mx-auto size-3 text-radar-600" aria-label="pinned" /> : null}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-slate-900">{i.title}</span>
@@ -218,7 +248,11 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
               </li>
             ))}
           </ol>
-          {top.some((i) => i.overridden) ? <p className="px-5 pb-3 text-xs text-slate-500">* rank set manually</p> : null}
+          {top.some((i) => i.overridden) ? (
+            <p className="flex items-center gap-1 px-5 pb-3 text-xs text-slate-500">
+              <Pin className="size-3 text-radar-600" /> rank pinned manually
+            </p>
+          ) : null}
         </Card>
       </div>
 
@@ -328,8 +362,8 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
             </CardBody>
           ) : (
             <ul className="divide-y divide-slate-100">
-              {alerts.map((a) => (
-                <li key={a.id} className="px-5 py-3.5">
+              {alertStories.map(([a, ...rest]) => (
+                <li key={a.storySlug} className="px-5 py-3.5">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                     {a.storyCategories.slice(0, 2).map((c) => (
                       <span key={c} className="font-medium text-amber-700">
@@ -343,9 +377,14 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
                   </Link>
                   <p className="mt-0.5 text-xs text-slate-500">
                     Affects{" "}
-                    <Link href={`${base}/initiatives/${a.initiativeId}`} className="font-medium text-slate-700 hover:underline">
-                      {a.initiativeTitle}
-                    </Link>
+                    {[a, ...rest].map((x, idx) => (
+                      <span key={x.id}>
+                        {idx > 0 ? ", " : ""}
+                        <Link href={`${base}/initiatives/${x.initiativeId}`} className="font-medium text-slate-700 hover:underline">
+                          {x.initiativeTitle}
+                        </Link>
+                      </span>
+                    ))}
                   </p>
                 </li>
               ))}

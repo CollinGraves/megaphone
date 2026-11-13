@@ -92,7 +92,7 @@ export default async function WorkspacesPage() {
                 <Th className="text-right">Initiatives</Th>
                 <Th className="hidden md:table-cell">Consultants</Th>
                 <Th className="hidden lg:table-cell">Created</Th>
-                <Th>
+                <Th className="relative">
                   <span className="sr-only">Open</span>
                 </Th>
               </tr>

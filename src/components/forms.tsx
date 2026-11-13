@@ -1,10 +1,19 @@
 "use client";
 
-import { useActionState, useEffect, useRef, type ReactNode } from "react";
+import { createContext, startTransition, useActionState, useContext, useEffect, useRef, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import type { ActionState } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { Alert, Button } from "./ui";
+
+/** Pending state for ActionForm, which submits via a transition (useFormStatus can't see it). */
+const ActionPendingContext = createContext(false);
+
+function usePending() {
+  const { pending } = useFormStatus();
+  const actionPending = useContext(ActionPendingContext);
+  return pending || actionPending;
+}
 
 export function SubmitButton({
   children,
@@ -23,7 +32,7 @@ export function SubmitButton({
   name?: string;
   value?: string;
 }) {
-  const { pending } = useFormStatus();
+  const pending = usePending();
   return (
     <Button type="submit" disabled={pending} variant={variant} size={size} className={className} name={name} value={value}>
       {pending ? (pendingText ?? "Saving…") : children}
@@ -48,18 +57,30 @@ export function ActionForm({
   resetOnSuccess?: boolean;
   successMessage?: string;
 }) {
-  const [state, formAction] = useActionState(action, null);
+  const [state, formAction, isPending] = useActionState(action, null);
   const ref = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (state?.ok && resetOnSuccess) ref.current?.reset();
   }, [state, resetOnSuccess]);
   return (
-    <form ref={ref} action={formAction} className={cn("space-y-4", className)}>
+    <form
+      ref={ref}
+      action={formAction}
+      // Submit inside a transition instead of via the form action so React doesn't auto-reset
+      // the form: if the server rejects the input, the user's values stay put.
+      onSubmit={(e) => {
+        e.preventDefault();
+        const submitter = (e.nativeEvent as SubmitEvent).submitter;
+        const data = new FormData(e.currentTarget, submitter);
+        startTransition(() => formAction(data));
+      }}
+      className={cn("space-y-4", className)}
+    >
       {state?.error ? <Alert tone="error">{state.error}</Alert> : null}
       {state?.ok && (state.message || successMessage) ? (
         <Alert tone="success">{state.message ?? successMessage}</Alert>
       ) : null}
-      {children}
+      <ActionPendingContext.Provider value={isPending}>{children}</ActionPendingContext.Provider>
     </form>
   );
 }
@@ -104,7 +125,7 @@ export function ConfirmSubmit({
   size?: "sm" | "md";
   className?: string;
 }) {
-  const { pending } = useFormStatus();
+  const pending = usePending();
   return (
     <Button
       type="submit"

@@ -9,16 +9,14 @@ import { requireStaff } from "@/lib/auth/session";
 import { listLeads } from "@/lib/leads";
 import { formatNumber, timeAgo } from "@/lib/utils";
 import { isAdmin, visibleOrgIds } from "./_lib/access";
+import { daysAgo } from "./_lib/time";
 import { LeadStatusBadge, ScoreBadge } from "./_components/badges";
 
 export const metadata: Metadata = { title: "Overview" };
 
-const DAY = 24 * 60 * 60 * 1000;
-
 export default async function AdminOverviewPage() {
   const me = await requireStaff();
-  const now = Date.now();
-  const since = (days: number) => new Date(now - days * DAY);
+  const since = daysAgo;
   const orgIds = await visibleOrgIds(me);
   const orgScope = orgIds === null ? undefined : inArray(organizations.id, orgIds.length ? orgIds : [""]);
 
@@ -72,7 +70,7 @@ export default async function AdminOverviewPage() {
   const onboardedPct = signups.total ? Math.round((signups.onboarded / signups.total) * 100) : 0;
   const admin = isAdmin(me);
   const runFailed = Boolean(lastRun?.error);
-  const runStale = lastRun ? now - lastRun.startedAt.getTime() > 2 * DAY : true;
+  const runStale = lastRun ? lastRun.startedAt < daysAgo(2) : true;
 
   return (
     <>
@@ -98,7 +96,7 @@ export default async function AdminOverviewPage() {
       </section>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+        <Card className="min-w-0 lg:col-span-2">
           <CardHeader
             title="Hottest leads"
             description="Highest lead score, excluding customers and disqualified leads."
@@ -135,7 +133,7 @@ export default async function AdminOverviewPage() {
           )}
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader title="Talk to North Labs" description="Unhandled contact requests" />
           {recentRequests.length === 0 ? (
             <CardBody>

@@ -79,7 +79,7 @@ export default async function LeadDetailPage({ params }: PageProps<"/admin/leads
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
           <Card>
             <CardHeader title={`Lead score: ${lead.score.score} / 100`} description={`Tier: ${lead.score.tier}. Each signal's contribution is shown below.`} />
             <CardBody>
@@ -192,13 +192,13 @@ export default async function LeadDetailPage({ params }: PageProps<"/admin/leads
           </Card>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <Card>
             <CardHeader title="Pipeline" description={lead.ownerName ? `Owned by ${lead.ownerName}` : "Unassigned"} />
             <CardBody>
               <ActionForm action={updateLead.bind(null, lead.id)}>
                 <Field label="Status" htmlFor="status">
-                  <Select id="status" name="status" defaultValue={lead.status}>
+                  <Select key={lead.status} id="status" name="status" defaultValue={lead.status}>
                     {LEAD_STATUSES.map((s) => (
                       <option key={s} value={s}>
                         {LEAD_STATUS_LABELS[s]}
@@ -207,7 +207,7 @@ export default async function LeadDetailPage({ params }: PageProps<"/admin/leads
                   </Select>
                 </Field>
                 <Field label="Owner" htmlFor="ownerId">
-                  <Select id="ownerId" name="ownerId" defaultValue={lead.ownerId ?? ""}>
+                  <Select key={lead.ownerId ?? ""} id="ownerId" name="ownerId" defaultValue={lead.ownerId ?? ""}>
                     <option value="">Unassigned</option>
                     {staff.map((s) => (
                       <option key={s.id} value={s.id}>
