@@ -1,0 +1,2 @@
+CREATE INDEX "ideas_org_submitter_idx" ON "ideas" USING btree ("org_id","submitter_email","created_at");--> statement-breakpoint
+CREATE INDEX "initiatives_org_approval_idx" ON "initiatives" USING btree ("org_id","approval_status");

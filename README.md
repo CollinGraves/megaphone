@@ -172,6 +172,8 @@ AI Radar keeps a small time-aware knowledge graph in Postgres (`src/lib/graph`):
 
 After deploying: `npm run db:backfill-graph` links existing stories and computes stacks (ingestion keeps them fresh).
 `npm run db:seed-graph-demo` adds clearly-labelled fictional demo stories locally (it refuses non-local databases).
+Demo data for the newer Workspace features: `scripts/seed-governance-demo.ts` and `scripts/seed-ideas-demo.ts` (run like
+the other scripts with `NODE_OPTIONS=--conditions=react-server npx tsx --tsconfig tsconfig.json <script>`).
 
 ### Single sign-on
 
@@ -180,6 +182,30 @@ when its client ID and secret are set (see `.env.example`). Until then it shows 
 work and school accounts only. The same email rules apply as for the email form (disposable addresses blocked;
 personal ones blocked if `REQUIRE_WORK_EMAIL=true`), and an existing account with the same verified email is linked
 rather than duplicated.
+
+### AI readiness assessment (lead generation)
+
+`/assessment` is a public 16-question assessment across six dimensions (strategy, use cases, data, technology,
+people, governance), plus company context (`src/lib/assessment`). Anonymous visitors see a scored teaser. The full
+report (strengths, priority gaps with next steps, suggested starter initiatives) needs a work-email sign-up, which
+claims the assessment via `/assessment/claim`. From the report, "Create my free AI portfolio" opens a **trial
+Workspace** (capped at 5 initiatives) pre-filled with suggested initiatives, bridging the free product into the paid
+one. Completed assessments add to the lead score and appear on the lead in Admin.
+
+### Governance (AI use-case register)
+
+Each initiative has a risk tier (with a suggested tier and the reasoning, based on customer exposure, decisions about
+individuals, data sensitivity from its dependencies, and human oversight). There is a request → approve / approve
+with conditions / reject workflow with emails, and periodic re-review dates. Material classification changes after
+a decision reopen the review. Workspaces can require an approval before initiatives enter pilot and/or production.
+`/w/<slug>/governance` is the register: what needs attention, the approvals queue, filters, and a CSV inventory for
+auditors. This supports risk management; it isn't legal advice.
+
+### Idea intake
+
+Members submit AI ideas in the Workspace, and anyone at the company can use a shareable intake link limited to the
+company's email domains (rate-limited, honeypot). Triagers (editors and above) review ideas, convert them into
+initiatives (with an hours-saved estimate), or decline or mark duplicates, and submitters are emailed the outcome.
 
 ### MCP server (use AI Radar from Claude, Cursor, ChatGPT…)
 

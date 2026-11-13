@@ -683,7 +683,7 @@ export const initiatives = pgTable(
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (t) => [index("initiatives_org_idx").on(t.orgId)],
+  (t) => [index("initiatives_org_idx").on(t.orgId), index("initiatives_org_approval_idx").on(t.orgId, t.approvalStatus)],
 );
 
 export const accessStatus = pgEnum("access_status", [
@@ -837,7 +837,10 @@ export const ideas = pgTable(
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (t) => [index("ideas_org_status_idx").on(t.orgId, t.status)],
+  (t) => [
+    index("ideas_org_status_idx").on(t.orgId, t.status),
+    index("ideas_org_submitter_idx").on(t.orgId, t.submitterEmail, t.createdAt),
+  ],
 );
 
 /** Radar stories that affect a specific initiative (vendor overlap on high-signal categories). */

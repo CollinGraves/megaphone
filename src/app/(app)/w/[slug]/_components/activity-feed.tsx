@@ -11,7 +11,7 @@ export function ActivityFeed({ rows, slug, showInitiative = true }: { rows: Acti
           <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-slate-300" aria-hidden />
           <div className="min-w-0">
             <p className="text-slate-700">
-              <span className="font-medium text-slate-900">{r.userName ?? "Someone"}</span> {describeActivity(r.action, r.detail)}
+              <span className="font-medium text-slate-900">{r.userName ?? (typeof r.detail?.submitterName === "string" ? r.detail.submitterName : "Someone")}</span> {describeActivity(r.action, r.detail)}
               {showInitiative && r.initiativeId && r.initiativeTitle ? (
                 <>
                   {" "}

@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { activityLog, initiatives, user } from "@/db/schema";
 import { ACCESS_STATUSES, ORG_ROLES, labelFrom } from "@/lib/taxonomy";
 import { formatDate, formatNumber } from "@/lib/utils";
+import { describeGovernanceEvent } from "../governance/governance-ui";
 
 export type ActivityRow = {
   id: string;
@@ -96,7 +97,34 @@ export function describeActivity(action: string, detail: Record<string, unknown>
       return "changed the prioritization weights";
     case "export.csv":
       return "exported the portfolio to CSV";
+    case "idea.submitted":
+      return `submitted the idea “${s(d.title)}”${d.channel === "intake_link" ? " via the intake link" : d.via === "mcp" ? " via MCP" : ""}`;
+    case "idea.under_review":
+      return `moved “${s(d.title)}” to review`;
+    case "idea.reopened":
+      return `reopened the idea “${s(d.title)}”`;
+    case "idea.notes_updated":
+      return `updated triage notes on “${s(d.title)}”`;
+    case "idea.accepted":
+      return `turned the idea “${s(d.title)}” into an initiative`;
+    case "idea.declined":
+      return `declined the idea “${s(d.title)}”`;
+    case "idea.duplicate":
+      return `marked “${s(d.title)}” as a duplicate`;
+    case "intake.enabled":
+      return "turned on the idea intake link";
+    case "intake.disabled":
+      return "turned off the idea intake link";
+    case "intake.rotated":
+      return "issued a new idea intake link";
+    case "intake.domains_updated":
+      return "updated who can submit ideas";
+    case "impact.recorded":
+      return `recorded ${formatNumber(Number(d.value))} for “${s(d.metric)}” (${s(d.period)})${d.via === "mcp" ? " via MCP" : ""}`;
+    case "workspace.created_from_assessment":
+      return "created this workspace from an AI readiness assessment";
     default:
+      if (action.startsWith("governance.")) return describeGovernanceEvent(action, d);
       return action.replace(/[._]/g, " ");
   }
 }
