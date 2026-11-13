@@ -56,6 +56,14 @@ Acme), `owner@acme.example`, `editor@acme.example`, `viewer@acme.example`. The d
 
 ## Deploying (Vercel + Supabase)
 
+**Fresh database in one step:** `npm run db:bootstrap-sql -- bootstrap.sql` writes a single SQL file that creates a
+dedicated `radar_app` login role (owner of all app objects), applies every migration and records it for Drizzle,
+enables row-level security on every table, revokes Supabase `anon`/`authenticated` access, and seeds the sources. Run
+it once as the database admin (Supabase SQL editor). Then use the pooled connection string as `radar_app`:
+`postgres://radar_app.<project-ref>:<password>@<pooler-host>:6543/postgres`. The file contains the role password,
+so don't commit it.
+
+
 1. Create a Supabase project and copy the **transaction pooler** connection string (port 6543) into `DATABASE_URL`.
 2. Run `npm run db:migrate` and `npm run db:seed` against it once (locally, with `DATABASE_URL` pointed at Supabase).
 3. Import the repo into Vercel and set the environment variables from `.env.example`: `DATABASE_URL`,
