@@ -4,9 +4,11 @@ import { and, count, eq, inArray, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/db";
-import { consultantAssignments, invitations, memberships, organizations, orgPlan, orgRole, orgStatus, user } from "@/db/schema";
+import { activityLog, consultantAssignments, invitations, memberships, organizations, orgPlan, orgRole, orgStatus, user } from "@/db/schema";
 import { requirePlatformAdmin } from "@/lib/auth/session";
+import { isLiveStatus } from "@/lib/billing/sync";
 import { createInvitation } from "@/lib/invitations";
+import { isSelfServePaid } from "@/lib/plans";
 import { INDUSTRY_SLUGS } from "@/lib/taxonomy";
 import type { ActionState } from "@/lib/utils";
 
@@ -150,7 +152,7 @@ const settingsSchema = z.object({
 });
 
 export async function updateWorkspaceSettings(orgId: string, _prev: ActionState, form: FormData): Promise<ActionState> {
-  await requirePlatformAdmin();
+  const me = await requirePlatformAdmin();
   const parsed = settingsSchema.safeParse({
     name: form.get("name") ?? "",
     industry: form.get("industry") ?? "",
@@ -158,12 +160,28 @@ export async function updateWorkspaceSettings(orgId: string, _prev: ActionState,
     defaultHourlyRate: form.get("defaultHourlyRate"),
   });
   if (!parsed.success) return { error: firstIssue(parsed.error) };
+  const id = orgIdSchema.parse(orgId);
+  const [before] = await db
+    .select({ plan: organizations.plan, subscriptionStatus: organizations.subscriptionStatus, stripeSubscriptionId: organizations.stripeSubscriptionId })
+    .from(organizations)
+    .where(eq(organizations.id, id))
+    .limit(1);
   const [updated] = await db
     .update(organizations)
     .set(parsed.data)
-    .where(eq(organizations.id, orgIdSchema.parse(orgId)))
+    .where(eq(organizations.id, id))
     .returning({ slug: organizations.slug });
   if (!updated) return { error: "Workspace not found." };
+  if (before && before.plan !== parsed.data.plan) {
+    // Team/Business without a live Stripe subscription = complimentary ("comped") plan.
+    const live = Boolean(before.stripeSubscriptionId) && isLiveStatus(before.subscriptionStatus);
+    await db.insert(activityLog).values({
+      orgId: id,
+      userId: me.id,
+      action: "billing.plan_set_by_admin",
+      detail: { from: before.plan, to: parsed.data.plan, comped: isSelfServePaid(parsed.data.plan) && !live, overridesStripe: live },
+    });
+  }
   revalidateOrg(orgId, updated.slug);
   return { ok: true, message: "Workspace settings saved." };
 }

@@ -70,7 +70,7 @@ export default async function WorkspacesPage({ searchParams }: PageProps<"/admin
         title={admin ? "Client workspaces" : "Your client workspaces"}
         description={
           admin
-            ? "Workspaces provisioned by North Labs. Provision a new client, assign consultants and manage access."
+            ? "Client workspaces, both provisioned by North Labs and self-serve. Track activation, provision new clients, assign consultants and manage access."
             : "Workspaces you're assigned to as a consultant."
         }
         actions={

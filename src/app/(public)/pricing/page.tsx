@@ -101,7 +101,7 @@ export default async function PricingPage({ searchParams }: PageProps<"/pricing"
       <section className="mx-auto max-w-7xl px-4 pt-14 pb-10 sm:px-6 sm:pt-20">
         <div className="mx-auto max-w-2xl text-center">
           <div className="text-sm font-semibold uppercase tracking-wide text-radar-700">{BRAND} Workspace pricing</div>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">Run your company’s AI portfolio. Start free.</h1>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-balance text-slate-900 sm:text-4xl">Run your company’s AI portfolio. Start free.</h1>
           <p className="mt-3 text-slate-600">
             Prioritize every AI initiative, measure the impact and govern the risk — whatever platform it runs on. Per workspace, not per seat. Upgrade, switch or
             cancel any time.

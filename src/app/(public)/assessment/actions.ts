@@ -204,7 +204,7 @@ export async function createStarterWorkspace(_prev: ActionState, form: FormData)
     for (const candidate of slugCandidates(name)) {
       [org] = await tx
         .insert(organizations)
-        .values({ name, slug: candidate, industry, plan: "trial", provisionedById: null })
+        .values({ name, slug: candidate, industry, plan: "trial", provisionedById: null, createdById: current.id })
         .onConflictDoNothing({ target: organizations.slug })
         .returning({ id: organizations.id, slug: organizations.slug });
       if (org) break;

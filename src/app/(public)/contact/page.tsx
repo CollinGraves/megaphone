@@ -15,7 +15,12 @@ export const metadata: Metadata = {
 export default async function ContactPage({ searchParams }: PageProps<"/contact">) {
   const params = await searchParams;
   const user = await getCurrentUser();
-  const source = [params.from, params.story].filter((v) => typeof v === "string").join(":") || "contact_page";
+  // e.g. "onboarding_stalled:acme", "billing:acme:business", "story:<slug>"
+  const source =
+    [params.from, params.story, params.workspace, params.plan]
+      .filter((v): v is string => typeof v === "string" && v.length > 0)
+      .map((v) => v.replace(/[^\w.:\-]/g, "").slice(0, 80))
+      .join(":") || "contact_page";
   if (user && typeof params.from === "string") await track("cta_click", { userId: user.id, metadata: { source } });
   return (
     <div className="mx-auto grid max-w-6xl gap-12 px-4 py-14 sm:px-6 lg:grid-cols-2">

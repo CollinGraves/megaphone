@@ -17,23 +17,25 @@ import { decideSubscriptionSync, planChangeAction, trialDays, trialEligible, typ
 
 export class BillingError extends Error {}
 
-let cached: Stripe | null | undefined;
+let cached: { signature: string; client: Stripe } | null = null;
 
 /** The Stripe client, or null when STRIPE_SECRET_KEY isn't set. */
 export function stripeClient(): Stripe | null {
-  if (cached !== undefined) return cached;
   const key = process.env.STRIPE_SECRET_KEY?.trim();
-  if (!key) return (cached = null);
+  if (!key) return null;
   // Optional override for local testing against stripe-mock or a fake API (e.g. http://localhost:12111).
-  const base = process.env.STRIPE_API_BASE?.trim();
+  const base = process.env.STRIPE_API_BASE?.trim() || "";
+  const signature = `${key}|${base}`;
+  if (cached?.signature === signature) return cached.client;
   const target = base ? new URL(base) : null;
-  cached = new Stripe(key, {
+  const client = new Stripe(key, {
     appInfo: { name: BRAND, url: appUrl() },
     maxNetworkRetries: 2,
     timeout: 20_000,
-    ...(target ? { host: target.hostname, port: target.port || (target.protocol === "https:" ? 443 : 80), protocol: target.protocol === "http:" ? "http" : "https" } : {}),
+    ...(target ? { host: target.hostname, port: target.port || (target.protocol === "https:" ? 443 : 80), protocol: target.protocol === "http:" ? ("http" as const) : ("https" as const) } : {}),
   });
-  return cached;
+  cached = { signature, client };
+  return client;
 }
 
 /** Self-serve checkout is available: API key and all four plan prices are configured. */
@@ -110,7 +112,8 @@ export async function createPortalSession(org: Organization): Promise<string> {
   const stripe = stripeClient();
   if (!stripe) throw new BillingError("Online billing isn’t set up yet. Contact North Labs for invoices or plan changes.");
   if (!org.stripeCustomerId) throw new BillingError("This workspace doesn’t have a billing account yet. Choose a plan to get started.");
-  const session = await stripe.billingPortal.sessions.create({ customer: org.stripeCustomerId, return_url: billingUrl(org.slug) });
+  const configuration = process.env.STRIPE_PORTAL_CONFIGURATION_ID?.trim() || undefined;
+  const session = await stripe.billingPortal.sessions.create({ customer: org.stripeCustomerId, return_url: billingUrl(org.slug), ...(configuration ? { configuration } : {}) });
   return session.url;
 }
 
@@ -283,4 +286,13 @@ export async function handlePaymentFailed(invoice: Stripe.Invoice) {
     const res = await sendEmail({ to: m.email, subject, html, text });
     if (res.status === "failed") console.error(`[billing] payment-failed email to ${m.email} failed: ${res.error}`);
   }
+}
+
+/* ───────────────────────────── Stripe dashboard links ───────────────────────────── */
+
+/** Link to an object in the Stripe dashboard (test-mode paths unless the key is live). */
+export function stripeDashboardUrl(kind: "customers" | "subscriptions", id: string): string {
+  const key = process.env.STRIPE_SECRET_KEY?.trim() ?? "";
+  const live = key.startsWith("sk_live_") || key.startsWith("rk_live_");
+  return `https://dashboard.stripe.com/${live ? "" : "test/"}${kind}/${encodeURIComponent(id)}`;
 }

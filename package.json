@@ -18,7 +18,8 @@
     "db:backfill-companies": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/backfill-companies.ts",
     "db:backfill-graph": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/backfill-graph.ts",
     "db:seed-graph-demo": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/seed-graph-demo.ts",
-    "db:bootstrap-sql": "tsx --tsconfig tsconfig.json scripts/export-bootstrap-sql.ts"
+    "db:bootstrap-sql": "tsx --tsconfig tsconfig.json scripts/export-bootstrap-sql.ts",
+    "stripe:setup": "tsx --tsconfig tsconfig.json scripts/stripe-setup.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",

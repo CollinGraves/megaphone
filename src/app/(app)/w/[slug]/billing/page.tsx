@@ -127,6 +127,15 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
         </Alert>
       ) : null}
 
+      {one(sp.upgrade) === "initiatives" && plan.initiativeLimit != null && summary.kind !== "managed" ? (
+        <Alert tone="neutral" className="flex gap-2 border-violet-200 bg-violet-50 text-violet-950">
+          <Lock className="mt-0.5 size-4 shrink-0 text-violet-700" />
+          <span>
+            <strong>{plan.name} includes up to {plan.initiativeLimit} active initiatives.</strong> Team includes {PLANS.team.initiativeLimit}, and Business is unlimited.
+          </span>
+        </Alert>
+      ) : null}
+
       {summary.pastDue ? (
         <Alert tone="error" className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <span className="flex gap-2">
@@ -139,7 +148,7 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
         </Alert>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-5 [&>*]:min-w-0">
+      <div className="grid items-start gap-6 lg:grid-cols-5 [&>*]:min-w-0">
         <Card className="lg:col-span-3">
           <CardHeader title="Current plan" action={<Badge tone={summary.tone}>{summary.badge}</Badge>} />
           <CardBody className="space-y-4">
@@ -278,38 +287,40 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
         </section>
       )}
 
-      <section aria-labelledby="services-heading" className="rounded-xl bg-ink-900 p-5 text-white sm:p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-xl">
-            <div className="text-xs font-semibold uppercase tracking-wider text-radar-400">The easy button</div>
-            <h2 id="services-heading" className="mt-1 text-lg font-semibold">
-              Want North Labs to set it up or run it with you?
-            </h2>
-            <p className="mt-1 text-sm text-slate-300">
-              Entirely optional. Our consultants can launch your portfolio for you or work inside your workspace every week.
-            </p>
-          </div>
-          <ButtonLink href={contactHref()} variant="accent" className="shrink-0">
-            Talk to North Labs <ArrowRight className="size-4" />
-          </ButtonLink>
-        </div>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          {SERVICES.map((s) => (
-            <div key={s.name} className="rounded-lg bg-white/5 p-4 ring-1 ring-white/10">
-              <h3 className="font-semibold">{s.name}</h3>
-              <p className="mt-0.5 text-sm text-slate-300">{s.summary}</p>
-              <ul className="mt-3 space-y-1.5 text-sm text-slate-200">
-                {s.points.map((pt) => (
-                  <li key={pt} className="flex gap-2">
-                    <Check className="mt-0.5 size-4 shrink-0 text-radar-400" aria-hidden />
-                    {pt}
-                  </li>
-                ))}
-              </ul>
+      {summary.kind !== "managed" ? (
+        <section aria-labelledby="services-heading" className="rounded-xl bg-ink-900 p-5 text-white sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-xl">
+              <div className="text-xs font-semibold uppercase tracking-wider text-radar-400">The easy button</div>
+              <h2 id="services-heading" className="mt-1 text-lg font-semibold">
+                Want North Labs to set it up or run it with you?
+              </h2>
+              <p className="mt-1 text-sm text-slate-300">
+                Entirely optional. Our consultants can launch your portfolio for you or work inside your workspace every week.
+              </p>
             </div>
-          ))}
-        </div>
-      </section>
+            <ButtonLink href={contactHref()} variant="accent" className="shrink-0">
+              Talk to North Labs <ArrowRight className="size-4" />
+            </ButtonLink>
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {SERVICES.map((s) => (
+              <div key={s.name} className="rounded-lg bg-white/5 p-4 ring-1 ring-white/10">
+                <h3 className="font-semibold">{s.name}</h3>
+                <p className="mt-0.5 text-sm text-slate-300">{s.summary}</p>
+                <ul className="mt-3 space-y-1.5 text-sm text-slate-200">
+                  {s.points.map((pt) => (
+                    <li key={pt} className="flex gap-2">
+                      <Check className="mt-0.5 size-4 shrink-0 text-radar-400" aria-hidden />
+                      {pt}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

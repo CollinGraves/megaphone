@@ -241,6 +241,63 @@ Connect from Claude Code with
 stdio clients via `npx mcp-remote <url> --header "Authorization: Bearer radar_…"` (the settings page generates both).
 claude.ai and ChatGPT "custom connectors" need OAuth rather than a static key; that's a follow-up (see roadmap).
 
+### Billing (Stripe)
+
+Anyone can create a **Free** workspace at `/workspaces/new` and upgrade to **Team** or **Business** with a card;
+North Labs services (Guided Launch, Managed AI office) stay an optional "easy button" sold through Talk to North Labs.
+Plans, limits, prices and features live in one place: `src/lib/plans.ts`.
+
+| | Free (`trial`) | Team (`team`) | Business (`business`, legacy `pro`) | Managed (`engagement` / `enterprise`) |
+|---|---|---|---|---|
+| Price | $0 | $399/mo or $3,990/yr | $999/mo or $9,990/yr | North Labs agreement |
+| Active initiatives | 5 | 25 | Unlimited | Unlimited |
+| Teammates, impact, data deps, alerts, in-app ideas, risk register | ✓ | ✓ | ✓ | ✓ |
+| `intake_link` company-wide idea intake link | | ✓ | ✓ | ✓ |
+| `export_csv` portfolio CSV export | | ✓ | ✓ | ✓ |
+| `mcp_workspace` workspace tools over MCP (read) | | ✓ | ✓ | ✓ |
+| `mcp_write` MCP write tools | | | ✓ | ✓ |
+| `governance_workflow` review requests, approvals, stage gate, reminders | | | ✓ | ✓ |
+| `governance_export` AI use-case inventory CSV | | | ✓ | ✓ |
+
+**Setup**
+
+1. Create a Stripe account and copy a **test-mode** secret key into `STRIPE_SECRET_KEY` (`.env.local`).
+2. `npm run stripe:setup` (add `--webhook-url https://<app>/api/stripe/webhook` for a deployed app). It idempotently
+   creates the Team/Business products, the four recurring prices (lookup keys `team_monthly`, `team_annual`,
+   `business_monthly`, `business_annual`), a Billing Portal configuration that allows switching between them, and the
+   webhook endpoint, then prints the env vars to set. It refuses live keys unless you pass `--live`.
+3. Set the printed `STRIPE_PRICE_*`, `STRIPE_PORTAL_CONFIGURATION_ID` and `STRIPE_WEBHOOK_SECRET`; optionally
+   `STRIPE_TRIAL_DAYS` (default 14, only for workspaces that never had a subscription).
+4. Locally, forward webhooks with the Stripe CLI: `stripe listen --forward-to localhost:3000/api/stripe/webhook`
+   and use the `whsec_…` it prints. Test cards: `4242 4242 4242 4242` (success), `4000 0000 0000 0341` (fails later →
+   `invoice.payment_failed`).
+
+Webhook events to subscribe: `checkout.session.completed`, `customer.subscription.created|updated|deleted`,
+`invoice.payment_failed`. Without Stripe configured, the billing and pricing pages still show the plans and upgrades fall
+back to "Contact us to upgrade".
+
+**How it works** (`src/lib/billing/`)
+
+- `prices.ts` maps env price ids (falling back to lookup keys) to plan + interval; `sync.ts` holds the pure
+  subscription → workspace rules: `active`/`trialing` → the subscribed plan, `past_due` → keep the plan and show a
+  banner, `canceled`/`unpaid`/`incomplete_expired` → back to Free. Managed workspaces are never touched, and late events
+  for an older subscription are ignored. Both are unit-tested.
+- `server.ts` creates Checkout (subscription mode, `client_reference_id` = org id, org metadata on the customer and
+  subscription, promotion codes allowed) and Billing Portal sessions, and applies subscriptions to the org row under a
+  row lock, logging `billing.*` activity.
+- `/api/stripe/webhook` verifies the signature, records the event id in `stripe_events` first (duplicates are
+  acknowledged and skipped; the id is released if handling fails so Stripe's retry runs it), and refreshes the
+  subscription from the API when it can, since events may arrive out of order. Payment failures email the workspace's
+  owners and admins.
+- Gating is enforced server-side (actions, route handlers, the public intake link, MCP `requireWorkspace`, the governance
+  stage gate and reminders) with `hasFeature`; the UI shows `<UpgradePrompt>` (`src/components/upgrade-prompt.tsx`).
+  Downgrading keeps data: saved governance policies and intake links pause until the workspace upgrades again.
+- `/w/<slug>/billing` needs `billing:manage` (owners, admins, assigned consultants, platform admins). Platform admins can
+  also set Team/Business on a workspace in the admin console without Stripe (a complimentary plan); the admin overview
+  shows MRR/ARR at list price, plans, self-serve sign-ups and Free → paid conversions.
+- Self-serve creation guardrails (`src/lib/workspace-creation.ts`): at most 3 workspaces created per person and one Free
+  workspace per company email domain (North Labs staff are exempt); personal-email sign-ups get a nudge.
+
 ### Operational guardrails
 
 - **Naming**: the product name lives in `src/lib/brand.ts` (`BRAND`) and is used across the UI, titles, emails, MCP
@@ -253,7 +310,7 @@ claude.ai and ChatGPT "custom connectors" need OAuth rather than a static key; t
 
 ## Roadmap / next steps
 
-- Self-serve Workspace sign-up with Stripe billing (`organizations.plan`, `stripe*` columns are already reserved).
+- Stripe Tax and invoice/PO billing for larger self-serve customers; seat- or usage-based add-ons if needed.
 - CRM sync (webhook or API) for leads and engagement.
 - SAML SSO for enterprise workspaces (Google/Microsoft OAuth is in place; Better Auth has an SSO plugin for SAML).
 - OAuth for the MCP server (so it can be added as a claude.ai / ChatGPT connector without pasting a key) and per-key
