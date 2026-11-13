@@ -69,7 +69,7 @@ export function RadarIndex({
               <p className="mt-1.5 text-sm text-slate-300">
                 Pick the topics and vendors you care about. We&apos;ll send a short digest with only what matters to you.
               </p>
-              <ButtonLink href="/sign-up" variant="accent" className="mt-4 w-full">
+              <ButtonLink href="/sign-up?src=radar_sidebar" variant="accent" className="mt-4 w-full">
                 Create a free account
               </ButtonLink>
             </div>
@@ -131,7 +131,7 @@ function InlineCta() {
         <div className="font-semibold text-slate-900">Too much to keep up with?</div>
         <div className="text-sm text-slate-600">Get a personalized weekly digest. Free, takes 30 seconds.</div>
       </div>
-      <ButtonLink href="/sign-up" variant="primary">
+      <ButtonLink href="/sign-up?src=radar_inline" variant="primary">
         Personalize my radar
       </ButtonLink>
     </div>

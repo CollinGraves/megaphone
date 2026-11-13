@@ -121,7 +121,7 @@ export default async function StoryPage({ params }: PageProps<"/radar/[slug]">) 
               <p className="mt-1.5 text-sm text-slate-300">
                 AI Radar watches hundreds of sources and sends you only what matters to your role and industry.
               </p>
-              <ButtonLink href="/sign-up" variant="accent" className="mt-4 w-full">
+              <ButtonLink href="/sign-up?src=story_sidebar" variant="accent" className="mt-4 w-full">
                 Get your free radar
               </ButtonLink>
             </div>

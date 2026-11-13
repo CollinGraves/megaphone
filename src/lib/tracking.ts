@@ -11,7 +11,8 @@ export type EngagementType =
   | "digest_open"
   | "digest_click"
   | "cta_click"
-  | "contact_request";
+  | "contact_request"
+  | "colleague_invite";
 
 export async function track(
   type: EngagementType,

@@ -1,28 +1,64 @@
 import Link from "next/link";
-import { and, count, eq, gte } from "drizzle-orm";
-import { ArrowRight, Bell, Database, Gauge, Layers, ListOrdered, Radar, Sparkles, TrendingUp } from "lucide-react";
+import { and, count, countDistinct, desc, eq, gte, isNotNull } from "drizzle-orm";
+import {
+  Bell,
+  BriefcaseBusiness,
+  Building2,
+  ChevronDown,
+  Cpu,
+  Database,
+  Gauge,
+  Landmark,
+  Layers,
+  ListOrdered,
+  Radar,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+} from "lucide-react";
+import { EmailCapture } from "@/components/email-capture";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import { StoryCard } from "@/components/stories/story-card";
 import { ButtonLink } from "@/components/ui";
 import { db } from "@/db";
-import { sources, stories } from "@/db/schema";
+import { sources, stories, user, type Story } from "@/db/schema";
 import { listStories } from "@/lib/stories";
-import { CATEGORIES } from "@/lib/taxonomy";
+import { CATEGORIES, categoryLabel, vendorLabel } from "@/lib/taxonomy";
 import { formatNumber } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
+/** Only show reader counts once they're large enough to be persuasive. */
+const SOCIAL_PROOF_MIN_READERS = 250;
+
 async function getStats() {
   const weekAgo = new Date(Date.now() - 7 * 864e5);
-  const [[s], [st]] = await Promise.all([
+  const [[s], [st], [readers], firstParty] = await Promise.all([
     db.select({ n: count() }).from(sources).where(eq(sources.active, true)),
     db.select({ n: count() }).from(stories).where(and(eq(stories.status, "published"), gte(stories.publishedAt, weekAgo))),
+    db
+      .select({ n: count(), companies: countDistinct(user.companyDomain) })
+      .from(user)
+      .where(and(isNotNull(user.onboardedAt), eq(user.platformRole, "user"))),
+    db
+      .select({ name: sources.name })
+      .from(sources)
+      .where(and(eq(sources.active, true), gte(sources.authority, 4)))
+      .orderBy(desc(sources.authority), sources.name)
+      .limit(18),
   ]);
-  return { sources: s?.n ?? 0, storiesThisWeek: st?.n ?? 0 };
+  return {
+    sources: s?.n ?? 0,
+    storiesThisWeek: st?.n ?? 0,
+    readers: readers?.n ?? 0,
+    companies: readers?.companies ?? 0,
+    sourceNames: firstParty.map((f) => f.name),
+  };
 }
 
 export default async function HomePage() {
-  const [top, stats] = await Promise.all([listStories({ sinceDays: 7, order: "top", limit: 3 }), getStats()]);
+  const [top, stats] = await Promise.all([listStories({ sinceDays: 7, order: "top", limit: 6 }), getStats()]);
+  const showReaders = stats.readers >= SOCIAL_PROOF_MIN_READERS;
 
   return (
     <>
@@ -31,29 +67,92 @@ export default async function HomePage() {
         {/* Hero */}
         <section className="relative overflow-hidden bg-ink-950 text-white">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(18,179,147,0.18),transparent_55%)]" />
-          <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:py-28">
+          <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:py-24">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-radar-300">
-                <span className="size-1.5 rounded-full bg-radar-400" /> Tracking {formatNumber(stats.sources)} sources · {formatNumber(stats.storiesThisWeek)} stories this week
+                <span className="size-1.5 rounded-full bg-radar-400" />
+                {showReaders
+                  ? `Read by ${formatNumber(stats.readers)} professionals at ${formatNumber(stats.companies)} companies`
+                  : `Tracking ${formatNumber(stats.sources)} sources · ${formatNumber(stats.storiesThisWeek)} stories this week`}
               </div>
               <h1 className="mt-6 text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-                Every AI update that matters.
-                <span className="block text-radar-400">None of the noise.</span>
+                The AI briefing for people who run the business.
               </h1>
               <p className="mt-6 max-w-xl text-lg text-slate-300">
-                AI Radar watches vendor announcements, research, regulators and the press, merges duplicate coverage, ranks
-                what&apos;s significant, and delivers only the updates you care about, in one feed and one short digest.
+                Model launches, price changes, deprecations and regulation, filtered to your industry and the platforms your
+                company runs on. One short digest, with what happened and why it matters.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <ButtonLink href="/sign-up" variant="accent" size="lg">
-                  Get your free radar <ArrowRight className="size-4" />
-                </ButtonLink>
-                <ButtonLink href="/radar" size="lg" className="border border-white/15 bg-white/5 text-white hover:bg-white/10">
-                  See this week&apos;s top stories
-                </ButtonLink>
+              <EmailCapture source="hero" dark className="mt-8" />
+              <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-400">
+                <Link href="/radar" className="underline-offset-4 hover:text-white hover:underline">
+                  Browse this week&apos;s top stories →
+                </Link>
+                <span className="hidden sm:inline" aria-hidden>
+                  ·
+                </span>
+                <span>Built by North Labs, AI consultants to operating teams</span>
               </div>
             </div>
             <RadarVisual />
+          </div>
+        </section>
+
+        {/* Sources strip */}
+        <section className="border-b border-slate-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Watching first-party and top-tier sources, including</div>
+            <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-slate-600">
+              {stats.sourceNames.map((n) => (
+                <span key={n}>{n}</span>
+              ))}
+              <span className="text-slate-400">+ {Math.max(0, stats.sources - stats.sourceNames.length)} more</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Digest preview */}
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+          <div className="grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
+            <div>
+              <h2 className="text-3xl font-semibold tracking-tight text-slate-900">Five minutes a week. Nothing important missed.</h2>
+              <p className="mt-3 text-slate-600">
+                Forty articles about the same launch become one story, with a plain-English summary and a note on what it means
+                for companies adopting AI. You choose the topics, vendors and industries; we send what matters, daily or weekly.
+              </p>
+              <ul className="mt-6 space-y-3 text-sm text-slate-700">
+                {[
+                  "Ranked by significance, not by who published first",
+                  "Every story links to the original sources",
+                  "Vendor-neutral: no pay-to-play rankings",
+                ].map((t) => (
+                  <li key={t} className="flex gap-2">
+                    <ShieldCheck className="mt-0.5 size-4 shrink-0 text-radar-600" /> {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <DigestPreview stories={top.slice(0, 3)} />
+          </div>
+        </section>
+
+        {/* Roles */}
+        <section className="border-y border-slate-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Built for the leaders accountable for AI results</h2>
+            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { icon: Cpu, role: "CIOs & CTOs", body: "Vendor roadmaps, deprecations and security issues for the platforms you've standardized on." },
+                { icon: BriefcaseBusiness, role: "COOs & operations", body: "Where AI is actually saving time in operations like yours, and what it took to get there." },
+                { icon: Sparkles, role: "Heads of AI & data", body: "Model releases, agent tooling and price/performance shifts that change what's worth building." },
+                { icon: Landmark, role: "Finance, legal & risk", body: "Regulation, pricing changes and governance frameworks, before they hit your budget or audit." },
+              ].map(({ icon: Icon, role, body }) => (
+                <div key={role} className="rounded-xl border border-slate-200 p-5">
+                  <Icon className="size-5 text-radar-600" />
+                  <h3 className="mt-3 font-semibold text-slate-900">{role}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{body}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -69,7 +168,7 @@ export default async function HomePage() {
             </Link>
           </div>
           <div className="mt-6 grid gap-4 lg:grid-cols-3">
-            {top.map((s) => (
+            {top.slice(0, 3).map((s) => (
               <StoryCard key={s.id} story={s} />
             ))}
           </div>
@@ -82,7 +181,7 @@ export default async function HomePage() {
             <div className="mt-8 grid gap-8 md:grid-cols-3">
               {[
                 { icon: Radar, title: "We watch everything", body: "First-party vendor blogs and newsrooms, research feeds, regulators, trade press and community signals, checked every hour." },
-                { icon: Layers, title: "We separate signal from noise", body: "Forty articles about one launch become one story. Each story is summarized, tagged and scored for significance." },
+                { icon: Layers, title: "We separate signal from noise", body: "Duplicate coverage is merged into one story. Each story is summarized, tagged and scored for significance." },
                 { icon: Bell, title: "You get what matters to you", body: "Choose topics, companies and industries. Read your feed anytime, or get a daily or weekly digest." },
               ].map(({ icon: Icon, title, body }) => (
                 <div key={title}>
@@ -140,21 +239,92 @@ export default async function HomePage() {
           </div>
         </section>
 
+        {/* FAQ */}
+        <section className="border-t border-slate-200 bg-white">
+          <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Questions</h2>
+            <div className="mt-6 divide-y divide-slate-200 border-y border-slate-200">
+              {FAQ.map((f) => (
+                <details key={f.q} className="group py-4">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium text-slate-900">
+                    {f.q}
+                    <ChevronDown className="size-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180" />
+                  </summary>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">{f.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Final CTA */}
         <section className="bg-ink-900">
-          <div className="mx-auto flex max-w-7xl flex-col items-start gap-6 px-4 py-14 sm:px-6 md:flex-row md:items-center md:justify-between">
+          <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-14 sm:px-6 md:grid-cols-2">
             <div>
               <h2 className="text-2xl font-semibold text-white">Stop scrolling ten feeds to keep up with AI.</h2>
               <p className="mt-1 text-slate-300">Set up your radar in 30 seconds. Free.</p>
             </div>
-            <ButtonLink href="/sign-up" variant="accent" size="lg">
-              Get your free radar
-            </ButtonLink>
+            <EmailCapture source="footer_cta" dark />
           </div>
         </section>
       </main>
       <SiteFooter />
     </>
+  );
+}
+
+const FAQ = [
+  {
+    q: "Is AI Radar really free?",
+    a: "Yes. The feed and digest are free. North Labs funds it because it's how we stay close to what our clients need, and some readers eventually ask us for help with their own AI initiatives.",
+  },
+  {
+    q: "Why do you ask for my work email?",
+    a: "Your company tells us your industry and likely tech stack, so we can rank the stories that matter to you, and it lets colleagues share your radar. We never sell your information. North Labs may occasionally reach out if it looks like we could help, and you can opt out anytime.",
+  },
+  {
+    q: "How is this different from other AI newsletters?",
+    a: "It's personalized and business-focused. Instead of one editor's picks for everyone, AI Radar ranks every story by significance and filters it to your topics, vendors and industry, with a note on why it matters for companies adopting AI.",
+  },
+  {
+    q: "How often will I hear from you?",
+    a: "You choose: a daily briefing on weekday mornings, a weekly digest on Mondays, or no email at all, just the feed. You can change it anytime.",
+  },
+  {
+    q: "Who is North Labs?",
+    a: "North Labs is an AI consultancy that helps companies decide where AI should go first, build it on the right platform, and measure the impact. Our clients run their AI portfolios in the AI Radar Workspace.",
+  },
+];
+
+function DigestPreview({ stories }: { stories: Story[] }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60" aria-label="Example digest">
+      <div className="flex items-center justify-between rounded-t-2xl bg-ink-900 px-5 py-3 text-sm">
+        <span className="font-semibold text-white">
+          AI Radar <span className="font-normal text-slate-400">· Weekly digest</span>
+        </span>
+        <span className="text-xs text-slate-400">Monday, 8:00 AM</span>
+      </div>
+      <div className="divide-y divide-slate-100 px-5">
+        {stories.map((s) => (
+          <div key={s.id} className="py-4">
+            <div className="text-xs text-slate-500">
+              {[s.primarySourceName, ...s.vendors.slice(0, 1).map(vendorLabel), ...s.categories.slice(0, 1).map(categoryLabel)].filter(Boolean).join(" · ")}
+            </div>
+            <div className="mt-1 font-semibold leading-snug text-slate-900">{s.title}</div>
+            {s.summary.trim() !== s.title.trim() ? <p className="mt-1 line-clamp-2 text-sm text-slate-600">{s.summary}</p> : null}
+            {s.whyItMatters ? (
+              <p className="mt-2 border-l-2 border-radar-400 pl-2.5 text-xs text-slate-700">
+                <strong>Why it matters:</strong> {s.whyItMatters}
+              </p>
+            ) : null}
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center gap-2 rounded-b-2xl border-t border-slate-100 bg-slate-50 px-5 py-3 text-xs text-slate-500">
+        <Building2 className="size-3.5" /> Filtered for: Manufacturing · Microsoft · Pricing changes · Regulation
+      </div>
+    </div>
   );
 }
 
@@ -166,7 +336,7 @@ function RadarVisual() {
     { x: 40, y: 26, label: "Deprecation" },
   ];
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-md" aria-hidden>
+    <div className="relative mx-auto hidden aspect-square w-full max-w-md sm:block" aria-hidden>
       <svg viewBox="0 0 100 100" className="absolute inset-0 size-full">
         {[46, 34, 22, 10].map((r) => (
           <circle key={r} cx="50" cy="50" r={r} fill="none" stroke="rgba(49,206,171,0.22)" strokeWidth="0.3" />
@@ -209,7 +379,7 @@ function WorkspacePreview() {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/60" aria-hidden>
       <div className="flex items-center gap-2 text-xs text-slate-500">
-        <Gauge className="size-4 text-radar-600" /> Acme Manufacturing · AI portfolio
+        <Gauge className="size-4 text-radar-600" /> Example company · AI portfolio
       </div>
       <div className="mt-4 grid grid-cols-3 gap-3">
         {[

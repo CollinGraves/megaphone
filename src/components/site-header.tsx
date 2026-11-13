@@ -31,7 +31,7 @@ export async function SiteHeader({ dark = false }: { dark?: boolean }) {
               <Link href="/sign-in" className={`${link} px-2`}>
                 Sign in
               </Link>
-              <ButtonLink href="/sign-up" variant={dark ? "accent" : "primary"} size="sm">
+              <ButtonLink href="/sign-up?src=header" variant={dark ? "accent" : "primary"} size="sm">
                 Get your free radar
               </ButtonLink>
             </>
@@ -56,7 +56,7 @@ export function SiteFooter() {
           <Link href="/contact" className="hover:text-slate-900">
             Contact
           </Link>
-          <Link href="/sign-up" className="hover:text-slate-900">
+          <Link href="/sign-up?src=footer" className="hover:text-slate-900">
             Sign up
           </Link>
         </nav>

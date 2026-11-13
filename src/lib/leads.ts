@@ -114,18 +114,9 @@ export function detectSeniority(jobTitle: string | null | undefined): { level: S
   return { level: "individual", points: 0 };
 }
 
-const FREE_EMAIL_DOMAINS = new Set([
-  "gmail.com", "googlemail.com", "yahoo.com", "yahoo.co.uk", "ymail.com", "hotmail.com", "hotmail.co.uk",
-  "outlook.com", "live.com", "msn.com", "aol.com", "icloud.com", "me.com", "mac.com", "proton.me",
-  "protonmail.com", "gmx.com", "gmx.de", "mail.com", "zoho.com", "yandex.com", "qq.com", "163.com", "hey.com",
-  "fastmail.com", "pm.me",
-]);
+import { emailDomain, isWorkEmail } from "./email-domains";
 
-export const emailDomain = (email: string) => email.split("@")[1]?.trim().toLowerCase() ?? "";
-export const isWorkEmail = (email: string) => {
-  const domain = emailDomain(email);
-  return domain.includes(".") && !FREE_EMAIL_DOMAINS.has(domain);
-};
+export { emailDomain, isWorkEmail };
 
 export type EngagementCounts = Record<EngagementType, { recent: number; total: number }>;
 

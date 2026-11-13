@@ -43,9 +43,15 @@ export const user = pgTable("user", {
   industry: text("industry"),
   companySize: text("company_size"),
   onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
+  /** Registrable company domain for work emails (e.g. "acme.com"); null for personal emails. */
+  companyDomain: text("company_domain"),
+  /** Who invited this person (colleague referral). */
+  referredById: text("referred_by_id"),
+  /** Where the sign-up came from: hero, story CTA, colleague invite, utm_source… */
+  signupSource: text("signup_source"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [index("user_company_domain_idx").on(t.companyDomain)]);
 
 export const session = pgTable(
   "session",
@@ -275,6 +281,47 @@ export const contactRequests = pgTable("contact_requests", {
   handledAt: timestamp("handled_at", { withTimezone: true }),
   createdAt: createdAt(),
 });
+
+export const enrichmentStatus = pgEnum("enrichment_status", ["pending", "requested", "enriched", "failed"]);
+
+/** A company, keyed by its email domain. Enriched by an external provider (e.g. Clay) via webhook. */
+export const companies = pgTable("companies", {
+  domain: text("domain").primaryKey(),
+  name: text("name").notNull(),
+  website: text("website"),
+  industry: text("industry"),
+  employeeCount: integer("employee_count"),
+  /** One of COMPANY_SIZES. */
+  sizeRange: text("size_range"),
+  headquarters: text("headquarters"),
+  linkedinUrl: text("linkedin_url"),
+  description: text("description"),
+  enrichmentStatus: enrichmentStatus("enrichment_status").notNull().default("pending"),
+  enrichmentSource: text("enrichment_source"),
+  enrichmentRequestedAt: timestamp("enrichment_requested_at", { withTimezone: true }),
+  enrichedAt: timestamp("enriched_at", { withTimezone: true }),
+  raw: jsonb("raw").$type<Record<string, unknown>>(),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+});
+
+/** Other people at a company, found by enrichment. For North Labs outreach; never emailed automatically. */
+export const companyContacts = pgTable(
+  "company_contacts",
+  {
+    id: id(),
+    domain: text("domain")
+      .notNull()
+      .references(() => companies.domain, { onDelete: "cascade" }),
+    fullName: text("full_name").notNull(),
+    title: text("title"),
+    email: text("email"),
+    linkedinUrl: text("linkedin_url"),
+    source: text("source"),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("company_contacts_unique_idx").on(t.domain, t.fullName)],
+);
 
 /* ─────────────────────────────── Workspaces ─────────────────────────────── */
 
@@ -625,6 +672,7 @@ export const systemsRelations = relations(systems, ({ many }) => ({
   dependencies: many(dataDependencies),
 }));
 
+export type Company = typeof companies.$inferSelect;
 export type Story = typeof stories.$inferSelect;
 export type Source = typeof sources.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;

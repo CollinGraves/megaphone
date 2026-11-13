@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { and, count, eq, ne } from "drizzle-orm";
 import { Search, Settings2 } from "lucide-react";
 import { StoryCard } from "@/components/stories/story-card";
 import { Alert, Badge, ButtonLink, Card, EmptyState, Input } from "@/components/ui";
 import { db } from "@/db";
-import { userPreferences } from "@/db/schema";
+import { InviteColleaguesCard } from "@/components/invite-colleagues";
+import { VerifyEmailBanner } from "@/components/verify-email-banner";
+import { user as userTable, userPreferences } from "@/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import { PAGE_SIZE, pageFrom } from "@/lib/pagination";
 import { listSavedStories, listStories, savedStoryIds } from "@/lib/stories";
@@ -32,9 +34,15 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const page = pageFrom(params);
   const offset = (page - 1) * PAGE_SIZE;
 
-  const [[prefs], workspaces] = await Promise.all([
+  const [[prefs], workspaces, [colleagues]] = await Promise.all([
     db.select().from(userPreferences).where(eq(userPreferences.userId, user.id)).limit(1),
     listAccessibleWorkspaces(user),
+    user.companyDomain
+      ? db
+          .select({ n: count() })
+          .from(userTable)
+          .where(and(eq(userTable.companyDomain, user.companyDomain), ne(userTable.id, user.id)))
+      : Promise.resolve([{ n: 0 }]),
   ]);
   const p = prefs ?? { categories: [], vendors: [], industries: [], minImportance: 2, digestFrequency: "weekly" as const };
 
@@ -61,6 +69,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      {!user.emailVerified ? <VerifyEmailBanner email={user.email} /> : null}
       {params.welcome ? (
         <Alert tone="success" className="mb-6">
           <strong>Your radar is live.</strong> This feed is filtered to your interests.{" "}
@@ -145,6 +154,9 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
               Email digest: <span className="font-medium text-slate-700">{p.digestFrequency === "off" ? "off" : p.digestFrequency}</span>
             </p>
           </Card>
+          {user.companyDomain ? (
+            <InviteColleaguesCard domain={user.companyDomain} company={user.company ?? user.companyDomain} colleagues={colleagues?.n ?? 0} />
+          ) : null}
           {workspaces.length === 0 ? (
             <div className="rounded-xl bg-ink-900 p-5 text-white">
               <h2 className="font-semibold">Track your own AI initiatives</h2>

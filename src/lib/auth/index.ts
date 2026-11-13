@@ -1,9 +1,14 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { eq } from "drizzle-orm";
+import { after } from "next/server";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
+import { classifyEmail, companyDomain, emailDomain } from "@/lib/email-domains";
+import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
+import { ensureCompany, requestEnrichment } from "@/lib/enrichment";
 import { appUrl } from "@/lib/env";
 
 const adminEmails = () =>
@@ -11,6 +16,18 @@ const adminEmails = () =>
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
+
+/** When true, personal (Gmail, Outlook…) addresses can't sign up at all. Disposable addresses never can. */
+export const requireWorkEmail = () => process.env.REQUIRE_WORK_EMAIL === "true";
+
+/** Run work after the response when inside a request; inline otherwise (scripts). */
+function runAfter(task: () => Promise<unknown>) {
+  try {
+    after(task);
+  } catch {
+    void task().catch((err) => console.error("[auth] background task failed", err));
+  }
+}
 
 export const auth = betterAuth({
   baseURL: appUrl(),
@@ -31,21 +48,64 @@ export const auth = betterAuth({
     minPasswordLength: 10,
     autoSignIn: true,
   },
+  // Verification is encouraged, not required: it proves the person controls a business domain.
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    expiresIn: 60 * 60 * 24 * 3,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: "Confirm your email for AI Radar",
+        html: emailLayout({
+          body: `<p style="font-size:15px">Hi ${escapeHtml(user.name.split(" ")[0] || "there")}, confirm your email to keep your AI Radar digest coming.</p>
+<p><a href="${url}" style="display:inline-block;background:#12b393;color:#070b14;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">Confirm my email</a></p>`,
+        }),
+        text: `Confirm your email for AI Radar: ${url}`,
+      });
+    },
+  },
   session: {
     expiresIn: 60 * 60 * 24 * 30,
     updateAge: 60 * 60 * 24,
+  },
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/sign-up/email") return;
+      const email = typeof ctx.body?.email === "string" ? ctx.body.email : "";
+      const kind = classifyEmail(email);
+      if (kind === "invalid") throw new APIError("BAD_REQUEST", { message: "Please enter a valid email address." });
+      if (kind === "disposable") {
+        throw new APIError("BAD_REQUEST", { message: "Temporary email addresses can't be used. Please use your work email." });
+      }
+      if (kind === "personal" && requireWorkEmail()) {
+        throw new APIError("BAD_REQUEST", {
+          message: `AI Radar is for business teams. Please sign up with your work email instead of ${emailDomain(email)}.`,
+        });
+      }
+    }),
   },
   databaseHooks: {
     user: {
       create: {
         after: async (created) => {
           const email = created.email.toLowerCase();
-          if (adminEmails().includes(email)) {
-            await db.update(schema.user).set({ platformRole: "admin" }).where(eq(schema.user.id, created.id));
-          }
+          const isWork = classifyEmail(email) === "work";
+          const domain = isWork ? companyDomain(emailDomain(email)) : null;
+          await db
+            .update(schema.user)
+            .set({
+              companyDomain: domain,
+              ...(adminEmails().includes(email) ? { platformRole: "admin" as const } : {}),
+            })
+            .where(eq(schema.user.id, created.id));
           await db.insert(schema.userPreferences).values({ userId: created.id }).onConflictDoNothing();
           await db.insert(schema.leadProfiles).values({ userId: created.id }).onConflictDoNothing();
-          await db.insert(schema.engagementEvents).values({ userId: created.id, type: "signup" });
+          await db.insert(schema.engagementEvents).values({ userId: created.id, type: "signup", metadata: { emailKind: classifyEmail(email) } });
+          if (domain) {
+            await ensureCompany(domain);
+            runAfter(() => requestEnrichment(domain));
+          }
         },
       },
     },

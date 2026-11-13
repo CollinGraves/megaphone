@@ -22,6 +22,20 @@
       "when": 1794589007195,
       "tag": "0002_lazy_dust",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794591767668,
+      "tag": "0003_small_kang",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794591774469,
+      "tag": "0004_groovy_angel",
+      "breakpoints": true
     }
   ]
 }

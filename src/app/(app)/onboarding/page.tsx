@@ -4,17 +4,26 @@ import { ActionForm, SubmitButton } from "@/components/forms";
 import { InterestFields, ProfileFields } from "@/components/preferences-fields";
 import { Card } from "@/components/ui";
 import { db } from "@/db";
-import { userPreferences } from "@/db/schema";
+import { companies, userPreferences } from "@/db/schema";
 import { requireUser } from "@/lib/auth/session";
+import { guessCompanyName } from "@/lib/email-domains";
 import { completeOnboarding } from "../settings/actions";
 
 export const metadata: Metadata = { title: "Set up your radar" };
 
 export default async function OnboardingPage() {
   const user = await requireUser("/onboarding");
-  const [prefs] = await db.select().from(userPreferences).where(eq(userPreferences.userId, user.id)).limit(1);
+  const [[prefs], [company]] = await Promise.all([
+    db.select().from(userPreferences).where(eq(userPreferences.userId, user.id)).limit(1),
+    user.companyDomain
+      ? db.select().from(companies).where(eq(companies.domain, user.companyDomain)).limit(1)
+      : Promise.resolve([]),
+  ]);
   const defaults = {
     ...user,
+    // Prefill from the email domain (enriched data when we have it) to cut onboarding friction.
+    company: user.company ?? company?.name ?? (user.companyDomain ? guessCompanyName(user.companyDomain) : null),
+    companySize: user.companySize ?? company?.sizeRange ?? null,
     categories: prefs?.categories.length ? prefs.categories : ["model_release", "pricing", "deprecation", "enterprise", "regulation"],
     vendors: prefs?.vendors ?? [],
     industries: prefs?.industries.length ? prefs.industries : [],

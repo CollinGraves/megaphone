@@ -128,6 +128,29 @@ Workspaces are tenant-isolated: every query is scoped by `orgId` after `getWorks
 - **Admin → Leads** scores and ranks leads and exports them as CSV. A direct CRM integration can be added later
   (custom CRM: likely an outbound webhook on lead events).
 
+### Business-account capture
+
+The free product is built to bring in **work emails** so every lead maps to a company:
+
+- **Email-first sign-up** on the landing page with live feedback: work emails are confirmed ("we'll tailor it for
+  Acme"), personal addresses get a nudge and an explicit "I don't have a work email" step, and disposable addresses are
+  rejected on the server. Set `REQUIRE_WORK_EMAIL=true` to block personal addresses entirely.
+- **Company accounts** (`companies`, keyed by email domain) are created on sign-up. Onboarding is prefilled from the
+  domain, so business users finish faster than personal-email users.
+- **Enrichment** is provider-agnostic. New domains are POSTed to `ENRICHMENT_WEBHOOK_URL` (e.g. a Clay table webhook),
+  and the provider posts results (company size, industry, HQ, LinkedIn, other contacts) to
+  `POST /api/integrations/enrichment` with `Authorization: Bearer $ENRICHMENT_API_SECRET`.
+- **Colleague invites** from the feed are limited to the inviter's own domain (max 5 per send, 20 per day) and
+  attributed via `user.referredById`.
+- **Email verification** is sent on sign-up but not required; unverified users see a reminder in their feed.
+- **Admin → Accounts** shows each company with its people, hottest lead, enriched contacts (CSV export), the 30-day
+  work-email rate and sign-ups by source (every sign-up link carries a `src`).
+
+Run `npm run db:backfill-companies` once after deploying to tag existing users with their company domain.
+
+Enriched contacts are for North Labs' own outreach and are never emailed by AI Radar. Check your outreach against
+CAN-SPAM, GDPR and similar rules for the regions you sell into.
+
 ## Roadmap / next steps
 
 - Self-serve Workspace sign-up with Stripe billing (`organizations.plan`, `stripe*` columns are already reserved).
