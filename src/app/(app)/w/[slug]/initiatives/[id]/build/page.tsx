@@ -14,7 +14,7 @@ import { cn, formatDate, timeAgo } from "@/lib/utils";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { CopyButton } from "../../../_components/client";
 import { addBuildUpdate, generateBrief } from "./actions";
-import { AutoRefresh } from "./auto-refresh";
+import { AutoRefresh } from "@/components/auto-refresh";
 
 // Brief generation runs after the action responds; give the function room to finish.
 export const maxDuration = 300;

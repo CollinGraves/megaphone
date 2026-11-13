@@ -551,6 +551,8 @@ export const organizations = pgTable("organizations", {
   createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
   /** Onboarding checklist hidden by an admin. */
   onboardingDismissedAt: timestamp("onboarding_dismissed_at", { withTimezone: true }),
+  /** Opt-in: anonymized, aggregate stats from this workspace may feed North Labs research (the show, reports). */
+  shareAggregateInsights: boolean("share_aggregate_insights").notNull().default(false),
   provisionedById: text("provisioned_by_id").references(() => user.id, { onDelete: "set null" }),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
@@ -919,6 +921,37 @@ export const buildUpdates = pgTable(
   (t) => [index("build_updates_initiative_idx").on(t.initiativeId, t.createdAt)],
 );
 
+/* ─────────────────────────────── The show ─────────────────────────────── */
+
+export const episodeStatus = pgEnum("episode_status", ["draft", "published"]);
+
+/** An episode of the show: a prep rundown (staff only) that becomes a public episode page once published. */
+export const episodes = pgTable(
+  "episodes",
+  {
+    id: id(),
+    number: integer("number").notNull().unique(),
+    /** Stable public URL segment, e.g. "episode-12". */
+    slug: text("slug").notNull().unique(),
+    title: text("title").notNull(),
+    airDate: date("air_date", { mode: "string" }).notNull(),
+    status: episodeStatus("status").notNull().default("draft"),
+    /** Rundown generation: generating | ready | failed. */
+    prepStatus: text("prep_status").notNull().default("ready"),
+    prepError: text("prep_error"),
+    rundown: jsonb("rundown").$type<Record<string, unknown>>(),
+    showNotes: text("show_notes"),
+    videoUrl: text("video_url"),
+    /** Stories covered, in rundown order (drives "covered on the show" links). */
+    storyIds: text("story_ids").array().notNull().default(sql`'{}'::text[]`),
+    createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+  },
+  (t) => [index("episodes_status_air_idx").on(t.status, t.airDate), index("episodes_story_ids_idx").using("gin", t.storyIds)],
+);
+
 /** Radar stories that affect a specific initiative (vendor overlap on high-signal categories). */
 export const initiativeAlerts = pgTable(
   "initiative_alerts",
@@ -990,6 +1023,7 @@ export type Company = typeof companies.$inferSelect;
 export type Entity = typeof entities.$inferSelect;
 export type EntityFact = typeof entityFacts.$inferSelect;
 export type Story = typeof stories.$inferSelect;
+export type Episode = typeof episodes.$inferSelect;
 export type Source = typeof sources.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;
 export type Initiative = typeof initiatives.$inferSelect;

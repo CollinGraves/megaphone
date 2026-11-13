@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { stories } from "@/db/schema";
+import { episodes, stories } from "@/db/schema";
 import { appUrl } from "@/lib/env";
 import { CATEGORIES, VENDORS } from "@/lib/taxonomy";
 
@@ -15,9 +15,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .where(eq(stories.status, "published"))
     .orderBy(desc(stories.publishedAt))
     .limit(5000);
+  const shows = await db
+    .select({ slug: episodes.slug, updatedAt: episodes.updatedAt })
+    .from(episodes)
+    .where(eq(episodes.status, "published"))
+    .orderBy(desc(episodes.airDate))
+    .limit(1000);
   return [
     { url: `${base}/`, changeFrequency: "daily", priority: 1 },
     { url: `${base}/radar`, changeFrequency: "hourly", priority: 0.9 },
+    { url: `${base}/show`, changeFrequency: "daily", priority: 0.8 },
+    ...shows.map((e) => ({ url: `${base}/show/${e.slug}`, lastModified: e.updatedAt, changeFrequency: "monthly" as const, priority: 0.7 })),
     { url: `${base}/assessment`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/pricing`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/contact`, changeFrequency: "monthly", priority: 0.5 },

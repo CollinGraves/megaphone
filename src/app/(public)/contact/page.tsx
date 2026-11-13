@@ -17,10 +17,11 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
   const user = await getCurrentUser();
   // e.g. "onboarding_stalled:acme", "billing:acme:business", "story:<slug>"
   const source =
-    [params.from, params.story, params.workspace, params.plan]
+    [params.from, params.story, params.episode, params.workspace, params.plan]
       .filter((v): v is string => typeof v === "string" && v.length > 0)
       .map((v) => v.replace(/[^\w.:\-]/g, "").slice(0, 80))
       .join(":") || "contact_page";
+  const pitch = params.from === "show" && !params.episode;
   if (user && typeof params.from === "string") await track("cta_click", { userId: user.id, metadata: { source } });
   return (
     <div className="mx-auto grid max-w-6xl gap-12 px-4 py-14 sm:px-6 lg:grid-cols-2">
@@ -48,8 +49,12 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
         </ul>
       </div>
       <Card className="p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Talk to North Labs</h2>
-        <p className="mt-1 text-sm text-slate-500">Tell us a little about what you&apos;re working on.</p>
+        <h2 className="text-lg font-semibold text-slate-900">{pitch ? "Pitch an idea for Build it live" : "Talk to North Labs"}</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          {pitch
+            ? "Describe the problem, the team it's for and the tools you already use. We may build it on the show (we'll leave your company's name out unless you say otherwise)."
+            : "Tell us a little about what you're working on."}
+        </p>
         <ActionForm action={submitContactRequest} className="mt-6" resetOnSuccess>
           <input type="hidden" name="source" value={source} />
           <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />

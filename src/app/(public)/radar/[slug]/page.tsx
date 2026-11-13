@@ -8,6 +8,7 @@ import { getStackContext, stackReasons, storyContext } from "@/lib/graph/persona
 import { Badge, ButtonLink, Card, ImportanceMeter } from "@/components/ui";
 import { getCurrentUser } from "@/lib/auth/session";
 import { appUrl } from "@/lib/env";
+import { episodesForStory } from "@/lib/show/server";
 import { getRelatedStories, getStoryBySlug } from "@/lib/stories";
 import { categoryLabel, industryLabel, vendorLabel } from "@/lib/taxonomy";
 import { track } from "@/lib/tracking";
@@ -33,7 +34,7 @@ export default async function StoryPage({ params }: PageProps<"/radar/[slug]">) 
   const found = await getStoryBySlug(slug);
   if (!found) notFound();
   const { story, coverage } = found;
-  const [related, user, graph] = await Promise.all([getRelatedStories(story), getCurrentUser(), storyContext(story.id)]);
+  const [related, user, graph, onShow] = await Promise.all([getRelatedStories(story), getCurrentUser(), storyContext(story.id), episodesForStory(story.id)]);
   const stack = user ? await getStackContext(user) : null;
   const reason = (await stackReasons([story], stack)).get(story.id);
   await track("story_view", { userId: user?.id, storyId: story.id });
@@ -125,6 +126,20 @@ export default async function StoryPage({ params }: PageProps<"/radar/[slug]">) 
         </article>
 
         <aside className="space-y-6">
+          {onShow.length ? (
+            <div className="rounded-xl border border-radar-200 bg-radar-50 p-5">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-radar-800">Discussed on the show</h2>
+              <ul className="mt-2 space-y-1.5 text-sm">
+                {onShow.map((e) => (
+                  <li key={e.slug}>
+                    <Link href={`/show/${e.slug}`} className="font-medium text-slate-900 hover:text-radar-700">
+                      Ep. {e.number}: {e.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
           {!user ? (
             <div className="rounded-xl bg-ink-900 p-5 text-white">
               <h2 className="font-semibold">Stories like this, filtered for you</h2>

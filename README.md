@@ -250,6 +250,25 @@ Connect from Claude Code with
 stdio clients via `npx mcp-remote <url> --header "Authorization: Bearer radar_…"` (the settings page generates both).
 claude.ai and ChatGPT "custom connectors" need OAuth rather than a static key; that's a follow-up (see roadmap).
 
+### The show
+
+North Labs staff prep episodes at **Admin → Show**. Creating an episode picks the strongest stories from the last
+N days (varied across vendors and sources) and writes a rundown: cold open, one news segment per story with talking
+points, a hot take, the mid-market angle and an audience question, a deadline-watch segment from the knowledge graph,
+and a closer. Without an Anthropic key the prep is a template built from the stories' own summaries.
+
+Extra segments:
+- **Build it live**: enter a viewer's idea and get a segment built on a full build brief (draft prompt and test cases included).
+- **By the numbers**: rounded aggregates (nearest 5%) across workspaces whose *owners* opted in under Settings →
+  Anonymous benchmarks. Nothing is shown until 5 opted-in workspaces have initiatives, and a platform is only named if
+  3+ companies use it.
+- **Custom** (mailbag, interviews…), plus reorder/remove.
+
+Copy or download the run sheet as Markdown. Publishing creates `/show/<episode-n>` with the YouTube embed
+(privacy-enhanced), show notes drafted from the rundown, the stories covered, and `Episode`/`VideoObject` JSON-LD; covered
+stories link back to the episode, and published episodes are in the sitemap. Set the host's name in `SHOW_HOST`
+(`src/lib/brand.ts`).
+
 ### Billing (Stripe)
 
 Anyone can create a **Free** workspace at `/workspaces/new` and upgrade to **Team** or **Business** with a card;

@@ -19,6 +19,9 @@ export async function SiteHeader({ dark = false }: { dark?: boolean }) {
             <span className="xl:hidden">AI readiness</span>
             <span className="hidden xl:inline">AI readiness assessment</span>
           </Link>
+          <Link href="/show" className={link}>
+            Show
+          </Link>
           <Link href="/#workspace" className={link}>
             For companies
           </Link>
@@ -63,6 +66,9 @@ export function SiteFooter() {
           </Link>
           <Link href="/assessment?src=footer" className="hover:text-slate-900">
             AI readiness assessment
+          </Link>
+          <Link href="/show" className="hover:text-slate-900">
+            The show
           </Link>
           <Link href="/pricing" className="hover:text-slate-900">
             Pricing

@@ -57,6 +57,27 @@ export async function updateWeights(_prev: ActionState, form: FormData): Promise
   });
 }
 
+/**
+ * Opt in/out of anonymized aggregate research (the show's by-the-numbers segment, reports). Only the client's
+ * own owners decide this: North Labs staff benefit from the data, so their platform access doesn't count.
+ */
+export async function updateInsightsSharing(_prev: ActionState, form: FormData): Promise<ActionState> {
+  return runAction(async () => {
+    const ctx = await authorize(form, "settings:manage");
+    const [own] = await db
+      .select({ role: memberships.role })
+      .from(memberships)
+      .where(and(eq(memberships.orgId, ctx.org.id), eq(memberships.userId, ctx.user.id), eq(memberships.role, "owner")))
+      .limit(1);
+    if (!own) throw new ActionError("Only an owner who is a member of this workspace can change data sharing.");
+    const share = form.get("share") === "1";
+    await db.update(organizations).set({ shareAggregateInsights: share }).where(eq(organizations.id, ctx.org.id));
+    await logActivity(ctx, "settings.insights_sharing", { share });
+    revalidateWorkspace(ctx.org.slug);
+    return { ok: true, message: share ? "Thanks! Anonymized aggregates from this workspace can now be included." : "Data sharing turned off." };
+  });
+}
+
 /* ───────────────────────────── Members & invitations ───────────────────────────── */
 
 const roleSchema = z.enum(orgRole.enumValues);

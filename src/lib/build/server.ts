@@ -116,6 +116,11 @@ async function generateWithModel(context: BriefContext): Promise<{ brief: BuildB
   return { brief, generator: response.model ?? model };
 }
 
+/** Write a brief for any context: the model when a key is configured, otherwise the template. */
+export async function generateBriefForContext(context: BriefContext): Promise<{ brief: BuildBrief; generator: string }> {
+  return hasAnthropic() ? generateWithModel(context) : { brief: templateBrief(context), generator: "template" };
+}
+
 /** How many briefs this org can still generate in the rolling window (null = unlimited). */
 export async function briefQuota(org: Pick<Organization, "id" | "plan">) {
   const limit = briefsPerMonth(org.plan);
@@ -137,7 +142,7 @@ export async function runBriefGeneration(briefId: string) {
   if (!org || !initiative) return;
   try {
     const context = await loadBriefContext(org, initiative, row.guidance);
-    const { brief, generator } = hasAnthropic() ? await generateWithModel(context) : { brief: templateBrief(context), generator: "template" };
+    const { brief, generator } = await generateBriefForContext(context);
     await db
       .update(buildBriefs)
       .set({ status: "ready", content: brief as unknown as Record<string, unknown>, generator, completedAt: new Date(), error: null })

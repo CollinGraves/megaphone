@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, Factory, Gauge, Newspaper, Rss, UserRoundSearch, Users } from "lucide-react";
+import { Building2, Factory, Gauge, Mic, Newspaper, Rss, UserRoundSearch, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ITEMS = [
@@ -10,6 +10,7 @@ const ITEMS = [
   { href: "/admin/leads", label: "Leads", icon: UserRoundSearch, adminOnly: false },
   { href: "/admin/accounts", label: "Accounts", icon: Factory, adminOnly: false },
   { href: "/admin/workspaces", label: "Workspaces", icon: Building2, adminOnly: false },
+  { href: "/admin/show", label: "Show", icon: Mic, adminOnly: false },
   { href: "/admin/sources", label: "Sources", icon: Rss, adminOnly: true },
   { href: "/admin/stories", label: "Stories", icon: Newspaper, adminOnly: true },
   { href: "/admin/users", label: "Users", icon: Users, adminOnly: true },

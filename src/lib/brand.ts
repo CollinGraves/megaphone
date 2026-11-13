@@ -5,3 +5,8 @@
  */
 export const BRAND = "AI Radar";
 export const BRAND_COMPANY = "North Labs";
+
+/** The show. Set SHOW_HOST to the host's name as it should appear on episode pages. */
+export const SHOW_NAME = `The ${BRAND} Show`;
+export const SHOW_HOST = "the North Labs team";
+export const SHOW_TAGLINE = "AI news for the people who have to make it work.";

@@ -126,6 +126,8 @@ export function describeActivity(action: string, detail: Record<string, unknown>
       return `generated build brief v${s(d.version)}${d.generator === "template" ? " (template)" : ""}`;
     case "build.progress":
       return `posted a build update (${s(d.status).replace(/_/g, " ")}): “${s(d.message)}”${d.via === "mcp" ? " via MCP" : ""}`;
+    case "settings.insights_sharing":
+      return d.share ? "opted in to anonymous benchmarks" : "turned off anonymous benchmarks";
     case "onboarding.dismissed":
       return d.complete ? "hid the setup checklist" : `dismissed the setup checklist${typeof d.percent === "number" ? ` at ${d.percent}%` : ""}`;
     case "workspace.created_from_assessment":
