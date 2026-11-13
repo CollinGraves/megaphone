@@ -3,7 +3,7 @@ import Link from "next/link";
 import { and, count, desc, eq, gte, inArray, isNull, ne, sql } from "drizzle-orm";
 import { AlertTriangle, ArrowRight, CheckCircle2, Inbox } from "lucide-react";
 import { db } from "@/db";
-import { contactRequests, ingestionRuns, initiatives, organizations, sources, stories, user, userPreferences } from "@/db/schema";
+import { assessments, contactRequests, ingestionRuns, initiatives, organizations, sources, stories, user, userPreferences } from "@/db/schema";
 import { Badge, Card, CardBody, CardHeader, EmptyState, PageHeader, Stat } from "@/components/ui";
 import { requireStaff } from "@/lib/auth/session";
 import { listLeads } from "@/lib/leads";
@@ -20,7 +20,7 @@ export default async function AdminOverviewPage() {
   const orgIds = await visibleOrgIds(me);
   const orgScope = orgIds === null ? undefined : inArray(organizations.id, orgIds.length ? orgIds : [""]);
 
-  const [[signups], [digest], [openRequests], recentRequests, leads, [workspaces], [initiativeCount], [lastRun], [storyCount], [sourceHealth]] =
+  const [[signups], [digest], [openRequests], recentRequests, leads, [workspaces], [initiativeCount], [lastRun], [storyCount], [sourceHealth], [assessmentStats]] =
     await Promise.all([
       db
         .select({
@@ -64,9 +64,17 @@ export default async function AdminOverviewPage() {
           failing: sql<number>`count(*) filter (where ${sources.active} and ${sources.consecutiveFailures} > 0)`.mapWith(Number),
         })
         .from(sources),
+      db
+        .select({
+          last7: sql<number>`count(*) filter (where ${assessments.createdAt} >= ${since(7).toISOString()}::timestamptz)`.mapWith(Number),
+          last30: sql<number>`count(*) filter (where ${assessments.createdAt} >= ${since(30).toISOString()}::timestamptz)`.mapWith(Number),
+          claimed30: sql<number>`count(*) filter (where ${assessments.createdAt} >= ${since(30).toISOString()}::timestamptz and ${assessments.userId} is not null)`.mapWith(Number),
+        })
+        .from(assessments),
     ]);
 
   const hottest = leads.filter((l) => l.status !== "customer" && l.status !== "disqualified").slice(0, 6);
+  const claimedPct = assessmentStats.last30 ? Math.round((assessmentStats.claimed30 / assessmentStats.last30) * 100) : 0;
   const onboardedPct = signups.total ? Math.round((signups.onboarded / signups.total) * 100) : 0;
   const admin = isAdmin(me);
   const runFailed = Boolean(lastRun?.error);
@@ -80,7 +88,7 @@ export default async function AdminOverviewPage() {
         description="Lead pipeline, client workspaces and the health of the Radar ingestion pipeline at a glance."
       />
 
-      <section aria-label="Lead funnel" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <section aria-label="Lead funnel" className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <Stat label="Signups · 7 days" value={formatNumber(signups.last7)} hint={`${formatNumber(signups.last30)} in the last 30 days`} />
         <Stat label="Total signups" value={formatNumber(signups.total)} hint={`${onboardedPct}% completed onboarding`} />
         <Stat label="Digest subscribers" value={formatNumber(digest.subscribers)} hint="Daily or weekly email" />
@@ -92,6 +100,12 @@ export default async function AdminOverviewPage() {
               Review requests →
             </Link>
           }
+        />
+        <Stat
+          className="col-span-2 lg:col-span-1"
+          label="Assessments · 7 days"
+          value={formatNumber(assessmentStats.last7)}
+          hint={`${formatNumber(assessmentStats.last30)} in 30 days · ${claimedPct}% saved to an account`}
         />
       </section>
 

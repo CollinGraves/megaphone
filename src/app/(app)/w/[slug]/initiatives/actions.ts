@@ -20,7 +20,8 @@ import {
   systemCategory,
   systems,
 } from "@/db/schema";
-import { ACCESS_STATUSES, HEALTH, STAGES, TRIAL_INITIATIVE_LIMIT, labelFrom } from "@/lib/taxonomy";
+import { isApproved, isRegulatedData, isoDate, maxSensitivity, normalizePolicy, sensitivityRank, stageChangeBlocked } from "@/lib/governance";
+import { ACCESS_STATUSES, HEALTH, SENSITIVITIES, STAGES, TRIAL_INITIATIVE_LIMIT, labelFrom } from "@/lib/taxonomy";
 import { strs, type ActionState } from "@/lib/utils";
 import { logActivity } from "@/lib/workspace";
 import { PLATFORM_OPTIONS } from "../_components/badges";
@@ -147,11 +148,30 @@ export async function saveInitiative(_prev: ActionState, form: FormData): Promis
     let initiativeId: string;
     if (id) {
       const existing = await getOwnedInitiative(ctx, id);
+      // Governance gate: entering a stage the policy gates needs an approval in force.
+      const blocked = stageChangeBlocked({
+        policy: normalizePolicy(ctx.org.governancePolicy),
+        fromStage: existing.stage,
+        toStage: values.stage,
+        approvalStatus: existing.approvalStatus,
+        reviewDueOn: existing.reviewDueOn,
+        today: isoDate(new Date()),
+      });
+      if (blocked) throw new ActionError(blocked);
       const changes = describeChanges(existing, values);
       await db.update(initiatives).set(values).where(and(eq(initiatives.id, existing.id), eq(initiatives.orgId, ctx.org.id)));
       if (changes.length) await logActivity(ctx, "initiative.updated", { title: values.title, changes }, existing.id);
       initiativeId = existing.id;
     } else {
+      const blocked = stageChangeBlocked({
+        policy: normalizePolicy(ctx.org.governancePolicy),
+        fromStage: null,
+        toStage: values.stage,
+        approvalStatus: "not_submitted",
+        reviewDueOn: null,
+        today: isoDate(new Date()),
+      });
+      if (blocked) throw new ActionError(blocked);
       if (ctx.org.plan === "trial") {
         const [{ n }] = await db
           .select({ n: sql<number>`count(*)::int` })
@@ -380,6 +400,13 @@ export async function addDependency(_prev: ActionState, form: FormData): Promise
       }
     }
 
+    // Governance: an approved use case that starts using more sensitive regulated data needs a re-review.
+    const previousMax = isApproved(initiative.approvalStatus)
+      ? maxSensitivity(
+          (await db.select({ s: dataDependencies.sensitivity }).from(dataDependencies).where(eq(dataDependencies.initiativeId, initiative.id))).map((r) => r.s),
+        )
+      : null;
+
     await db.insert(dataDependencies).values({
       initiativeId: initiative.id,
       systemId: system.id,
@@ -389,6 +416,23 @@ export async function addDependency(_prev: ActionState, form: FormData): Promise
       notes: d.notes,
     });
     await logActivity(ctx, "dependency.added", { system: system.name, data: d.dataDescription }, initiative.id);
+    if (isApproved(initiative.approvalStatus) && isRegulatedData(d.sensitivity) && sensitivityRank(d.sensitivity) > sensitivityRank(previousMax)) {
+      const [reopened] = await db
+        .update(initiatives)
+        .set({ approvalStatus: "not_submitted", reviewDueOn: null })
+        .where(and(eq(initiatives.id, initiative.id), eq(initiatives.approvalStatus, initiative.approvalStatus)))
+        .returning({ id: initiatives.id });
+      if (reopened) {
+        await logActivity(
+          ctx,
+          "governance.reopened",
+          { title: initiative.title, previousStatus: initiative.approvalStatus, reason: `new ${labelFrom(SENSITIVITIES, d.sensitivity)} data dependency on ${system.name}` },
+          initiative.id,
+        );
+        revalidateWorkspace(ctx.org.slug);
+        return { ok: true, message: `Added dependency on ${system.name}. It adds ${labelFrom(SENSITIVITIES, d.sensitivity)} data, so the governance approval was reopened for review.` };
+      }
+    }
     revalidateWorkspace(ctx.org.slug);
     return { ok: true, message: `Added dependency on ${system.name}.` };
   });

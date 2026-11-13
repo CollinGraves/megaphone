@@ -35,6 +35,7 @@ const blank = (overrides: Partial<LeadSignals> = {}): LeadSignals => ({
   contactRequests: 0,
   lastContactRequestAt: null,
   workspaceCount: 0,
+  assessment: null,
   ...overrides,
 });
 
@@ -144,6 +145,16 @@ describe("scoreLead", () => {
   it("adds strong intent signals for contact requests and workspace membership", () => {
     expect(points(blank({ contactRequests: 2 }), "contact")).toBe(20);
     expect(points(blank({ workspaceCount: 1 }), "workspace")).toBe(10);
+  });
+
+  it("adds a signal for a completed readiness assessment, which also counts for recency", () => {
+    const s = blank({ assessment: { overall: 47, level: "experimenting", completedAt: daysAgo(2), count: 1 } });
+    const result = scoreLead(s, NOW);
+    const reason = result.reasons.find((r) => r.component === "assessment");
+    expect(reason?.points).toBe(10);
+    expect(reason?.label).toBe("Completed AI readiness assessment (Experimenting, 47/100)");
+    expect(points(s, "recency")).toBe(10);
+    expect(result.score).toBe(20);
   });
 
   it("caps the total at 100 and marks it hot", () => {

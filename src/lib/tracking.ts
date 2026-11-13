@@ -12,7 +12,9 @@ export type EngagementType =
   | "digest_click"
   | "cta_click"
   | "contact_request"
-  | "colleague_invite";
+  | "colleague_invite"
+  | "assessment_started"
+  | "assessment_completed";
 
 export async function track(
   type: EngagementType,

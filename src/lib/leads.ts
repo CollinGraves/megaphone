@@ -2,6 +2,7 @@ import { and, desc, eq, ilike, inArray, isNotNull, isNull, or, sql, type SQL } f
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import {
+  assessments,
   contactRequests,
   engagementEvents,
   leadProfiles,
@@ -11,10 +12,11 @@ import {
   user,
   userPreferences,
 } from "@/db/schema";
+import { levelById } from "@/lib/assessment/scoring";
 import { COMPANY_SIZES, industryLabel } from "@/lib/taxonomy";
 
 /* ───────────────────────────── Scoring model ─────────────────────────────
- * A lead score (0–100) is the capped sum of seven explainable components:
+ * A lead score (0–100) is the capped sum of nine explainable components:
  *
  *   Profile completeness  ≤ 20   company, title, industry, size, onboarded, interests, digest
  *   Work email               5   non-freemail domain
@@ -24,8 +26,9 @@ import { COMPANY_SIZES, industryLabel } from "@/lib/taxonomy";
  *   Recency               ≤ 10   days since last engagement or contact request
  *   Contact request         20   submitted "Talk to North Labs"
  *   Workspace member        10   already inside a client workspace
+ *   Readiness assessment    10   completed (and claimed) the free AI readiness assessment
  *
- * The raw maximum is 120, so strong intent (a contact request from a senior buyer at a large
+ * The raw maximum is 130, so strong intent (a contact request from a senior buyer at a large
  * company) saturates at 100 without needing every other signal.
  */
 
@@ -44,6 +47,8 @@ export const ENGAGEMENT_LABELS: Record<string, string> = {
   digest_open: "Opened digest",
   digest_click: "Clicked digest link",
   cta_click: "Clicked North Labs CTA",
+  assessment_started: "Started AI readiness assessment",
+  assessment_completed: "Completed AI readiness assessment",
 };
 
 const ENGAGEMENT_WEIGHTS: Record<EngagementType, number> = {
@@ -63,7 +68,7 @@ const ENGAGEMENT_NOUNS: Record<EngagementType, [string, string]> = {
 
 export const RECENT_WINDOW_DAYS = 30;
 const OLDER_EVENT_FACTOR = 0.25;
-/** Maximum points per score component (raw total 120, capped at 100). */
+/** Maximum points per score component (raw total 130, capped at 100). */
 export const SCORE_MAX_POINTS = {
   profile: 20,
   workEmail: 5,
@@ -73,6 +78,7 @@ export const SCORE_MAX_POINTS = {
   recency: 10,
   contact: 20,
   workspace: 10,
+  assessment: 10,
 } as const satisfies Record<string, number>;
 const MAX = SCORE_MAX_POINTS;
 
@@ -139,6 +145,8 @@ export type LeadSignals = {
   contactRequests: number;
   lastContactRequestAt: Date | null;
   workspaceCount: number;
+  /** Latest claimed readiness assessment, if any. */
+  assessment: { overall: number; level: string; completedAt: Date; count: number } | null;
 };
 
 export type ScoreComponent = keyof typeof SCORE_MAX_POINTS;
@@ -214,7 +222,7 @@ export function scoreLead(s: LeadSignals, now: Date = new Date()): LeadScore {
     add("engagement", `Engagement: ${top.join(", ")}`, engagementPoints);
   }
 
-  const lastTouch = [s.lastEngagedAt, s.lastContactRequestAt]
+  const lastTouch = [s.lastEngagedAt, s.lastContactRequestAt, s.assessment?.completedAt ?? null]
     .filter((d): d is Date => d instanceof Date)
     .reduce<Date | null>((a, b) => (!a || b > a ? b : a), null);
   if (lastTouch) {
@@ -226,6 +234,10 @@ export function scoreLead(s: LeadSignals, now: Date = new Date()): LeadScore {
   if (s.contactRequests > 0) add("contact", "Asked to talk to North Labs", MAX.contact);
   if (s.workspaceCount > 0)
     add("workspace", `Member of ${plural(s.workspaceCount, ["client workspace", "client workspaces"])}`, MAX.workspace);
+  if (s.assessment) {
+    const level = levelById(s.assessment.level)?.label ?? s.assessment.level;
+    add("assessment", `Completed AI readiness assessment (${level}, ${s.assessment.overall}/100)`, MAX.assessment);
+  }
 
   const score = Math.max(0, Math.min(100, reasons.reduce((sum, r) => sum + r.points, 0)));
   reasons.sort((a, b) => b.points - a.points);
@@ -310,6 +322,20 @@ export async function listLeads(filters: LeadFilters & { userIds?: string[] } = 
     .groupBy(memberships.userId)
     .as("mem");
 
+  // Latest claimed assessment per user, aggregated in SQL (one row per user).
+  const asm = db
+    .select({
+      userId: sql<string>`${assessments.userId}`.as("asm_user_id"),
+      count: sql<number>`count(*)::int`.as("asm_count"),
+      last: sql<string>`max(${assessments.createdAt})`.as("asm_last"),
+      overall: sql<number>`(array_agg((${assessments.scores}->>'overall')::int order by ${assessments.createdAt} desc))[1]`.as("asm_overall"),
+      level: sql<string>`(array_agg(${assessments.level} order by ${assessments.createdAt} desc))[1]`.as("asm_level"),
+    })
+    .from(assessments)
+    .where(isNotNull(assessments.userId))
+    .groupBy(assessments.userId)
+    .as("asm");
+
   const where: SQL[] = [eq(user.platformRole, "user")];
   if (filters.userIds) where.push(inArray(user.id, filters.userIds.length ? filters.userIds : [""]));
   if (filters.status === "new") where.push(or(isNull(leadProfiles.status), eq(leadProfiles.status, "new"))!);
@@ -345,6 +371,10 @@ export async function listLeads(filters: LeadFilters & { userIds?: string[] } = 
       crCount: cr.count,
       crLast: cr.last,
       memCount: mem.count,
+      asmCount: asm.count,
+      asmLast: asm.last,
+      asmOverall: asm.overall,
+      asmLevel: asm.level,
     })
     .from(user)
     .leftJoin(leadProfiles, eq(leadProfiles.userId, user.id))
@@ -352,6 +382,7 @@ export async function listLeads(filters: LeadFilters & { userIds?: string[] } = 
     .leftJoin(userPreferences, eq(userPreferences.userId, user.id))
     .leftJoin(cr, eq(cr.userId, user.id))
     .leftJoin(mem, eq(mem.userId, user.id))
+    .leftJoin(asm, eq(asm.userId, user.id))
     .where(and(...where));
 
   if (rows.length === 0) return [];
@@ -394,6 +425,7 @@ export async function listLeads(filters: LeadFilters & { userIds?: string[] } = 
     const agg = byUser.get(r.id);
     const interests = { categories: r.categories ?? [], vendors: r.vendors ?? [], industries: r.industries ?? [] };
     const crLast = toDate(r.crLast);
+    const asmLast = toDate(r.asmLast);
     const signals: LeadSignals = {
       email: r.email,
       company: r.company,
@@ -408,6 +440,10 @@ export async function listLeads(filters: LeadFilters & { userIds?: string[] } = 
       contactRequests: Number(r.crCount ?? 0),
       lastContactRequestAt: crLast,
       workspaceCount: Number(r.memCount ?? 0),
+      assessment:
+        r.asmCount && asmLast
+          ? { overall: Number(r.asmOverall ?? 0), level: r.asmLevel ?? "", completedAt: asmLast, count: Number(r.asmCount) }
+          : null,
     };
     return {
       id: r.id,
@@ -426,7 +462,7 @@ export async function listLeads(filters: LeadFilters & { userIds?: string[] } = 
       ownerEmail: r.ownerEmail,
       interests,
       digestFrequency: r.digestFrequency,
-      lastActivityAt: latest(agg?.lastAny ?? null, crLast, r.onboardedAt, r.createdAt),
+      lastActivityAt: latest(agg?.lastAny ?? null, crLast, asmLast, r.onboardedAt, r.createdAt),
       signals,
       score: scoreLead(signals, now),
     };
@@ -517,6 +553,8 @@ export const LEAD_CSV_COLUMNS = [
   "contact_requests",
   "last_contact_request_at",
   "workspace_count",
+  "assessment_score",
+  "assessment_level",
   "notes",
   "profile_url",
 ] as const;
@@ -574,6 +612,8 @@ export function leadCsvRecord(lead: LeadRow, baseUrl: string): Record<(typeof LE
     contact_requests: lead.signals.contactRequests,
     last_contact_request_at: lead.signals.lastContactRequestAt,
     workspace_count: lead.signals.workspaceCount,
+    assessment_score: lead.signals.assessment?.overall ?? null,
+    assessment_level: lead.signals.assessment?.level ?? null,
     notes: lead.notes,
     profile_url: `${baseUrl}/admin/leads/${lead.id}`,
   };

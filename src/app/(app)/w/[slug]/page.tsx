@@ -1,9 +1,9 @@
-import { ArrowRight, BellRing, Download, Pin, Plus, Rocket } from "lucide-react";
+import { AlertTriangle, ArrowRight, BellRing, Download, Pin, Plus, Rocket, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ButtonLink, Card, CardBody, CardHeader, EmptyState, PageHeader, Stat } from "@/components/ui";
-import { STAGES, categoryLabel } from "@/lib/taxonomy";
+import { RISK_TIERS, STAGES, categoryLabel } from "@/lib/taxonomy";
 import { cn, formatNumber, formatUsd, timeAgo } from "@/lib/utils";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { ActivityFeed } from "./_components/activity-feed";
@@ -13,6 +13,8 @@ import { loadOpenAlerts } from "./_lib/alerts";
 import { loadOrgDependencies, systemUsage } from "./_lib/dependencies";
 import { formatPct } from "./_lib/format";
 import { loadPortfolio } from "./_lib/portfolio";
+import { loadRegister, summarizeRegister } from "./governance/data";
+import { TIER_BAR } from "./governance/governance-ui";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -21,12 +23,14 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
   const ctx = await getWorkspaceOrNotFound(slug);
   const base = `/w/${ctx.org.slug}`;
 
-  const [portfolio, deps, alerts, activity] = await Promise.all([
+  const [portfolio, deps, alerts, activity, register] = await Promise.all([
     loadPortfolio(ctx.org),
     loadOrgDependencies(ctx.org.id),
     loadOpenAlerts(ctx.org.id, { limit: 20 }),
     loadActivity(ctx.org.id, { limit: 8 }),
+    loadRegister(ctx.org),
   ]);
+  const governance = summarizeRegister(register.items);
   const { items, totals, roiActual, roiEstimated } = portfolio;
 
   const actions = (
@@ -157,7 +161,9 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
         />
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-5">
+      <GovernanceCard base={base} summary={governance} canApprove={ctx.can("governance:approve")} />
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-5 [&>*]:min-w-0">
         <Card className="xl:col-span-3">
           <CardHeader title="Pipeline by stage" description="Initiative count per stage, split by health" />
           <CardBody className="space-y-3">
@@ -256,7 +262,7 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
         </Card>
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-5">
+      <div className="mt-6 grid gap-6 xl:grid-cols-5 [&>*]:min-w-0">
         <Card className="xl:col-span-3">
           <CardHeader title="Impact by initiative" description="Annualized value: estimate vs. actual run-rate" />
           <CardBody>
@@ -343,7 +349,7 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
         </Card>
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-5">
+      <div className="mt-6 grid gap-6 xl:grid-cols-5 [&>*]:min-w-0">
         <Card className="xl:col-span-3">
           <CardHeader
             title="Recent Radar alerts"
@@ -409,5 +415,65 @@ function Legend({ className, children }: { className: string; children: ReactNod
       <span className={cn("size-2 rounded-sm", className)} aria-hidden />
       {children}
     </span>
+  );
+}
+
+function GovernanceCard({ base, summary, canApprove }: { base: string; summary: ReturnType<typeof summarizeRegister>; canApprove: boolean }) {
+  const total = Math.max(1, summary.total);
+  const classified = summary.total - (summary.byTier.unclassified ?? 0);
+  return (
+    <Card className="mt-6">
+      <div className="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:gap-8">
+        <div className="min-w-0 lg:w-80 lg:shrink-0">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+              <ShieldCheck className="size-4 text-radar-600" /> AI governance
+            </h2>
+            <span className="text-xs text-slate-500">
+              {classified}/{summary.total} classified
+            </span>
+          </div>
+          <Link href={`${base}/governance`} className="mt-2 flex h-2.5 overflow-hidden rounded-full bg-slate-100" aria-label="Risk tier mix">
+            {RISK_TIERS.map((t) =>
+              summary.byTier[t.slug] ? (
+                <span key={t.slug} className={cn("h-full", TIER_BAR[t.slug])} style={{ width: `${(summary.byTier[t.slug] / total) * 100}%` }} title={`${t.label}: ${summary.byTier[t.slug]}`} />
+              ) : null,
+            )}
+          </Link>
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500">
+            {RISK_TIERS.filter((t) => summary.byTier[t.slug]).map((t) => (
+              <Legend key={t.slug} className={TIER_BAR[t.slug]}>
+                {t.label.replace(" risk", "")} <span className="font-semibold tabular-nums text-slate-800">{summary.byTier[t.slug]}</span>
+              </Legend>
+            ))}
+          </div>
+        </div>
+        <dl className="grid flex-1 grid-cols-3 gap-3 text-sm">
+          <GovernanceFigure label={canApprove ? "Awaiting your review" : "Pending reviews"} value={summary.pending} tone={summary.pending ? "amber" : undefined} href={`${base}/governance?status=pending`} />
+          <GovernanceFigure label="Needs attention" value={summary.needsAttention} tone={summary.needsAttention ? "amber" : undefined} href={`${base}/governance?attention=1`} />
+          <GovernanceFigure label="Reviews overdue" value={summary.overdue} tone={summary.overdue ? "red" : undefined} href={`${base}/governance?issue=review_overdue`} />
+        </dl>
+        <Link href={`${base}/governance`} className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-radar-700 hover:underline">
+          Use-case register <ArrowRight className="size-3.5" />
+        </Link>
+      </div>
+    </Card>
+  );
+}
+
+function GovernanceFigure({ label, value, href, tone }: { label: string; value: number; href: string; tone?: "amber" | "red" }) {
+  return (
+    <Link href={href} className="min-w-0 rounded-lg px-2 py-1 hover:bg-slate-50">
+      <dt className="text-xs leading-tight text-slate-500">{label}</dt>
+      <dd
+        className={cn(
+          "mt-0.5 flex items-center gap-1 text-xl font-semibold tabular-nums",
+          tone === "red" ? "text-red-700" : tone === "amber" ? "text-amber-700" : "text-slate-900",
+        )}
+      >
+        {value}
+        {tone && value > 0 ? <AlertTriangle className="size-3.5" aria-hidden /> : null}
+      </dd>
+    </Link>
   );
 }

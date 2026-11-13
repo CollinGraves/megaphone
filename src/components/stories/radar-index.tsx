@@ -74,6 +74,18 @@ export function RadarIndex({
               </ButtonLink>
             </div>
           ) : null}
+          {!signedIn ? (
+            <div className="rounded-xl border border-radar-200 bg-radar-50 p-5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-radar-700">Free · 5 minutes</div>
+              <h2 className="mt-1 font-semibold text-slate-900">How ready is your company for AI?</h2>
+              <p className="mt-1.5 text-sm text-slate-600">
+                Score your readiness across six dimensions and get a prioritized plan with starter initiatives.
+              </p>
+              <ButtonLink href="/assessment?src=radar_sidebar" variant="secondary" className="mt-4 w-full">
+                Take the assessment
+              </ButtonLink>
+            </div>
+          ) : null}
           <nav>
             <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Topics</h2>
             <ul className="space-y-0.5">

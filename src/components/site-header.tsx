@@ -14,6 +14,10 @@ export async function SiteHeader({ dark = false }: { dark?: boolean }) {
           <Link href="/radar" className={link}>
             Top stories
           </Link>
+          <Link href="/assessment?src=nav" className={`${link} hidden whitespace-nowrap lg:inline`}>
+            <span className="xl:hidden">AI readiness</span>
+            <span className="hidden xl:inline">AI readiness assessment</span>
+          </Link>
           <Link href="/#workspace" className={link}>
             For companies
           </Link>
@@ -52,6 +56,9 @@ export function SiteFooter() {
         <nav className="flex flex-wrap gap-5">
           <Link href="/radar" className="hover:text-slate-900">
             Top stories
+          </Link>
+          <Link href="/assessment?src=footer" className="hover:text-slate-900">
+            AI readiness assessment
           </Link>
           <Link href="/contact" className="hover:text-slate-900">
             Contact

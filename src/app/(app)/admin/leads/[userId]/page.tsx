@@ -3,11 +3,13 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { desc, eq, or, sql } from "drizzle-orm";
-import { ArrowLeft, Building2, Mail } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, Mail } from "lucide-react";
 import { db } from "@/db";
-import { contactRequests, memberships, organizations } from "@/db/schema";
+import { assessments, contactRequests, memberships, organizations } from "@/db/schema";
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { Badge, Card, CardBody, CardHeader, Field, PageHeader, Select, Table, Td, Textarea, Th } from "@/components/ui";
+import { DIMENSIONS, bandFor, levelById } from "@/lib/assessment";
+import { describeContext, summarize } from "@/lib/assessment/server";
 import { requireStaff } from "@/lib/auth/session";
 import {
   emailDomain,
@@ -38,7 +40,7 @@ export default async function LeadDetailPage({ params }: PageProps<"/admin/leads
   const lead = await getLead(userId);
   if (!lead) notFound();
 
-  const [timeline, requests, workspaces, staff, orgIds] = await Promise.all([
+  const [timeline, requests, workspaces, staff, orgIds, leadAssessments] = await Promise.all([
     leadTimeline(userId, 100),
     db
       .select()
@@ -53,6 +55,13 @@ export default async function LeadDetailPage({ params }: PageProps<"/admin/leads
       .orderBy(organizations.name),
     listStaff(),
     visibleOrgIds(me),
+    db
+      .select({ assessment: assessments, orgName: organizations.name, orgSlug: organizations.slug })
+      .from(assessments)
+      .leftJoin(organizations, eq(organizations.id, assessments.orgId))
+      .where(eq(assessments.userId, userId))
+      .orderBy(desc(assessments.createdAt))
+      .limit(10),
   ]);
   const canOpenOrg = (orgId: string) => orgIds === null || orgIds.includes(orgId);
   const e = lead.signals.engagement;
@@ -103,6 +112,14 @@ export default async function LeadDetailPage({ params }: PageProps<"/admin/leads
               )}
             </CardBody>
           </Card>
+
+          {leadAssessments[0] ? (
+            <AssessmentCard
+              latest={leadAssessments[0]}
+              total={leadAssessments.length}
+              canOpenOrg={canOpenOrg}
+            />
+          ) : null}
 
           <Card>
             <CardHeader title="Engagement" description={`Last ${RECENT_WINDOW_DAYS} days vs. all time`} />
@@ -303,6 +320,90 @@ export default async function LeadDetailPage({ params }: PageProps<"/admin/leads
         </div>
       </div>
     </>
+  );
+}
+
+function AssessmentCard({
+  latest,
+  total,
+  canOpenOrg,
+}: {
+  latest: { assessment: typeof assessments.$inferSelect; orgName: string | null; orgSlug: string | null };
+  total: number;
+  canOpenOrg: (orgId: string) => boolean;
+}) {
+  const a = latest.assessment;
+  const { context, overall, recs } = summarize(a);
+  const level = levelById(a.level)?.label ?? a.level;
+  const barTone = { foundational: "bg-amber-500", developing: "bg-sky-600", strength: "bg-radar-500" } as const;
+  return (
+    <Card>
+      <CardHeader
+        title="AI readiness assessment"
+        description={`Completed ${formatDate(a.createdAt)}${a.source ? ` · via ${a.source}` : ""}${total > 1 ? ` · latest of ${total}` : ""}`}
+        action={
+          <Link href={`/assessment/${a.id}`} className="inline-flex items-center gap-1 text-sm font-medium text-radar-700 hover:underline">
+            Full report <ArrowRight className="size-4" aria-hidden />
+          </Link>
+        }
+      />
+      <CardBody className="space-y-5">
+        <div className="grid gap-5 sm:grid-cols-[140px_1fr]">
+          <div>
+            <div className="text-3xl font-semibold tabular-nums text-slate-900">
+              {overall}
+              <span className="text-base font-normal text-slate-400">/100</span>
+            </div>
+            <Badge tone="dark" className="mt-1">
+              {level}
+            </Badge>
+            {recs.priorities.length ? (
+              <p className="mt-3 text-xs text-slate-500">
+                Weakest: <span className="text-slate-700">{recs.priorities.map((p) => p.label).join(", ")}</span>
+              </p>
+            ) : null}
+          </div>
+          <ul className="space-y-2">
+            {DIMENSIONS.map((d) => {
+              const v = Number(a.scores[d.id] ?? 0);
+              return (
+                <li key={d.id} className="grid grid-cols-[minmax(0,10rem)_1fr_2rem] items-center gap-3 text-sm">
+                  <span className="truncate text-slate-600">{d.label}</span>
+                  <span className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                    <span className={`block h-full rounded-full ${barTone[bandFor(v)]}`} style={{ width: `${Math.max(2, v)}%` }} />
+                  </span>
+                  <span className="text-right font-medium tabular-nums text-slate-900">{v}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+        <dl className="grid gap-x-6 gap-y-2 border-t border-slate-100 pt-4 text-sm sm:grid-cols-2">
+          {describeContext(context).map(([k, v]) => (
+            <div key={k} className="min-w-0">
+              <dt className="text-xs text-slate-500">{k}</dt>
+              <dd className="text-slate-900">{v}</dd>
+            </div>
+          ))}
+          <div className="min-w-0">
+            <dt className="text-xs text-slate-500">Starter workspace</dt>
+            <dd className="text-slate-900">
+              {a.orgId && latest.orgName ? (
+                canOpenOrg(a.orgId) ? (
+                  <Link href={`/admin/workspaces/${a.orgId}`} className="font-medium text-radar-700 hover:underline">
+                    {latest.orgName}
+                  </Link>
+                ) : (
+                  latest.orgName
+                )
+              ) : (
+                <span className="text-slate-400">Not created</span>
+              )}
+            </dd>
+          </div>
+        </dl>
+      </CardBody>
+    </Card>
   );
 }
 

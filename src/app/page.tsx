@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { and, count, countDistinct, desc, eq, gte, isNotNull } from "drizzle-orm";
 import {
+  ArrowRight,
   Bell,
   BriefcaseBusiness,
   Building2,
@@ -25,6 +26,7 @@ import { sources, stories, user, type Story } from "@/db/schema";
 import { listStories } from "@/lib/stories";
 import { CATEGORIES, categoryLabel, vendorLabel } from "@/lib/taxonomy";
 import { formatNumber } from "@/lib/utils";
+import { DimensionBars, LevelScale, ScoreRing } from "./(public)/assessment/_components/visuals";
 
 export const dynamic = "force-dynamic";
 
@@ -83,10 +85,20 @@ export default async function HomePage() {
                 company runs on, with a heads-up before deadlines hit the tools you use. One short digest.
               </p>
               <EmailCapture source="hero" dark className="mt-8" />
+              <Link
+                href="/assessment?src=home_hero"
+                className="mt-5 inline-flex max-w-full items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 transition-colors hover:border-radar-400/40 hover:bg-white/10"
+              >
+                <Gauge className="size-4 shrink-0 text-radar-300" aria-hidden />
+                <span>
+                  How ready is your company for AI? <span className="font-medium text-radar-300">Take the free 5-minute assessment →</span>
+                </span>
+              </Link>
               <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-400">
                 <Link href="/radar" className="underline-offset-4 hover:text-white hover:underline">
                   Browse this week&apos;s top stories →
                 </Link>
+
                 <span className="hidden sm:inline" aria-hidden>
                   ·
                 </span>
@@ -133,6 +145,43 @@ export default async function HomePage() {
               </ul>
             </div>
             <DigestPreview stories={top.slice(0, 3)} />
+          </div>
+        </section>
+
+        {/* Readiness assessment */}
+        <section aria-labelledby="assessment-cta" className="relative overflow-hidden bg-ink-900 text-white">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(18,179,147,0.16),transparent_55%)]" />
+          <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.1fr_0.9fr]">
+            <div>
+              <div className="text-sm font-semibold uppercase tracking-wide text-radar-300">Free AI readiness assessment</div>
+              <h2 id="assessment-cta" className="mt-2 text-3xl font-semibold tracking-tight">
+                How ready is your company for AI?
+              </h2>
+              <p className="mt-3 max-w-xl text-slate-300">
+                Sixteen questions, about five minutes. Get a scored report across strategy, use cases, data, technology,
+                people and governance, with your biggest gaps, concrete next steps and starter initiatives for the functions
+                you care about.
+              </p>
+              <ul className="mt-6 grid gap-3 text-sm text-slate-200 sm:grid-cols-2">
+                {[
+                  "Overall score and maturity level",
+                  "Six dimension scores, instantly",
+                  "Gaps with practical next steps",
+                  "A free starter AI portfolio",
+                ].map((t) => (
+                  <li key={t} className="flex gap-2">
+                    <ShieldCheck className="mt-0.5 size-4 shrink-0 text-radar-400" aria-hidden /> {t}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <ButtonLink href="/assessment?src=home_section" variant="accent" size="lg">
+                  Take the 5-minute assessment <ArrowRight className="size-4" aria-hidden />
+                </ButtonLink>
+                <span className="text-sm text-slate-400">No sign-up needed to see your scores.</span>
+              </div>
+            </div>
+            <AssessmentPreview />
           </div>
         </section>
 
@@ -295,6 +344,10 @@ const FAQ = [
     q: "Who is North Labs?",
     a: "North Labs is an AI consultancy that helps companies decide where AI should go first, build it on the right platform, and measure the impact. Our clients run their AI portfolios in the AI Radar Workspace.",
   },
+  {
+    q: "What is the AI readiness assessment?",
+    a: "A free, five-minute questionnaire that scores your company across six dimensions of AI readiness and suggests where to start. Your scores appear instantly; the full report with next steps and starter initiatives is free with an AI Radar account.",
+  },
 ];
 
 function DigestPreview({ stories }: { stories: Story[] }) {
@@ -325,6 +378,32 @@ function DigestPreview({ stories }: { stories: Story[] }) {
       <div className="flex items-center gap-2 rounded-b-2xl border-t border-slate-100 bg-slate-50 px-5 py-3 text-xs text-slate-500">
         <Building2 className="size-3.5" /> Filtered for: Manufacturing · Microsoft · Pricing changes · Regulation
       </div>
+    </div>
+  );
+}
+
+function AssessmentPreview() {
+  return (
+    <div className="rounded-2xl bg-white p-5 text-slate-900 shadow-2xl shadow-black/30 sm:p-6" aria-hidden>
+      <div className="flex items-center justify-between text-xs text-slate-500">
+        <span className="font-medium uppercase tracking-wide">AI readiness report</span>
+        <span>Example · illustrative scores</span>
+      </div>
+      <div className="mt-4 flex items-center gap-5">
+        <ScoreRing score={61} size={104} />
+        <div className="min-w-0 flex-1">
+          <div className="text-xs text-slate-500">Maturity level</div>
+          <div className="text-xl font-semibold text-slate-900">Scaling</div>
+          <div className="mt-3">
+            <LevelScale levelId="scaling" />
+          </div>
+        </div>
+      </div>
+      <DimensionBars
+        scores={{ strategy: 72, value: 63, data: 38, technology: 75, people: 56, governance: 62 }}
+        showBand={false}
+        className="mt-6 space-y-3"
+      />
     </div>
   );
 }
