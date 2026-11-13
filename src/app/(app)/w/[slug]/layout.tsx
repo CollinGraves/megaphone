@@ -8,13 +8,14 @@ import { ORG_ROLES, labelFrom } from "@/lib/taxonomy";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { WorkspaceNav, type NavItem } from "./_components/client";
 import { countOpenAlerts } from "./_lib/alerts";
+import { BRAND } from "@/lib/brand";
 
 const PLAN_LABELS: Record<string, string> = { engagement: "Engagement", trial: "Trial", pro: "Pro", enterprise: "Enterprise" };
 
 export async function generateMetadata({ params }: LayoutProps<"/w/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const ctx = await getWorkspaceOrNotFound(slug);
-  return { title: { template: `%s · ${ctx.org.name} · AI Radar`, default: `${ctx.org.name} · AI Radar` } };
+  return { title: { template: `%s · ${ctx.org.name} · ${BRAND}`, default: `${ctx.org.name} · ${BRAND}` } };
 }
 
 export default async function WorkspaceLayout({ children, params }: LayoutProps<"/w/[slug]">) {

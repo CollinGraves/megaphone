@@ -9,6 +9,7 @@ import { appUrl } from "@/lib/env";
 import { IDEA_FREQUENCIES, estimateAnnualHours, frequencyLabel } from "@/lib/ideas";
 import { IDEA_URGENCY, labelFrom } from "@/lib/taxonomy";
 import { zOptNumber, zOptText } from "../../_lib/action-utils";
+import { BRAND } from "@/lib/brand";
 
 /** Public, shareable intake URL for a workspace's current token. */
 export const intakeUrl = (token: string) => `${appUrl()}/intake/${token}`;
@@ -147,14 +148,14 @@ export async function notifyTriagersOfNewIdea(org: Pick<Organization, "id" | "na
       quote(idea.problem.length > 600 ? `${idea.problem.slice(0, 600)}…` : idea.problem) +
       p(`<span style="color:#475569">${facts.map(escapeHtml).join(" · ")}</span>`) +
       button(ideaUrl(org, idea.id), "Review the idea"),
-    footer: `You're receiving this because you can triage AI ideas in the ${escapeHtml(org.name)} workspace on AI Radar.`,
+    footer: `You're receiving this because you can triage AI ideas in the ${escapeHtml(org.name)} workspace on ${BRAND}.`,
   });
   const text = `${idea.submitterName} submitted a new AI idea via ${via}: "${idea.title}"\n\n${idea.problem}\n\n${facts.join(" · ")}\n\nReview it: ${ideaUrl(org, idea.id)}`;
   sendLater(to.map((email) => ({ to: email, subject, html, text })));
 }
 
 const submitterFooter = (orgName: string) =>
-  `You're receiving this because you submitted an AI idea to ${escapeHtml(orgName)}'s AI team through AI Radar.`;
+  `You're receiving this because you submitted an AI idea to ${escapeHtml(orgName)}'s AI team through ${BRAND}.`;
 
 /** Receipt for an idea submitted through the public intake link. */
 export function sendIntakeConfirmation(org: Pick<Organization, "name">, idea: Idea) {

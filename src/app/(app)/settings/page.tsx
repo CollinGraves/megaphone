@@ -16,6 +16,7 @@ import { db } from "@/db";
 import { userPreferences } from "@/db/schema";
 import { requireUser } from "@/lib/auth/session";
 import { updateSettings } from "./actions";
+import { BRAND } from "@/lib/brand";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -51,7 +52,7 @@ export default async function SettingsPage() {
       <div className="mt-8" id="api">
         <h2 className="mb-1 text-sm font-semibold text-slate-900">API &amp; MCP</h2>
         <p className="mb-3 text-sm text-slate-600">
-          Use AI Radar from Claude, ChatGPT, Cursor or any MCP-compatible tool. Keys act as you, with your current workspace role. Server URL:{" "}
+          Use {BRAND} from Claude, ChatGPT, Cursor or any MCP-compatible tool. Keys act as you, with your current workspace role. Server URL:{" "}
           <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">{mcpUrl}</code>
         </p>
         <Card className="space-y-5 p-6">

@@ -11,6 +11,7 @@ import type { SocialProviders } from "@/lib/auth/providers";
 import { safeNextPath } from "@/lib/safe-redirect";
 import { SsoButtons } from "./sso-buttons";
 import { Alert, Button, Card, Checkbox, Field, Input } from "./ui";
+import { BRAND } from "@/lib/brand";
 
 export function AuthForm({
   mode,
@@ -66,7 +67,7 @@ export function AuthForm({
   const ssoNewUserUrl = next ? safeNextPath(next, "/onboarding") : `/onboarding?${newUserParams.toString()}`;
   return (
     <Card className="p-6">
-      <h1 className="text-lg font-semibold text-slate-900">{isSignUp ? "Create your free AI Radar" : "Welcome back"}</h1>
+      <h1 className="text-lg font-semibold text-slate-900">{isSignUp ? `Create your free ${BRAND}` : "Welcome back"}</h1>
       <p className="mt-1 text-sm text-slate-500">
         {isSignUp
           ? "Use your company email and we'll tailor your radar to your company's stack, deadlines and industry."
@@ -104,7 +105,7 @@ export function AuthForm({
               <AlertTriangle className="mt-0.5 size-4 shrink-0" />
               <div>
                 {requireWorkEmail ? (
-                  <>AI Radar is for business teams. Please use your work email.</>
+                  <>{BRAND} is for business teams. Please use your work email.</>
                 ) : (
                   <>
                     <strong>Looks like a personal address.</strong> With your company email we tailor your radar to the
@@ -158,7 +159,7 @@ export function AuthForm({
           </>
         ) : (
           <>
-            New to AI Radar?{" "}
+            New to {BRAND}?{" "}
             <Link href={`/sign-up${nextQuery}`} className="font-medium text-radar-700 hover:underline">
               Create a free account
             </Link>

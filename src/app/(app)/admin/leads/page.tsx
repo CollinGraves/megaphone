@@ -15,6 +15,7 @@ import { LEAD_STATUS_LABELS, LeadStatusBadge, ScoreBadge } from "../_components/
 import { Pager } from "../_components/pager";
 import { MIN_SCORE_OPTIONS, parseLeadFilters } from "./filters";
 import { LeadsTabs } from "./tabs";
+import { BRAND } from "@/lib/brand";
 
 export const metadata: Metadata = { title: "Leads" };
 
@@ -70,7 +71,7 @@ export default async function LeadsPage({ searchParams }: PageProps<"/admin/lead
       <PageHeader
         eyebrow="Leads"
         title="Lead pipeline"
-        description="Everyone who signed up for AI Radar, scored by fit and engagement. Hover a score to see why."
+        description={`Everyone who signed up for ${BRAND}, scored by fit and engagement. Hover a score to see why.`}
         actions={
           <ButtonLink href={`/admin/leads/export${qs(view)}`} variant="secondary" prefetch={false}>
             <Download className="size-4" aria-hidden /> Export CSV
@@ -145,7 +146,7 @@ export default async function LeadsPage({ searchParams }: PageProps<"/admin/lead
         <EmptyState
           icon={<UserRoundSearch className="size-6" />}
           title={hasFilters ? "No leads match these filters" : "No leads yet"}
-          description={hasFilters ? "Try widening your filters." : "People who sign up for AI Radar show up here."}
+          description={hasFilters ? "Try widening your filters." : `People who sign up for ${BRAND} show up here.`}
         />
       ) : (
         <Card>

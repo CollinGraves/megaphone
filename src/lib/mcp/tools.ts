@@ -22,7 +22,11 @@ import { getStackContext, storyContext, upcomingDeadlines } from "@/lib/graph/pe
 import { estimateAnnualHours } from "@/lib/ideas";
 import { getStoryBySlug, listStories } from "@/lib/stories";
 import { CATEGORY_SLUGS, STAGES, VENDOR_SLUGS, categoryLabel, labelFrom, vendorLabel } from "@/lib/taxonomy";
+import { rateLimit } from "@/lib/rate-limit";
 import { loadPrincipal, McpAccessError, requireWorkspace, type Principal } from "./principal";
+import { BRAND } from "@/lib/brand";
+
+const MCP_CALLS_PER_MINUTE = 120;
 
 type ToolCtx = { http?: { authInfo?: { extra?: Record<string, unknown> } } };
 type ToolResult = { content: { type: "text"; text: string }[]; isError?: boolean };
@@ -37,6 +41,8 @@ function withPrincipal<A>(fn: (args: A, p: Principal) => Promise<ToolResult>) {
     if (typeof keyId !== "string") return fail("Not authenticated.");
     const p = await loadPrincipal(keyId);
     if (!p) return fail("This API key has been revoked.");
+    const limited = await rateLimit(`mcp:key:${keyId}`, MCP_CALLS_PER_MINUTE, 60);
+    if (!limited.allowed) return fail(`Rate limit reached (${MCP_CALLS_PER_MINUTE} calls per minute). Retry in ${limited.retryAfterSeconds}s.`);
     try {
       return await fn(args, p);
     } catch (err) {
@@ -71,7 +77,7 @@ export function registerRadarTools(server: McpServer) {
     {
       title: "Search AI news",
       description:
-        "Search AI Radar's deduplicated, ranked AI news. Filter by text, category, vendor and recency. Importance is 1 (trivia) to 5 (major).",
+        `Search ${BRAND}'s deduplicated, ranked AI news. Filter by text, category, vendor and recency. Importance is 1 (trivia) to 5 (major).`,
       inputSchema: z.object({
         query: z.string().max(100).optional().describe("Words to match in titles and summaries"),
         category: z.enum(CATEGORY_SLUGS as [string, ...string[]]).optional(),
@@ -143,7 +149,7 @@ export function registerRadarTools(server: McpServer) {
     {
       title: "My company's stack and deadlines",
       description:
-        "The tools AI Radar believes your company runs on (confirmed or inferred) and upcoming retirements, deprecations and regulatory dates that affect them or vendors you follow.",
+        `The tools ${BRAND} believes your company runs on (confirmed or inferred) and upcoming retirements, deprecations and regulatory dates that affect them or vendors you follow.`,
       inputSchema: z.object({ days: z.number().int().min(7).max(365).default(180) }),
       annotations: READ,
     },

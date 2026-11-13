@@ -11,6 +11,7 @@ import { memberships, organizations } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth/session";
 import { IntakeForm } from "./intake-form";
 import { TOKEN_RE } from "./token";
+import { BRAND } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -121,7 +122,7 @@ export default async function IntakePage({ params }: PageProps<"/intake/[token]"
         </Card>
 
         <p className="mt-6 flex items-center justify-center gap-1.5 text-xs text-slate-400">
-          <RadarMark className="size-4" /> Powered by AI Radar by North Labs
+          <RadarMark className="size-4" /> Powered by {BRAND} by North Labs
         </p>
       </main>
     </div>

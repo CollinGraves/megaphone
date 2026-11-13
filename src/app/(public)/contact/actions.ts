@@ -7,6 +7,8 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
 import { track } from "@/lib/tracking";
 import type { ActionState } from "@/lib/utils";
+import { BRAND } from "@/lib/brand";
+import { clientIpKey, rateLimit } from "@/lib/rate-limit";
 
 const ContactSchema = z.object({
   name: z.string().trim().min(1, "Please enter your name").max(120),
@@ -19,6 +21,8 @@ const ContactSchema = z.object({
 export async function submitContactRequest(_prev: ActionState, form: FormData): Promise<ActionState> {
   // Honeypot: bots fill every field.
   if (form.get("website")) return { ok: true, message: "Thanks! We'll be in touch shortly." };
+  const limited = await rateLimit(`contact:ip:${await clientIpKey()}`, 5, 3600);
+  if (!limited.allowed) return { error: "We've received several messages from your network already. Please try again later or email us directly." };
   const parsed = ContactSchema.safeParse({
     name: form.get("name"),
     email: form.get("email"),
@@ -37,7 +41,7 @@ export async function submitContactRequest(_prev: ActionState, form: FormData): 
   if (notify) {
     await sendEmail({
       to: notify,
-      subject: `New AI Radar contact request: ${data.name}${data.company ? ` (${data.company})` : ""}`,
+      subject: `New ${BRAND} contact request: ${data.name}${data.company ? ` (${data.company})` : ""}`,
       html: emailLayout({
         body: `<p><strong>${escapeHtml(data.name)}</strong> &lt;${escapeHtml(data.email)}&gt;${data.company ? ` — ${escapeHtml(data.company)}` : ""}</p><p>${escapeHtml(data.message ?? "(no message)")}</p><p style="color:#64748b">Source: ${escapeHtml(data.source ?? "contact page")}</p>`,
       }),

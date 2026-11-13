@@ -11,6 +11,7 @@ import { appUrl } from "@/lib/env";
 import { addStackItem, setStackItemStatus } from "@/lib/graph/stack";
 import { track } from "@/lib/tracking";
 import type { ActionState } from "@/lib/utils";
+import { BRAND } from "@/lib/brand";
 
 export async function toggleSavedStory(storyId: string) {
   const user = await getCurrentUser();
@@ -58,21 +59,21 @@ export async function inviteColleagues(_prev: ActionState, form: FormData): Prom
     const url = `${appUrl()}/sign-up?ref=${encodeURIComponent(current.id)}&email=${encodeURIComponent(email)}&src=colleague_invite`;
     await sendEmail({
       to: email,
-      subject: `${current.name} thinks you'd find AI Radar useful`,
+      subject: `${current.name} thinks you'd find ${BRAND} useful`,
       html: emailLayout({
-        body: `<p style="font-size:15px">${escapeHtml(current.name)}${current.jobTitle ? ` (${escapeHtml(current.jobTitle)})` : ""} uses AI Radar to keep up with the AI news that matters to ${escapeHtml(current.company ?? "your company")} and invited you to join.</p>
-<p style="font-size:14px;color:#334155">AI Radar watches hundreds of sources and sends a short, personalized digest of model releases, pricing changes, regulation and enterprise adoption. It's free.</p>
+        body: `<p style="font-size:15px">${escapeHtml(current.name)}${current.jobTitle ? ` (${escapeHtml(current.jobTitle)})` : ""} uses ${BRAND} to keep up with the AI news that matters to ${escapeHtml(current.company ?? "your company")} and invited you to join.</p>
+<p style="font-size:14px;color:#334155">${BRAND} watches hundreds of sources and sends a short, personalized digest of model releases, pricing changes, regulation and enterprise adoption. It's free.</p>
 <p><a href="${url}" style="display:inline-block;background:#12b393;color:#070b14;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">Get my free radar</a></p>`,
         footer: `You received this because ${escapeHtml(current.name)} invited you. We won't email you again unless you sign up.`,
       }),
-      text: `${current.name} invited you to AI Radar: ${url}`,
+      text: `${current.name} invited you to ${BRAND}: ${url}`,
     });
     await track("colleague_invite", { userId: current.id, metadata: { email } });
   }
   revalidatePath("/feed");
   const parts = [];
   if (toInvite.length) parts.push(`Invited ${toInvite.length} colleague${toInvite.length === 1 ? "" : "s"}.`);
-  if (existing.size) parts.push(`${existing.size} already ${existing.size === 1 ? "uses" : "use"} AI Radar.`);
+  if (existing.size) parts.push(`${existing.size} already ${existing.size === 1 ? "uses" : "use"} ${BRAND}.`);
   return { ok: true, message: parts.join(" ") };
 }
 

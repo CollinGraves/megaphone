@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { BRAND } from "@/lib/brand";
 
 export function RadarMark({ className }: { className?: string }) {
   return (
@@ -20,7 +21,7 @@ export function Logo({ href = "/", dark = false, className }: { href?: string; d
     <Link href={href} className={cn("flex items-center gap-2", className)}>
       <RadarMark />
       <span className={cn("text-[15px] font-semibold tracking-tight", dark ? "text-white" : "text-slate-900")}>
-        AI Radar
+        {BRAND}
         <span className={cn("ml-1.5 font-normal", dark ? "text-slate-400" : "text-slate-500")}>by North Labs</span>
       </span>
     </Link>

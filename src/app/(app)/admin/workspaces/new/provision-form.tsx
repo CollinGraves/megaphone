@@ -10,6 +10,7 @@ import { INDUSTRIES } from "@/lib/taxonomy";
 import { CopyField } from "../../_components/copy-button";
 import { PLAN_LABELS } from "../../_components/badges";
 import { provisionWorkspace, type ProvisionState } from "../actions";
+import { BRAND } from "@/lib/brand";
 
 type Consultant = { id: string; name: string; email: string };
 
@@ -58,7 +59,7 @@ function ProvisionFormInner({ consultants, onReset }: { consultants: Consultant[
             </div>
           ) : invite?.status === "added" ? (
             <Alert tone="success">
-              {invite.email} already had an AI Radar account and was added as the workspace owner.
+              {invite.email} already had an {BRAND} account and was added as the workspace owner.
             </Alert>
           ) : null}
           {inviteError ? (

@@ -14,6 +14,7 @@ import { formatDate, formatUsd, timeAgo } from "@/lib/utils";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { CopyButton, InlineForm } from "../_components/client";
 import { changeRole, inviteMember, removeMember, revokeInvitation, updateProfile, updateWeights } from "./actions";
+import { BRAND } from "@/lib/brand";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -224,7 +225,7 @@ export default async function SettingsPage({ params }: PageProps<"/w/[slug]/sett
       {canMembers ? (
         <div className="mt-6 grid gap-6 xl:grid-cols-5">
           <Card className="xl:col-span-2">
-            <CardHeader title="Invite someone" description="People without an account get an email link; existing AI Radar users are added right away." />
+            <CardHeader title="Invite someone" description={`People without an account get an email link; existing ${BRAND} users are added right away.`} />
             <CardBody>
               <ActionForm action={inviteMember} className="space-y-4" resetOnSuccess>
                 <input type="hidden" name="slug" value={org.slug} />

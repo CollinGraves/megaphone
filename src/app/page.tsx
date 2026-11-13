@@ -27,6 +27,7 @@ import { listStories } from "@/lib/stories";
 import { CATEGORIES, categoryLabel, vendorLabel } from "@/lib/taxonomy";
 import { formatNumber } from "@/lib/utils";
 import { DimensionBars, LevelScale, ScoreRing } from "./(public)/assessment/_components/visuals";
+import { BRAND } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -227,7 +228,7 @@ export default async function HomePage() {
         {/* How it works */}
         <section className="border-y border-slate-200 bg-white">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">How AI Radar works</h2>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">How {BRAND} works</h2>
             <div className="mt-8 grid gap-8 md:grid-cols-3">
               {[
                 { icon: Radar, title: "We watch everything", body: "First-party vendor blogs and newsrooms, research feeds, regulators, trade press and community signals, checked every hour." },
@@ -257,7 +258,7 @@ export default async function HomePage() {
         <section id="workspace" className="mx-auto max-w-7xl scroll-mt-16 px-4 py-20 sm:px-6">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
-              <div className="text-sm font-semibold uppercase tracking-wide text-radar-700">AI Radar Workspace · for North Labs clients</div>
+              <div className="text-sm font-semibold uppercase tracking-wide text-radar-700">{BRAND} Workspace · for North Labs clients</div>
               <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">Your company&apos;s AI portfolio, in one place</h2>
               <p className="mt-3 text-slate-600">
                 Most companies have AI work spread across Claude, ChatGPT, Copilot, Gemini and in-house builds, with no
@@ -325,7 +326,7 @@ export default async function HomePage() {
 
 const FAQ = [
   {
-    q: "Is AI Radar really free?",
+    q: `Is ${BRAND} really free?`,
     a: "Yes. The feed and digest are free. North Labs funds it because it's how we stay close to what our clients need, and some readers eventually ask us for help with their own AI initiatives.",
   },
   {
@@ -334,7 +335,7 @@ const FAQ = [
   },
   {
     q: "How is this different from other AI newsletters?",
-    a: "It's personalized and business-focused. Instead of one editor's picks for everyone, AI Radar ranks every story by significance and filters it to your topics, vendors and industry, with a note on why it matters for companies adopting AI.",
+    a: `It's personalized and business-focused. Instead of one editor's picks for everyone, ${BRAND} ranks every story by significance and filters it to your topics, vendors and industry, with a note on why it matters for companies adopting AI.`,
   },
   {
     q: "How often will I hear from you?",
@@ -342,11 +343,11 @@ const FAQ = [
   },
   {
     q: "Who is North Labs?",
-    a: "North Labs is an AI consultancy that helps companies decide where AI should go first, build it on the right platform, and measure the impact. Our clients run their AI portfolios in the AI Radar Workspace.",
+    a: `North Labs is an AI consultancy that helps companies decide where AI should go first, build it on the right platform, and measure the impact. Our clients run their AI portfolios in the ${BRAND} Workspace.`,
   },
   {
     q: "What is the AI readiness assessment?",
-    a: "A free, five-minute questionnaire that scores your company across six dimensions of AI readiness and suggests where to start. Your scores appear instantly; the full report with next steps and starter initiatives is free with an AI Radar account.",
+    a: `A free, five-minute questionnaire that scores your company across six dimensions of AI readiness and suggests where to start. Your scores appear instantly; the full report with next steps and starter initiatives is free with an ${BRAND} account.`,
   },
 ];
 
@@ -355,7 +356,7 @@ function DigestPreview({ stories }: { stories: Story[] }) {
     <div className="rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60" aria-label="Example digest">
       <div className="flex items-center justify-between rounded-t-2xl bg-ink-900 px-5 py-3 text-sm">
         <span className="font-semibold text-white">
-          AI Radar <span className="font-normal text-slate-400">· Weekly digest</span>
+          {BRAND} <span className="font-normal text-slate-400">· Weekly digest</span>
         </span>
         <span className="text-xs text-slate-400">Monday, 8:00 AM</span>
       </div>

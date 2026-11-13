@@ -3,6 +3,7 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { entityKind, factPredicate } from "@/db/schema";
 import { CATEGORIES, CATEGORY_SLUGS, INDUSTRY_SLUGS, VENDORS, VENDOR_SLUGS } from "@/lib/taxonomy";
+import { BRAND } from "@/lib/brand";
 
 export const DEFAULT_MODEL = "claude-opus-5-5";
 
@@ -66,7 +67,7 @@ const ClassificationSchema = z.object({
 
 export type ClassificationResult = z.infer<typeof ClassificationSchema>;
 
-const SYSTEM_PROMPT = `You are the news editor for AI Radar, a briefing service that helps business and technology leaders keep up with AI.
+const SYSTEM_PROMPT = `You are the news editor for ${BRAND}, a briefing service that helps business and technology leaders keep up with AI.
 
 You receive a batch of newly fetched articles and a list of stories already published in the last few days. For every article:
 1. Decide whether it is relevant: it must be substantively about AI (models, products, research, policy, companies, infrastructure, adoption). Drop marketing fluff, job posts, podcasts without content, and unrelated tech news.

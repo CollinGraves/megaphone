@@ -11,6 +11,7 @@ import { INDUSTRY_SLUGS, ORG_ROLES, labelFrom } from "@/lib/taxonomy";
 import type { ActionState } from "@/lib/utils";
 import { logActivity, type WorkspaceContext } from "@/lib/workspace";
 import { ActionError, authorize, revalidateWorkspace, runAction, zId, zOptNumber } from "../_lib/action-utils";
+import { BRAND } from "@/lib/brand";
 
 /* ───────────────────────────── Workspace profile & scoring ───────────────────────────── */
 
@@ -99,7 +100,7 @@ export async function inviteMember(_prev: ActionState, form: FormData): Promise<
       ok: true,
       message:
         result.status === "added"
-          ? `${email} already has an AI Radar account and was added as ${labelFrom(ORG_ROLES, role).toLowerCase()}.`
+          ? `${email} already has an ${BRAND} account and was added as ${labelFrom(ORG_ROLES, role).toLowerCase()}.`
           : `Invitation emailed to ${email}. You can also copy the link from the pending invitations list.`,
     };
   });

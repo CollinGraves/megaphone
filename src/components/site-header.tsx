@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/session";
 import { Logo } from "./logo";
 import { ButtonLink } from "./ui";
+import { BRAND } from "@/lib/brand";
 
 export async function SiteHeader({ dark = false }: { dark?: boolean }) {
   const user = await getCurrentUser();
@@ -51,7 +52,7 @@ export function SiteFooter() {
     <footer className="mt-auto border-t border-slate-200 bg-white">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div>
-          <span className="font-medium text-slate-700">AI Radar</span> is built and run by North Labs.
+          <span className="font-medium text-slate-700">{BRAND}</span> is built and run by North Labs.
         </div>
         <nav className="flex flex-wrap gap-5">
           <Link href="/radar" className="hover:text-slate-900">

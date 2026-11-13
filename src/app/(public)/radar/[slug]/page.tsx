@@ -12,6 +12,7 @@ import { getRelatedStories, getStoryBySlug } from "@/lib/stories";
 import { categoryLabel, industryLabel, vendorLabel } from "@/lib/taxonomy";
 import { track } from "@/lib/tracking";
 import { formatDate, timeAgo } from "@/lib/utils";
+import { BRAND } from "@/lib/brand";
 
 export async function generateMetadata({ params }: PageProps<"/radar/[slug]">): Promise<Metadata> {
   const { slug } = await params;
@@ -128,7 +129,7 @@ export default async function StoryPage({ params }: PageProps<"/radar/[slug]">) 
             <div className="rounded-xl bg-ink-900 p-5 text-white">
               <h2 className="font-semibold">Stories like this, filtered for you</h2>
               <p className="mt-1.5 text-sm text-slate-300">
-                AI Radar watches hundreds of sources and sends you only what matters to your role and industry.
+                {BRAND} watches hundreds of sources and sends you only what matters to your role and industry.
               </p>
               <ButtonLink href="/sign-up?src=story_sidebar" variant="accent" className="mt-4 w-full">
                 Get your free radar

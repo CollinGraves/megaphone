@@ -11,6 +11,7 @@ import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
 import { ensureCompany, requestEnrichment } from "@/lib/enrichment";
 import { appUrl } from "@/lib/env";
 import { socialProvidersEnabled } from "./providers";
+import { BRAND } from "@/lib/brand";
 
 const adminEmails = () =>
   (process.env.PLATFORM_ADMIN_EMAILS ?? "")
@@ -57,12 +58,12 @@ export const auth = betterAuth({
     sendVerificationEmail: async ({ user, url }) => {
       await sendEmail({
         to: user.email,
-        subject: "Confirm your email for AI Radar",
+        subject: `Confirm your email for ${BRAND}`,
         html: emailLayout({
-          body: `<p style="font-size:15px">Hi ${escapeHtml(user.name.split(" ")[0] || "there")}, confirm your email to keep your AI Radar digest coming.</p>
+          body: `<p style="font-size:15px">Hi ${escapeHtml(user.name.split(" ")[0] || "there")}, confirm your email to keep your ${BRAND} digest coming.</p>
 <p><a href="${url}" style="display:inline-block;background:#12b393;color:#070b14;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">Confirm my email</a></p>`,
         }),
-        text: `Confirm your email for AI Radar: ${url}`,
+        text: `Confirm your email for ${BRAND}: ${url}`,
       });
     },
   },
@@ -107,7 +108,7 @@ export const auth = betterAuth({
       }
       if (kind === "personal" && requireWorkEmail()) {
         throw new APIError("BAD_REQUEST", {
-          message: `AI Radar is for business teams. Please sign up with your work email instead of ${emailDomain(email)}.`,
+          message: `${BRAND} is for business teams. Please sign up with your work email instead of ${emailDomain(email)}.`,
         });
       }
     }),

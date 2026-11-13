@@ -24,7 +24,7 @@ ingestion pipeline.
 | Auth | Better Auth (email + password), sessions stored in Postgres |
 | AI | Claude (Anthropic SDK, structured outputs) for story deduplication, classification and summaries. Falls back to a keyword classifier when no API key is set |
 | Email | Resend (falls back to logging emails to the server console) |
-| Jobs | Vercel Cron → `/api/cron/ingest` (hourly) and `/api/cron/digest` (daily) |
+| Jobs | Vercel Cron → `/api/cron/ingest` (hourly), `/api/cron/digest` (daily), `/api/cron/governance` (weekly review reminders) |
 | Hosting | Vercel |
 
 ## Getting started (local)
@@ -240,6 +240,16 @@ Connect from Claude Code with
 `claude mcp add --transport http ai-radar https://<app>/api/mcp --header "Authorization: Bearer radar_…"`, or from
 stdio clients via `npx mcp-remote <url> --header "Authorization: Bearer radar_…"` (the settings page generates both).
 claude.ai and ChatGPT "custom connectors" need OAuth rather than a static key; that's a follow-up (see roadmap).
+
+### Operational guardrails
+
+- **Naming**: the product name lives in `src/lib/brand.ts` (`BRAND`) and is used across the UI, titles, emails, MCP
+  descriptions and the news-editor prompt, so renaming the product means changing that one constant.
+- **Rate limits** (`src/lib/rate-limit.ts`, Postgres-backed so it works on serverless): contact form 5/hour per IP,
+  assessment submissions 10/hour per IP, MCP 120 calls/minute per key. The idea intake link has its own per-email and
+  per-workspace limits.
+- **CI** (`.github/workflows/ci.yml`): typecheck, lint, unit tests, a check that the schema has no unmigrated changes, and
+  a production build on every PR and push to `master`.
 
 ## Roadmap / next steps
 

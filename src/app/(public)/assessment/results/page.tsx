@@ -8,6 +8,7 @@ import { findByToken, summarize } from "@/lib/assessment/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { BandLegend, DimensionBars, LevelScale, ScoreRing } from "../_components/visuals";
 import { EmailGate } from "../_components/email-gate";
+import { BRAND } from "@/lib/brand";
 
 export const metadata: Metadata = {
   title: "Your AI readiness results",
@@ -79,7 +80,7 @@ export default async function AssessmentResultsPage({ searchParams }: PageProps<
           <Card className="overflow-hidden">
             <div className="bg-ink-900 px-6 py-5 text-white">
               <h2 className="text-lg font-semibold">Get your full report</h2>
-              <p className="mt-1 text-sm text-slate-300">Free with an AI Radar account. We&apos;ll also email you a copy.</p>
+              <p className="mt-1 text-sm text-slate-300">Free with an {BRAND} account. We&apos;ll also email you a copy.</p>
             </div>
             <div className="space-y-5 px-6 py-5">
               <ul className="space-y-2.5 text-sm text-slate-700">

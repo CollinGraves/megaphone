@@ -11,6 +11,7 @@ import { findInvitation } from "@/lib/invitations";
 import { ORG_ROLES, labelFrom } from "@/lib/taxonomy";
 import { formatDate } from "@/lib/utils";
 import { acceptInvite } from "./actions";
+import { BRAND } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Workspace invitation", robots: { index: false } };
@@ -65,7 +66,7 @@ export default async function InvitePage({ params }: PageProps<"/invite/[token]"
 
   const intro = (
     <p>
-      You’ve been invited to join <strong className="text-slate-900">{org.name}</strong> on AI Radar as{" "}
+      You’ve been invited to join <strong className="text-slate-900">{org.name}</strong> on {BRAND} as{" "}
       <strong className="text-slate-900">{role.toLowerCase()}</strong> — the single source of truth for the company’s AI initiatives.
     </p>
   );
@@ -137,7 +138,7 @@ function Footer({ signedIn }: { signedIn: boolean }) {
   return (
     <p className="mt-4 text-sm">
       <Link href={signedIn ? "/feed" : "/"} className="font-medium text-radar-700 hover:underline">
-        {signedIn ? "Go to your feed" : "Learn about AI Radar"}
+        {signedIn ? "Go to your feed" : `Learn about ${BRAND}`}
       </Link>
     </p>
   );

@@ -5,6 +5,7 @@ import { Card, Field, Input, Textarea } from "@/components/ui";
 import { getCurrentUser } from "@/lib/auth/session";
 import { track } from "@/lib/tracking";
 import { submitContactRequest } from "./actions";
+import { BRAND } from "@/lib/brand";
 
 export const metadata: Metadata = {
   title: "Talk to North Labs",
@@ -22,7 +23,7 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Turn AI news into business results</h1>
         <p className="mt-3 text-slate-600">
           North Labs works with leadership teams to decide where AI should go first, build it on the right platform, and
-          prove the impact. Our clients run their entire AI portfolio in an AI Radar Workspace.
+          prove the impact. Our clients run their entire AI portfolio in an {BRAND} Workspace.
         </p>
         <ul className="mt-8 space-y-4">
           {[

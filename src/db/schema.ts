@@ -294,6 +294,13 @@ export const apiKeys = pgTable(
   (t) => [index("api_keys_user_idx").on(t.userId)],
 );
 
+/** Fixed-window rate-limit counters (serverless-safe; old windows are pruned by the ingest cron). */
+export const rateLimits = pgTable("rate_limits", {
+  key: text("key").primaryKey(),
+  windowStart: timestamp("window_start", { withTimezone: true }).notNull().defaultNow(),
+  count: integer("count").notNull().default(0),
+});
+
 /** Free AI readiness assessment (public lead magnet). Anonymous until claimed by a signed-in user. */
 export const assessments = pgTable(
   "assessments",
