@@ -23,3 +23,11 @@ describe("isDigestDue", () => {
     expect(isDigestDue({ digestFrequency: "off", lastDigestSentAt: null }, monday)).toBe(false);
   });
 });
+
+describe("safeNextPath", async () => {
+  const { safeNextPath } = await import("./safe-redirect");
+  it("allows relative paths and rejects off-site redirects", () => {
+    expect(safeNextPath("/w/acme?x=1", "/feed")).toBe("/w/acme?x=1");
+    for (const bad of ["https://evil.com", "//evil.com", "/\\evil.com", undefined, ["/a"]]) expect(safeNextPath(bad, "/feed")).toBe("/feed");
+  });
+});

@@ -15,6 +15,8 @@ const adminEmails = () =>
 export const auth = betterAuth({
   baseURL: appUrl(),
   secret: process.env.BETTER_AUTH_SECRET,
+  // Allow Vercel preview deployments to authenticate against their own URL.
+  trustedOrigins: [appUrl(), ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : [])],
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {

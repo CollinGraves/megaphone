@@ -4,11 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { authClient } from "@/lib/auth/client";
+import { safeNextPath } from "@/lib/safe-redirect";
 import { Alert, Button, Card, Field, Input } from "./ui";
 
-function safeNext(next: string | null | undefined, fallback: string) {
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : fallback;
-}
 
 export function AuthForm({ mode, next, defaultEmail }: { mode: "sign-in" | "sign-up"; next?: string; defaultEmail?: string }) {
   const router = useRouter();
@@ -31,7 +29,7 @@ export function AuthForm({ mode, next, defaultEmail }: { mode: "sign-in" | "sign
         setError(result.error.message ?? "Something went wrong. Please try again.");
         return;
       }
-      router.push(safeNext(next, isSignUp ? "/onboarding" : "/feed"));
+      router.push(safeNextPath(next, isSignUp ? "/onboarding" : "/feed"));
       router.refresh();
     });
   }
