@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/*
+ * AI Radar design tokens.
+ * Neutral ink + a single "radar" accent. Light UI; marketing hero uses the dark ink surface.
+ */
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --color-ink-950: #070b14;
+  --color-ink-900: #0b1220;
+  --color-ink-800: #141d2f;
+  --color-ink-700: #22304a;
+
+  --color-radar-50: #ecfdf8;
+  --color-radar-100: #d1faee;
+  --color-radar-200: #a6f2dc;
+  --color-radar-300: #6ce5c6;
+  --color-radar-400: #31ceab;
+  --color-radar-500: #12b393;
+  --color-radar-600: #099079;
+  --color-radar-700: #0b7363;
+  --color-radar-800: #0e5b50;
+  --color-radar-900: #0f4b43;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: #f7f8fa;
+  color: #0f172a;
+  font-feature-settings: "cv11", "ss01";
+}
+
+/* Long-form text inside story summaries etc. */
+.prose-radar p + p {
+  margin-top: 0.75rem;
+}
+
+@keyframes radar-sweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.radar-sweep {
+  animation: radar-sweep 6s linear infinite;
+  transform-origin: 50% 50%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .radar-sweep {
+    animation: none;
+  }
+}

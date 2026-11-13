@@ -1,0 +1,636 @@
+import { relations, sql } from "drizzle-orm";
+import {
+  boolean,
+  date,
+  doublePrecision,
+  index,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
+
+const id = () =>
+  text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID());
+const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
+const updatedAt = () =>
+  timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date());
+
+/* ───────────────────────────── Auth (Better Auth) ───────────────────────────── */
+
+/** North Labs staff roles. Everyone who signs up is a plain "user". */
+export const platformRole = pgEnum("platform_role", ["user", "consultant", "admin"]);
+
+export const user = pgTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  image: text("image"),
+  platformRole: platformRole("platform_role").notNull().default("user"),
+  // Lead-capture profile, collected during onboarding
+  company: text("company"),
+  jobTitle: text("job_title"),
+  industry: text("industry"),
+  companySize: text("company_size"),
+  onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const session = pgTable(
+  "session",
+  {
+    id: text("id").primaryKey(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    token: text("token").notNull().unique(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+  },
+  (t) => [index("session_user_idx").on(t.userId)],
+);
+
+export const account = pgTable(
+  "account",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { withTimezone: true }),
+    scope: text("scope"),
+    password: text("password"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("account_user_idx").on(t.userId)],
+);
+
+export const verification = pgTable("verification", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/* ─────────────────────────────── Radar Feed ─────────────────────────────── */
+
+export const sourceType = pgEnum("source_type", ["rss", "sitemap"]);
+
+export const sources = pgTable("sources", {
+  id: id(),
+  name: text("name").notNull(),
+  homepageUrl: text("homepage_url"),
+  feedUrl: text("feed_url").notNull().unique(),
+  type: sourceType("type").notNull().default("rss"),
+  /** For sitemap sources: only URLs containing this path are considered (e.g. "/news/"). */
+  pathFilter: text("path_filter"),
+  /** Vendor slug when the source is first-party (e.g. "openai"). */
+  vendor: text("vendor"),
+  /** Category hint used by the heuristic classifier. */
+  defaultCategory: text("default_category"),
+  /** 1 (low) – 5 (canonical/first-party). Feeds importance scoring. */
+  authority: integer("authority").notNull().default(3),
+  /** True when the feed is AI-focused. General feeds are filtered by AI keywords / the model. */
+  aiOnly: boolean("ai_only").notNull().default(true),
+  /** Max items to take per fetch (keeps high-volume feeds like arXiv in check). */
+  maxItemsPerFetch: integer("max_items_per_fetch").notNull().default(25),
+  active: boolean("active").notNull().default(true),
+  lastFetchedAt: timestamp("last_fetched_at", { withTimezone: true }),
+  lastSuccessAt: timestamp("last_success_at", { withTimezone: true }),
+  lastError: text("last_error"),
+  consecutiveFailures: integer("consecutive_failures").notNull().default(0),
+  createdAt: createdAt(),
+});
+
+export const storyStatus = pgEnum("story_status", ["published", "hidden"]);
+
+/** A deduplicated news event. Many articles (from many sources) roll up into one story. */
+export const stories = pgTable(
+  "stories",
+  {
+    id: id(),
+    slug: text("slug").notNull().unique(),
+    title: text("title").notNull(),
+    summary: text("summary").notNull(),
+    whyItMatters: text("why_it_matters"),
+    categories: text("categories").array().notNull().default(sql`'{}'::text[]`),
+    vendors: text("vendors").array().notNull().default(sql`'{}'::text[]`),
+    industries: text("industries").array().notNull().default(sql`'{}'::text[]`),
+    /** 1–5. Combination of model judgement, source authority and coverage breadth. */
+    importance: integer("importance").notNull().default(2),
+    primaryUrl: text("primary_url").notNull(),
+    primarySourceName: text("primary_source_name"),
+    articleCount: integer("article_count").notNull().default(1),
+    status: storyStatus("status").notNull().default("published"),
+    featured: boolean("featured").notNull().default(false),
+    classifiedBy: text("classified_by").notNull().default("heuristic"), // "heuristic" | "llm"
+    publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    index("stories_published_idx").on(t.publishedAt),
+    index("stories_categories_idx").using("gin", t.categories),
+    index("stories_vendors_idx").using("gin", t.vendors),
+  ],
+);
+
+/** A single item pulled from a source. */
+export const articles = pgTable(
+  "articles",
+  {
+    id: id(),
+    sourceId: text("source_id")
+      .notNull()
+      .references(() => sources.id, { onDelete: "cascade" }),
+    storyId: text("story_id").references(() => stories.id, { onDelete: "set null" }),
+    url: text("url").notNull().unique(),
+    title: text("title").notNull(),
+    excerpt: text("excerpt"),
+    author: text("author"),
+    publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
+    fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull().defaultNow(),
+    processedAt: timestamp("processed_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("articles_story_idx").on(t.storyId),
+    index("articles_unprocessed_idx").on(t.processedAt),
+  ],
+);
+
+export const digestFrequency = pgEnum("digest_frequency", ["daily", "weekly", "off"]);
+
+export const userPreferences = pgTable("user_preferences", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  categories: text("categories").array().notNull().default(sql`'{}'::text[]`),
+  vendors: text("vendors").array().notNull().default(sql`'{}'::text[]`),
+  industries: text("industries").array().notNull().default(sql`'{}'::text[]`),
+  minImportance: integer("min_importance").notNull().default(2),
+  digestFrequency: digestFrequency("digest_frequency").notNull().default("weekly"),
+  lastDigestSentAt: timestamp("last_digest_sent_at", { withTimezone: true }),
+  updatedAt: updatedAt(),
+});
+
+export const savedStories = pgTable(
+  "saved_stories",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    storyId: text("story_id")
+      .notNull()
+      .references(() => stories.id, { onDelete: "cascade" }),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.storyId] })],
+);
+
+export const digests = pgTable("digests", {
+  id: id(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  storyIds: text("story_ids").array().notNull(),
+  status: text("status").notNull(), // "sent" | "skipped" | "failed" | "logged"
+  error: text("error"),
+  sentAt: createdAt(),
+});
+
+/** Engagement signals. Drive lead scoring and future CRM sync. */
+export const engagementEvents = pgTable(
+  "engagement_events",
+  {
+    id: id(),
+    userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
+    type: text("type").notNull(), // story_view | story_click | digest_open | digest_click | cta_click | signup | onboarded
+    storyId: text("story_id").references(() => stories.id, { onDelete: "set null" }),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("engagement_user_idx").on(t.userId), index("engagement_created_idx").on(t.createdAt)],
+);
+
+export const ingestionRuns = pgTable("ingestion_runs", {
+  id: id(),
+  trigger: text("trigger").notNull(), // cron | manual | script
+  startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+  finishedAt: timestamp("finished_at", { withTimezone: true }),
+  stats: jsonb("stats").$type<Record<string, number>>(),
+  error: text("error"),
+});
+
+export const leadStatus = pgEnum("lead_status", [
+  "new",
+  "contacted",
+  "qualified",
+  "customer",
+  "disqualified",
+]);
+
+/** North Labs' sales view of a signed-up user. */
+export const leadProfiles = pgTable("lead_profiles", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  status: leadStatus("status").notNull().default("new"),
+  notes: text("notes"),
+  ownerId: text("owner_id").references(() => user.id, { onDelete: "set null" }),
+  updatedAt: updatedAt(),
+});
+
+/** "Talk to North Labs" form submissions (public site). */
+export const contactRequests = pgTable("contact_requests", {
+  id: id(),
+  userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  company: text("company"),
+  message: text("message"),
+  source: text("source"), // which CTA produced it
+  handledAt: timestamp("handled_at", { withTimezone: true }),
+  createdAt: createdAt(),
+});
+
+/* ─────────────────────────────── Workspaces ─────────────────────────────── */
+
+export const orgPlan = pgEnum("org_plan", ["engagement", "trial", "pro", "enterprise"]);
+export const orgStatus = pgEnum("org_status", ["active", "suspended"]);
+export const orgRole = pgEnum("org_role", ["owner", "admin", "editor", "viewer"]);
+
+export type ScoringWeights = {
+  value: number;
+  feasibility: number;
+  alignment: number;
+  risk: number;
+};
+
+export const organizations = pgTable("organizations", {
+  id: id(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  industry: text("industry"),
+  plan: orgPlan("plan").notNull().default("engagement"),
+  status: orgStatus("status").notNull().default("active"),
+  /** Default loaded hourly cost, used to convert hours saved into dollars. */
+  defaultHourlyRate: doublePrecision("default_hourly_rate").notNull().default(75),
+  scoringWeights: jsonb("scoring_weights")
+    .$type<ScoringWeights>()
+    .notNull()
+    .default({ value: 0.4, feasibility: 0.3, alignment: 0.2, risk: 0.1 }),
+  // Reserved for self-service billing
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  provisionedById: text("provisioned_by_id").references(() => user.id, { onDelete: "set null" }),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+});
+
+export const memberships = pgTable(
+  "memberships",
+  {
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    role: orgRole("role").notNull().default("viewer"),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.orgId, t.userId] }), index("memberships_user_idx").on(t.userId)],
+);
+
+/** North Labs consultants assigned to a client workspace. */
+export const consultantAssignments = pgTable(
+  "consultant_assignments",
+  {
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.orgId, t.userId] })],
+);
+
+export const invitations = pgTable(
+  "invitations",
+  {
+    id: id(),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    role: orgRole("role").notNull().default("viewer"),
+    token: text("token").notNull().unique(),
+    invitedById: text("invited_by_id").references(() => user.id, { onDelete: "set null" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("invitations_org_idx").on(t.orgId)],
+);
+
+export const systemCategory = pgEnum("system_category", [
+  "crm",
+  "erp",
+  "data_warehouse",
+  "database",
+  "document_store",
+  "hris",
+  "ticketing",
+  "communication",
+  "finance",
+  "marketing",
+  "custom_app",
+  "other",
+]);
+
+/** A company's system of record (Salesforce, SAP, Snowflake…). */
+export const systems = pgTable(
+  "systems",
+  {
+    id: id(),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    category: systemCategory("category").notNull().default("other"),
+    vendor: text("vendor"),
+    owner: text("owner"),
+    description: text("description"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [uniqueIndex("systems_org_name_idx").on(t.orgId, t.name)],
+);
+
+export const initiativeStage = pgEnum("initiative_stage", [
+  "idea",
+  "evaluating",
+  "building",
+  "pilot",
+  "production",
+  "retired",
+]);
+export const initiativeHealth = pgEnum("initiative_health", ["on_track", "at_risk", "blocked"]);
+export const buildApproach = pgEnum("build_approach", ["buy", "configure", "build", "partner"]);
+
+export const initiatives = pgTable(
+  "initiatives",
+  {
+    id: id(),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    problemStatement: text("problem_statement").notNull().default(""),
+    proposedSolution: text("proposed_solution").notNull().default(""),
+    businessUnit: text("business_unit"),
+    sponsor: text("sponsor"),
+    ownerName: text("owner_name"),
+    stage: initiativeStage("stage").notNull().default("idea"),
+    health: initiativeHealth("health").notNull().default("on_track"),
+    /** Vendor slugs (anthropic, openai, microsoft…) the capability is built on. */
+    platforms: text("platforms").array().notNull().default(sql`'{}'::text[]`),
+    /** Free-form model / product names (e.g. "Claude Opus 5.5", "Copilot Studio"). */
+    models: text("models").array().notNull().default(sql`'{}'::text[]`),
+    buildApproach: buildApproach("build_approach"),
+    // Prioritization inputs, each 1–5
+    valueScore: integer("value_score").notNull().default(3),
+    feasibilityScore: integer("feasibility_score").notNull().default(3),
+    alignmentScore: integer("alignment_score").notNull().default(3),
+    riskScore: integer("risk_score").notNull().default(3), // higher = riskier
+    /** Optional manual override of rank; lower = higher priority. */
+    rankOverride: integer("rank_override"),
+    estimatedBuildCost: doublePrecision("estimated_build_cost"),
+    estimatedAnnualRunCost: doublePrecision("estimated_annual_run_cost"),
+    targetDate: date("target_date"),
+    launchedAt: date("launched_at"),
+    tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
+    createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("initiatives_org_idx").on(t.orgId)],
+);
+
+export const accessStatus = pgEnum("access_status", [
+  "not_requested",
+  "requested",
+  "granted",
+  "blocked",
+]);
+export const dataSensitivity = pgEnum("data_sensitivity", [
+  "public",
+  "internal",
+  "confidential",
+  "pii",
+  "phi",
+  "pci",
+]);
+
+export const dataDependencies = pgTable(
+  "data_dependencies",
+  {
+    id: id(),
+    initiativeId: text("initiative_id")
+      .notNull()
+      .references(() => initiatives.id, { onDelete: "cascade" }),
+    systemId: text("system_id")
+      .notNull()
+      .references(() => systems.id, { onDelete: "cascade" }),
+    dataDescription: text("data_description").notNull(),
+    accessStatus: accessStatus("access_status").notNull().default("not_requested"),
+    sensitivity: dataSensitivity("sensitivity").notNull().default("internal"),
+    notes: text("notes"),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index("data_deps_initiative_idx").on(t.initiativeId),
+    index("data_deps_system_idx").on(t.systemId),
+  ],
+);
+
+export const metricType = pgEnum("metric_type", [
+  "hours_saved",
+  "cost_saved",
+  "revenue_generated",
+  "custom",
+]);
+export const metricPeriod = pgEnum("metric_period", ["monthly", "annual", "one_time"]);
+
+export const impactMetrics = pgTable(
+  "impact_metrics",
+  {
+    id: id(),
+    initiativeId: text("initiative_id")
+      .notNull()
+      .references(() => initiatives.id, { onDelete: "cascade" }),
+    type: metricType("type").notNull(),
+    name: text("name").notNull(),
+    /** "hours" | "usd" | anything for custom metrics */
+    unit: text("unit").notNull(),
+    period: metricPeriod("period").notNull().default("monthly"),
+    estimatedValue: doublePrecision("estimated_value"),
+    /** For hours_saved metrics: overrides the org default loaded hourly rate. */
+    hourlyRate: doublePrecision("hourly_rate"),
+    assumptions: text("assumptions"),
+    createdAt: createdAt(),
+  },
+  (t) => [index("impact_metrics_initiative_idx").on(t.initiativeId)],
+);
+
+/** Actuals, recorded per period (usually monthly). */
+export const impactMeasurements = pgTable(
+  "impact_measurements",
+  {
+    id: id(),
+    metricId: text("metric_id")
+      .notNull()
+      .references(() => impactMetrics.id, { onDelete: "cascade" }),
+    periodStart: date("period_start").notNull(),
+    value: doublePrecision("value").notNull(),
+    note: text("note"),
+    recordedById: text("recorded_by_id").references(() => user.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("impact_measurement_period_idx").on(t.metricId, t.periodStart)],
+);
+
+export const comments = pgTable(
+  "comments",
+  {
+    id: id(),
+    initiativeId: text("initiative_id")
+      .notNull()
+      .references(() => initiatives.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+    body: text("body").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("comments_initiative_idx").on(t.initiativeId)],
+);
+
+/** Audit trail: who changed what, when. */
+export const activityLog = pgTable(
+  "activity_log",
+  {
+    id: id(),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    initiativeId: text("initiative_id").references(() => initiatives.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+    action: text("action").notNull(),
+    detail: jsonb("detail").$type<Record<string, unknown>>(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("activity_org_idx").on(t.orgId, t.createdAt)],
+);
+
+/** Radar stories that affect a specific initiative (vendor overlap on high-signal categories). */
+export const initiativeAlerts = pgTable(
+  "initiative_alerts",
+  {
+    id: id(),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    initiativeId: text("initiative_id")
+      .notNull()
+      .references(() => initiatives.id, { onDelete: "cascade" }),
+    storyId: text("story_id")
+      .notNull()
+      .references(() => stories.id, { onDelete: "cascade" }),
+    reason: text("reason").notNull(),
+    dismissedAt: timestamp("dismissed_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("initiative_alert_unique_idx").on(t.initiativeId, t.storyId),
+    index("initiative_alerts_org_idx").on(t.orgId),
+  ],
+);
+
+/* ─────────────────────────────── Relations ─────────────────────────────── */
+
+export const storiesRelations = relations(stories, ({ many }) => ({
+  articles: many(articles),
+}));
+export const articlesRelations = relations(articles, ({ one }) => ({
+  story: one(stories, { fields: [articles.storyId], references: [stories.id] }),
+  source: one(sources, { fields: [articles.sourceId], references: [sources.id] }),
+}));
+export const initiativesRelations = relations(initiatives, ({ one, many }) => ({
+  org: one(organizations, { fields: [initiatives.orgId], references: [organizations.id] }),
+  dependencies: many(dataDependencies),
+  metrics: many(impactMetrics),
+  comments: many(comments),
+}));
+export const dataDependenciesRelations = relations(dataDependencies, ({ one }) => ({
+  initiative: one(initiatives, {
+    fields: [dataDependencies.initiativeId],
+    references: [initiatives.id],
+  }),
+  system: one(systems, { fields: [dataDependencies.systemId], references: [systems.id] }),
+}));
+export const impactMetricsRelations = relations(impactMetrics, ({ one, many }) => ({
+  initiative: one(initiatives, {
+    fields: [impactMetrics.initiativeId],
+    references: [initiatives.id],
+  }),
+  measurements: many(impactMeasurements),
+}));
+export const impactMeasurementsRelations = relations(impactMeasurements, ({ one }) => ({
+  metric: one(impactMetrics, {
+    fields: [impactMeasurements.metricId],
+    references: [impactMetrics.id],
+  }),
+}));
+export const commentsRelations = relations(comments, ({ one }) => ({
+  initiative: one(initiatives, { fields: [comments.initiativeId], references: [initiatives.id] }),
+  user: one(user, { fields: [comments.userId], references: [user.id] }),
+}));
+export const systemsRelations = relations(systems, ({ many }) => ({
+  dependencies: many(dataDependencies),
+}));
+
+export type Story = typeof stories.$inferSelect;
+export type Source = typeof sources.$inferSelect;
+export type Organization = typeof organizations.$inferSelect;
+export type Initiative = typeof initiatives.$inferSelect;
+export type System = typeof systems.$inferSelect;
+export type ImpactMetric = typeof impactMetrics.$inferSelect;
+export type ImpactMeasurement = typeof impactMeasurements.$inferSelect;
+export type OrgRole = (typeof orgRole.enumValues)[number];
+export type PlatformRole = (typeof platformRole.enumValues)[number];
