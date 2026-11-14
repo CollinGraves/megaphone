@@ -17,6 +17,7 @@ export const FEATURES = [
   "mcp_write", // workspace write tools over MCP
   "governance_workflow", // review requests, approvals, policy stage gate, reminders
   "governance_export", // AI use-case inventory CSV for auditors
+  "departments", // departments with their own members, leads, initiatives, ideas and radar
 ] as const;
 export type Feature = (typeof FEATURES)[number];
 
@@ -91,6 +92,7 @@ export const PLANS = {
       "Governance approvals & review reminders",
       "Approval gate before pilot / production",
       "AI use-case inventory export for auditors",
+      "Departments with their own leads",
       "MCP write access",
     ],
   },
@@ -195,6 +197,7 @@ export const FEATURE_LABELS: Record<Feature, { name: string; description: string
   mcp_write: { name: "MCP write access", description: "Submit ideas and record impact from your AI assistant." },
   governance_workflow: { name: "Governance approvals", description: "Review requests, approvals, an approval gate before pilot / production and review reminders." },
   governance_export: { name: "AI use-case inventory export", description: "An auditor-ready CSV of every AI use case, its risk tier, oversight and approval." },
+  departments: { name: "Departments", description: "Give Finance, Sales and other teams their own members, leads, initiatives, ideas and radar." },
 };
 
 /** User-facing error when a server action needs a feature the workspace's plan doesn't include. */

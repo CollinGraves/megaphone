@@ -1,10 +1,10 @@
 "use server";
 
-import { and, eq, gt, isNull, ne } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull, ne } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
-import { invitations, memberships, orgRole, organizations, user, type OrgRole } from "@/db/schema";
+import { departmentMembers, departments, invitations, memberships, orgRole, organizations, user, type OrgRole } from "@/db/schema";
 import { createInvitation } from "@/lib/invitations";
 import { decideJoinRequest, JoinRequestError } from "@/lib/join-requests";
 import { canAssignRole } from "@/lib/permissions";
@@ -149,7 +149,18 @@ export async function removeMember(_prev: ActionState, form: FormData): Promise<
     const member = await getMember(ctx, zId().parse(form.get("userId")));
     assertCanManage(ctx, member.role);
     if (member.role === "owner") await assertNotLastOwner(ctx, member.userId);
-    await db.delete(memberships).where(and(eq(memberships.orgId, ctx.org.id), eq(memberships.userId, member.userId)));
+    await db.transaction(async (tx) => {
+      await tx.delete(memberships).where(and(eq(memberships.orgId, ctx.org.id), eq(memberships.userId, member.userId)));
+      // Leaving the workspace means leaving its departments too.
+      await tx
+        .delete(departmentMembers)
+        .where(
+          and(
+            eq(departmentMembers.userId, member.userId),
+            inArray(departmentMembers.departmentId, tx.select({ id: departments.id }).from(departments).where(eq(departments.orgId, ctx.org.id))),
+          ),
+        );
+    });
     await logActivity(ctx, "member.removed", { name: member.name, email: member.email });
     revalidateWorkspace(ctx.org.slug);
     // Removing yourself (as a plain member) ends your access.

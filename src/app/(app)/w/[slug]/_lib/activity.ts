@@ -134,6 +134,18 @@ export function describeActivity(action: string, detail: Record<string, unknown>
       return `let ${s(d.name)} join as ${s(d.role)}`;
     case "member.join_declined":
       return `declined ${s(d.name)}'s request to join`;
+    case "department.created":
+      return `created the ${s(d.name)} department`;
+    case "department.renamed":
+      return `renamed the ${s(d.from)} department to ${s(d.to)}`;
+    case "department.deleted":
+      return `deleted the ${s(d.name)} department`;
+    case "department.member_added":
+      return `added someone to ${s(d.department)} as ${s(d.role)}`;
+    case "department.role_changed":
+      return `changed a role in ${s(d.department)} to ${s(d.role)}`;
+    case "department.member_removed":
+      return `removed someone from ${s(d.department)}`;
     case "onboarding.dismissed":
       return d.complete ? "hid the setup checklist" : `dismissed the setup checklist${typeof d.percent === "number" ? ` at ${d.percent}%` : ""}`;
     case "workspace.created_from_assessment":

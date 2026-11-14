@@ -708,12 +708,18 @@ export const initiatives = pgTable(
     governanceNotes: text("governance_notes"),
     /** The idea this initiative was converted from, if any. */
     sourceIdeaId: text("source_idea_id"),
+    /** Owning department (null = company-wide). */
+    departmentId: text("department_id").references(() => departments.id, { onDelete: "set null" }),
     createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (t) => [index("initiatives_org_idx").on(t.orgId), index("initiatives_org_approval_idx").on(t.orgId, t.approvalStatus)],
+  (t) => [
+    index("initiatives_org_idx").on(t.orgId),
+    index("initiatives_org_approval_idx").on(t.orgId, t.approvalStatus),
+    index("initiatives_department_idx").on(t.departmentId),
+  ],
 );
 
 export const accessStatus = pgEnum("access_status", [
@@ -864,11 +870,14 @@ export const ideas = pgTable(
     triagedAt: timestamp("triaged_at", { withTimezone: true }),
     initiativeId: text("initiative_id").references(() => initiatives.id, { onDelete: "set null" }),
     duplicateOfId: text("duplicate_of_id"),
+    /** Department the idea is routed to (its leads can triage it). */
+    departmentId: text("department_id").references(() => departments.id, { onDelete: "set null" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (t) => [
     index("ideas_org_status_idx").on(t.orgId, t.status),
+    index("ideas_department_idx").on(t.departmentId),
     index("ideas_org_submitter_idx").on(t.orgId, t.submitterEmail, t.createdAt),
   ],
 );
@@ -924,6 +933,46 @@ export const buildUpdates = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index("build_updates_initiative_idx").on(t.initiativeId, t.createdAt)],
+);
+
+/* ─────────────────────────────── Departments ─────────────────────────────── */
+
+export const departmentRole = pgEnum("department_role", ["lead", "member"]);
+export const departmentVisibility = pgEnum("department_visibility", ["open", "private"]);
+
+/** A part of the company (Finance, Sales…) with its own people, initiatives, ideas and radar. */
+export const departments = pgTable(
+  "departments",
+  {
+    id: id(),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    slug: text("slug").notNull(),
+    description: text("description"),
+    /** Open: everyone in the workspace can see its work. Private is reserved for a later phase. */
+    visibility: departmentVisibility("visibility").notNull().default("open"),
+    createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [uniqueIndex("departments_org_slug_idx").on(t.orgId, t.slug)],
+);
+
+export const departmentMembers = pgTable(
+  "department_members",
+  {
+    departmentId: text("department_id")
+      .notNull()
+      .references(() => departments.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    role: departmentRole("role").notNull().default("member"),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.departmentId, t.userId] }), index("department_members_user_idx").on(t.userId)],
 );
 
 /* ─────────────────────────────── Join requests ─────────────────────────────── */
@@ -1060,6 +1109,8 @@ export type EntityFact = typeof entityFacts.$inferSelect;
 export type Story = typeof stories.$inferSelect;
 export type Episode = typeof episodes.$inferSelect;
 export type JoinRequest = typeof joinRequests.$inferSelect;
+export type Department = typeof departments.$inferSelect;
+export type DepartmentRole = (typeof departmentRole.enumValues)[number];
 export type Source = typeof sources.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;
 export type Initiative = typeof initiatives.$inferSelect;

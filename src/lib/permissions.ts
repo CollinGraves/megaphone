@@ -20,6 +20,7 @@ export const CAPABILITIES = [
   "ideas:triage",
   "governance:approve",
   "billing:manage",
+  "departments:manage",
 ] as const;
 export type Capability = (typeof CAPABILITIES)[number];
 
@@ -42,6 +43,7 @@ const ROLE_CAPABILITIES: Record<OrgRole, readonly Capability[]> = {
     "ideas:triage",
     "governance:approve",
     "billing:manage",
+    "departments:manage",
   ],
   owner: CAPABILITIES,
 };

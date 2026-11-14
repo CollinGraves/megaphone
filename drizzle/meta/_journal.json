@@ -99,6 +99,13 @@
       "when": 1794684416512,
       "tag": "0013_join_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794686637321,
+      "tag": "0014_departments",
+      "breakpoints": true
     }
   ]
 }
