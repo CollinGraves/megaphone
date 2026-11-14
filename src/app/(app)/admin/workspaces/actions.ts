@@ -1,5 +1,6 @@
 "use server";
 
+import { classifyEmail, companyDomain, emailDomain } from "@/lib/email-domains";
 import { and, count, eq, inArray, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -117,6 +118,8 @@ export async function provisionWorkspace(_prev: ProvisionState, form: FormData):
         industry: input.industry,
         plan: input.plan,
         defaultHourlyRate: input.defaultHourlyRate,
+        // Colleagues signing up from the client's domain are pointed here instead of creating a duplicate.
+        emailDomain: classifyEmail(input.ownerEmail) === "work" ? companyDomain(emailDomain(input.ownerEmail)) : null,
         provisionedById: me.id,
       })
       .returning({ id: organizations.id, name: organizations.name, slug: organizations.slug });

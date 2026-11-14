@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { invitations, memberships, orgRole, organizations, user, type OrgRole } from "@/db/schema";
 import { createInvitation } from "@/lib/invitations";
+import { decideJoinRequest, JoinRequestError } from "@/lib/join-requests";
 import { canAssignRole } from "@/lib/permissions";
 import { INDUSTRY_SLUGS, ORG_ROLES, labelFrom } from "@/lib/taxonomy";
 import type { ActionState } from "@/lib/utils";
@@ -177,5 +178,28 @@ export async function revokeInvitation(_prev: ActionState, form: FormData): Prom
     await db.update(invitations).set({ revokedAt: new Date() }).where(eq(invitations.id, inv.id));
     await logActivity(ctx, "invitation.revoked", { email: inv.email, role: inv.role });
     revalidateWorkspace(ctx.org.slug);
+  });
+}
+
+/* ───────────────────────────── Join requests ───────────────────────────── */
+
+export async function decideJoinRequestAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  return runAction(async () => {
+    const ctx = await authorize(form, "members:manage");
+    const v = z
+      .object({ requestId: zId(), decision: z.enum(["approve", "decline"]), role: roleSchema.default("editor") })
+      .parse({ requestId: form.get("requestId"), decision: form.get("decision"), role: form.get("role") ?? undefined });
+    if (v.decision === "approve" && !canAssignRole(ctx.access.role, v.role)) {
+      throw new ActionError(`Your role can't add people as ${labelFrom(ORG_ROLES, v.role).toLowerCase()}.`);
+    }
+    try {
+      await decideJoinRequest({ orgId: ctx.org.id, requestId: v.requestId, decision: v.decision, role: v.role, actor: ctx.user });
+    } catch (err) {
+      if (err instanceof JoinRequestError) throw new ActionError(err.message);
+      throw err;
+    }
+    revalidateWorkspace(ctx.org.slug);
+    // The request's row disappears once handled, so confirm at the top of the page instead.
+    redirect(`/w/${ctx.org.slug}/settings?request=${v.decision === "approve" ? `approved&role=${v.role}` : "declined"}`);
   });
 }

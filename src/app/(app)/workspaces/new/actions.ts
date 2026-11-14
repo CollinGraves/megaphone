@@ -1,6 +1,6 @@
 "use server";
 
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -11,7 +11,8 @@ import { rateLimit } from "@/lib/rate-limit";
 import { INDUSTRY_SLUGS } from "@/lib/taxonomy";
 import type { ActionState } from "@/lib/utils";
 import { checkWorkspaceCreation, slugCandidates } from "@/lib/workspace-creation";
-import { loadCreationFacts } from "./data";
+import { cancelJoinRequest, createJoinRequest, JoinRequestError } from "@/lib/join-requests";
+import { findDomainWorkspace, loadCreationFacts } from "./data";
 
 const schema = z.object({
   name: z.string().trim().min(2, "Workspace name: at least 2 characters.").max(120, "Workspace name: 120 characters at most."),
@@ -40,7 +41,15 @@ export async function createWorkspace(_prev: ActionState, form: FormData): Promi
     for (const candidate of slugCandidates(parsed.data.name)) {
       [org] = await tx
         .insert(organizations)
-        .values({ name: parsed.data.name, slug: candidate, industry: parsed.data.industry, plan: "trial", createdById: me.id, provisionedById: null })
+        .values({
+          name: parsed.data.name,
+          slug: candidate,
+          industry: parsed.data.industry,
+          plan: "trial",
+          emailDomain: me.companyDomain,
+          createdById: me.id,
+          provisionedById: null,
+        })
         .onConflictDoNothing({ target: organizations.slug })
         .returning({ id: organizations.id, slug: organizations.slug });
       if (org) break;
@@ -59,4 +68,42 @@ export async function createWorkspace(_prev: ActionState, form: FormData): Promi
   if ("error" in result) return { error: result.error };
   revalidatePath("/", "layout");
   redirect(`/w/${result.slug}`);
+}
+
+const joinSchema = z.object({ message: z.string().trim().max(500, "Keep the note under 500 characters.") });
+
+/** Ask to join the workspace that already exists for this person's company domain. */
+export async function requestToJoin(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const me = await getCurrentUser();
+  if (!me) return { error: "Your session has expired. Please sign in again." };
+  const parsed = joinSchema.safeParse({ message: form.get("message") ?? "" });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please check the form." };
+  const limit = await rateLimit(`workspace:join:${me.id}`, 5, 86_400);
+  if (!limit.allowed) return { error: "You've sent several requests today. Please wait for an admin to respond." };
+  const ws = await findDomainWorkspace(db, me);
+  if (!ws) return { error: "We couldn't find a workspace for your company anymore. Try creating one." };
+  if (ws.isMember) redirect(`/w/${ws.slug}`);
+  try {
+    const [org] = await db
+      .select({ id: organizations.id, name: organizations.name, slug: organizations.slug, emailDomain: organizations.emailDomain })
+      .from(organizations)
+      .where(eq(organizations.id, ws.id))
+      .limit(1);
+    await createJoinRequest(me, org, parsed.data.message || null);
+  } catch (err) {
+    if (err instanceof JoinRequestError) return { error: err.message };
+    throw err;
+  }
+  revalidatePath("/workspaces/new");
+  return { ok: true, message: `Request sent. We'll email you when an admin at ${ws.name} responds.` };
+}
+
+export async function cancelJoinRequestAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const me = await getCurrentUser();
+  if (!me) return { error: "Your session has expired. Please sign in again." };
+  const id = z.string().min(1).max(64).safeParse(form.get("requestId"));
+  if (!id.success) return { error: "Request not found." };
+  await cancelJoinRequest(me.id, id.data);
+  revalidatePath("/workspaces/new");
+  return { ok: true, message: "Request cancelled." };
 }

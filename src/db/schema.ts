@@ -551,12 +551,17 @@ export const organizations = pgTable("organizations", {
   createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
   /** Onboarding checklist hidden by an admin. */
   onboardingDismissedAt: timestamp("onboarding_dismissed_at", { withTimezone: true }),
+  /**
+   * The company email domain this workspace belongs to (e.g. "acme.com"). Self-serve sign-ups from that
+   * domain are pointed here (request to join) instead of creating a second workspace. Null for personal email.
+   */
+  emailDomain: text("email_domain"),
   /** Opt-in: anonymized, aggregate stats from this workspace may feed North Labs research (the show, reports). */
   shareAggregateInsights: boolean("share_aggregate_insights").notNull().default(false),
   provisionedById: text("provisioned_by_id").references(() => user.id, { onDelete: "set null" }),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
-});
+}, (t) => [index("organizations_email_domain_idx").on(t.emailDomain)]);
 
 export const memberships = pgTable(
   "memberships",
@@ -921,6 +926,36 @@ export const buildUpdates = pgTable(
   (t) => [index("build_updates_initiative_idx").on(t.initiativeId, t.createdAt)],
 );
 
+/* ─────────────────────────────── Join requests ─────────────────────────────── */
+
+export const joinRequestStatus = pgEnum("join_request_status", ["pending", "approved", "declined", "cancelled"]);
+
+/** Someone from the workspace's company domain asking to be let in (instead of creating a duplicate workspace). */
+export const joinRequests = pgTable(
+  "workspace_join_requests",
+  {
+    id: id(),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    message: text("message"),
+    status: joinRequestStatus("status").notNull().default("pending"),
+    /** Role granted when approved. */
+    grantedRole: orgRole("granted_role"),
+    decidedById: text("decided_by_id").references(() => user.id, { onDelete: "set null" }),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    uniqueIndex("join_requests_one_pending_idx").on(t.orgId, t.userId).where(sql`${t.status} = 'pending'`),
+    index("join_requests_org_status_idx").on(t.orgId, t.status),
+  ],
+);
+
 /* ─────────────────────────────── The show ─────────────────────────────── */
 
 export const episodeStatus = pgEnum("episode_status", ["draft", "published"]);
@@ -1024,6 +1059,7 @@ export type Entity = typeof entities.$inferSelect;
 export type EntityFact = typeof entityFacts.$inferSelect;
 export type Story = typeof stories.$inferSelect;
 export type Episode = typeof episodes.$inferSelect;
+export type JoinRequest = typeof joinRequests.$inferSelect;
 export type Source = typeof sources.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;
 export type Initiative = typeof initiatives.$inferSelect;
