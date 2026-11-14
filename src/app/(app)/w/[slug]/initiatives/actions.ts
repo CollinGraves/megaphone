@@ -20,6 +20,7 @@ import {
   systemCategory,
   systems,
 } from "@/db/schema";
+import { resolveDepartmentField } from "@/lib/departments.server";
 import { isApproved, isRegulatedData, isoDate, maxSensitivity, sensitivityRank, stageChangeBlocked } from "@/lib/governance";
 import { ACCESS_STATUSES, HEALTH, SENSITIVITIES, STAGES, labelFrom } from "@/lib/taxonomy";
 import { initiativeCapMessage, initiativeLimit } from "@/lib/plans";
@@ -128,8 +129,9 @@ function parseInitiative(form: FormData) {
 
 type InitiativeValues = ReturnType<typeof parseInitiative>;
 
-function describeChanges(before: typeof initiatives.$inferSelect, after: InitiativeValues): string[] {
+function describeChanges(before: typeof initiatives.$inferSelect, after: InitiativeValues & { departmentId?: string | null }): string[] {
   const changes: string[] = [];
+  if (after.departmentId !== undefined && (before.departmentId ?? null) !== after.departmentId) changes.push("department");
   if (before.stage !== after.stage) changes.push(`stage to ${labelFrom(STAGES, after.stage)}`);
   if (before.health !== after.health) changes.push(`health to ${labelFrom(HEALTH, after.health)}`);
   if (SCORE_FIELDS.some((k) => before[k] !== after[k])) changes.push("prioritization scores");
@@ -145,7 +147,15 @@ function describeChanges(before: typeof initiatives.$inferSelect, after: Initiat
 export async function saveInitiative(_prev: ActionState, form: FormData): Promise<ActionState> {
   return runAction(async () => {
     const ctx = await authorize(form, "initiative:write");
-    const values = parseInitiative(form);
+    const parsedValues = parseInitiative(form);
+    let departmentId: string | null | undefined;
+    try {
+      departmentId = await resolveDepartmentField(ctx.org, form);
+    } catch {
+      throw new ActionError("Pick a department from the list.");
+    }
+    // undefined: the form had no department field (e.g. plan without departments), so leave it unchanged.
+    const values = departmentId === undefined ? parsedValues : { ...parsedValues, departmentId };
     const id = field(form, "id");
     let initiativeId: string;
     if (id) {

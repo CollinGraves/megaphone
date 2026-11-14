@@ -19,12 +19,17 @@ export function InitiativeForm({
   businessUnits,
   weights,
   cancelHref,
+  departments = [],
+  defaultDepartmentId = null,
 }: {
   slug: string;
   initiative?: Initiative;
   businessUnits: string[];
   weights: ScoringWeights;
   cancelHref: string;
+  /** The workspace's departments; the field only shows when there are some (and the plan includes them). */
+  departments?: { id: string; name: string }[];
+  defaultDepartmentId?: string | null;
 }) {
   const i = initiative;
   const w = normalizeWeights(weights);
@@ -51,6 +56,18 @@ export function InitiativeForm({
       <Card>
         <CardHeader title="Ownership & status" />
         <CardBody className="grid gap-4 sm:grid-cols-2">
+          {departments.length ? (
+            <Field label="Department" htmlFor="departmentId" hint="Its leads can approve reviews and triage related ideas.">
+              <Select id="departmentId" name="departmentId" defaultValue={i ? (i.departmentId ?? "") : (defaultDepartmentId ?? "")}>
+                <option value="">Company-wide</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          ) : null}
           <Field label="Business unit" htmlFor="businessUnit">
             <Input id="businessUnit" name="businessUnit" list="business-units" maxLength={100} defaultValue={i?.businessUnit ?? ""} placeholder="e.g. Customer Service" />
             <datalist id="business-units">

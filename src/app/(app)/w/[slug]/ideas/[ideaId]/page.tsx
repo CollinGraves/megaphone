@@ -15,17 +15,20 @@ import { StageBadge } from "../../_components/badges";
 import { listBusinessUnits } from "../../_lib/queries";
 import { ChannelLabel, IdeaStatusBadge, SignalMeter, UrgencyBadge } from "../_components/badges";
 import { loadIdeaHistory } from "../_lib/server";
+import { canForDepartment } from "@/lib/departments.server";
 import { TriagePanel } from "./triage-panel";
 
-/** Triagers can open any idea in the workspace; everyone else only their own. */
+/** Triagers can open any idea; a department's leads the ideas routed to it; everyone else only their own. */
 async function loadVisibleIdea(ctx: WorkspaceContext, id: string): Promise<Idea | null> {
   if (!/^[\w-]{1,100}$/.test(id)) return null;
   const [row] = await db
     .select()
     .from(ideas)
-    .where(and(eq(ideas.id, id), eq(ideas.orgId, ctx.org.id), ctx.can("ideas:triage") ? undefined : eq(ideas.submittedById, ctx.user.id)))
+    .where(and(eq(ideas.id, id), eq(ideas.orgId, ctx.org.id)))
     .limit(1);
-  return row ?? null;
+  if (!row) return null;
+  if (row.submittedById === ctx.user.id || (await canForDepartment(ctx, "ideas:triage", row.departmentId))) return row;
+  return null;
 }
 
 export async function generateMetadata({ params }: PageProps<"/w/[slug]/ideas/[ideaId]">): Promise<Metadata> {
@@ -44,7 +47,7 @@ export default async function IdeaPage({ params, searchParams }: PageProps<"/w/[
   const idea = await loadVisibleIdea(ctx, ideaId);
   if (!idea) notFound();
   const base = `/w/${ctx.org.slug}`;
-  const canTriage = ctx.can("ideas:triage");
+  const canTriage = await canForDepartment(ctx, "ideas:triage", idea.departmentId);
   const triageOpen = canTriage && idea.status !== "accepted";
 
   const capped = initiativeLimit(ctx.org.plan) != null;

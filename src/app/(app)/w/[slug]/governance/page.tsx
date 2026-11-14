@@ -8,6 +8,7 @@ import { APPROVAL_STATUSES, HUMAN_OVERSIGHT_LEVELS, RISK_TIERS, SENSITIVITIES, S
 import { cn, formatDate, timeAgo } from "@/lib/utils";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { hasFeature } from "@/lib/plans";
+import { myDepartmentRoles } from "@/lib/departments.server";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { SensitivityBadge, StageBadge, platformLabel } from "../_components/badges";
 import { filterQuery, filterRegister, loadRegister, parseRegisterFilters, summarizeRegister } from "./data";
@@ -31,7 +32,11 @@ export default async function GovernancePage({ params, searchParams }: PageProps
   const sp = await searchParams;
   const ctx = await getWorkspaceOrNotFound(slug);
   const base = `/w/${ctx.org.slug}`;
-  const canApprove = ctx.can("governance:approve");
+  const roles = await myDepartmentRoles(ctx.org.id, ctx.user.id);
+  const ledDepartments = new Set([...roles].filter(([, r]) => r === "lead").map(([id]) => id));
+  // Department leads get an approvals queue too, limited to their departments' initiatives.
+  const approveAll = ctx.can("governance:approve");
+  const canApprove = approveAll || ledDepartments.size > 0;
   const canBilling = ctx.can("billing:manage");
   const workflow = hasFeature(ctx.org.plan, "governance_workflow");
   const canExport = hasFeature(ctx.org.plan, "governance_export");
@@ -47,7 +52,7 @@ export default async function GovernancePage({ params, searchParams }: PageProps
     .filter((i) => i.issues.length > 0)
     .sort((a, b) => b.issues.filter((x) => x.severity === "high").length - a.issues.filter((x) => x.severity === "high").length || b.issues.length - a.issues.length);
   const queue = items
-    .filter((i) => i.approvalStatus === "pending")
+    .filter((i) => i.approvalStatus === "pending" && (approveAll || (i.departmentId != null && ledDepartments.has(i.departmentId))))
     .sort((a, b) => (a.approvalRequestedAt?.getTime() ?? 0) - (b.approvalRequestedAt?.getTime() ?? 0));
   const staleCount = queue.filter((i) => i.approvalRequestedAt && daysBetween(isoDate(i.approvalRequestedAt), today) > PENDING_STALE_DAYS).length;
   const gated = policy.approvalRequiredStages.map((s) => labelFrom(STAGES, s));

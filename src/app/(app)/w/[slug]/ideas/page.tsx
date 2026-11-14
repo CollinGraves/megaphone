@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, or } from "drizzle-orm";
 import { Lightbulb, Link2, Plus, Search } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -8,6 +8,7 @@ import { ideas } from "@/db/schema";
 import { estimateAnnualHours, ideaSignal, urgencyRank } from "@/lib/ideas";
 import { IDEA_STATUSES } from "@/lib/taxonomy";
 import { cn, formatNumber, timeAgo } from "@/lib/utils";
+import { myDepartmentRoles } from "@/lib/departments.server";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { CopyButton } from "../_components/client";
 import { ChannelLabel, IdeaStatusBadge, SignalMeter, UrgencyBadge } from "./_components/badges";
@@ -36,14 +37,22 @@ export default async function IdeasPage({ params, searchParams }: PageProps<"/w/
   const sp = await searchParams;
   const ctx = await getWorkspaceOrNotFound(slug);
   const base = `/w/${ctx.org.slug}`;
-  const canTriage = ctx.can("ideas:triage");
+  const roles = await myDepartmentRoles(ctx.org.id, ctx.user.id);
+  const ledDepartments = [...roles].filter(([, r]) => r === "lead").map(([id]) => id);
+  // Department leads triage their departments' ideas, so the list works like a triager's for them.
+  const canTriage = ctx.can("ideas:triage") || ledDepartments.length > 0;
   const canSubmit = ctx.can("ideas:submit");
 
-  // Triagers see every idea; everyone else only sees what they submitted.
+  // Triagers see every idea; leads also see their departments' ideas; everyone else only their own.
+  const scope = ctx.can("ideas:triage")
+    ? undefined
+    : ledDepartments.length
+      ? or(eq(ideas.submittedById, ctx.user.id), inArray(ideas.departmentId, ledDepartments))
+      : eq(ideas.submittedById, ctx.user.id);
   const all = await db
     .select()
     .from(ideas)
-    .where(and(eq(ideas.orgId, ctx.org.id), canTriage ? undefined : eq(ideas.submittedById, ctx.user.id)))
+    .where(and(eq(ideas.orgId, ctx.org.id), scope))
     .orderBy(desc(ideas.createdAt))
     .limit(2000);
 

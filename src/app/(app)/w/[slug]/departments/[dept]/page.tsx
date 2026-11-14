@@ -5,7 +5,7 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { ChevronLeft, ShieldCheck } from "lucide-react";
 import { StoryCard } from "@/components/stories/story-card";
 import { ActionForm, ConfirmSubmit, SubmitButton } from "@/components/forms";
-import { Badge, Card, CardBody, CardHeader, Field, Input, Select, Stat, Table, Td, Textarea, Th } from "@/components/ui";
+import { Badge, ButtonLink, Card, CardBody, CardHeader, Field, Input, Select, Stat, Table, Td, Textarea, Th } from "@/components/ui";
 import { db } from "@/db";
 import { ideas } from "@/db/schema";
 import { DEPARTMENT_ROLES } from "@/lib/departments";
@@ -43,7 +43,13 @@ export default async function DepartmentPage({ params }: PageProps<"/w/[slug]/de
     canForDepartment(ctx, "governance:approve", dept.id),
     loadOpenAlerts(ctx.org.id, { limit: 200 }),
     db
-      .select({ id: ideas.id, title: ideas.title, status: ideas.status, submitterName: ideas.submitterName, createdAt: ideas.createdAt })
+      .select({
+        id: ideas.id,
+        title: ideas.title,
+        status: ideas.status,
+        submitterName: ideas.submitterName,
+        createdAt: ideas.createdAt,
+      })
       .from(ideas)
       .where(and(eq(ideas.orgId, ctx.org.id), eq(ideas.departmentId, dept.id), inArray(ideas.status, ["new", "under_review"])))
       .orderBy(desc(ideas.createdAt))
@@ -53,7 +59,15 @@ export default async function DepartmentPage({ params }: PageProps<"/w/[slug]/de
   const ids = new Set(items.map((i) => i.id));
   const alerts = allAlerts.filter((a) => ids.has(a.initiativeId)).slice(0, 8);
   const platforms = [...new Set(items.flatMap((i) => i.platforms))];
-  const stories = platforms.length ? await listStories({ vendors: platforms, matchAny: true, sinceDays: 14, order: "top", limit: 4 }) : [];
+  const stories = platforms.length
+    ? await listStories({
+        vendors: platforms,
+        matchAny: true,
+        sinceDays: 14,
+        order: "top",
+        limit: 4,
+      })
+    : [];
   const value = items.reduce((n, i) => n + bestValue(i.impact), 0);
   const pendingReviews = items.filter((i) => i.approvalStatus === "pending");
   const enabled = hasFeature(ctx.org.plan, "departments");
@@ -64,9 +78,16 @@ export default async function DepartmentPage({ params }: PageProps<"/w/[slug]/de
       <Link href={`${base}/departments`} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900">
         <ChevronLeft className="size-4" /> Departments
       </Link>
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{dept.name}</h1>
-        {dept.description ? <p className="mt-1 max-w-2xl text-sm text-slate-600">{dept.description}</p> : null}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{dept.name}</h1>
+          {dept.description ? <p className="mt-1 max-w-2xl text-sm text-slate-600">{dept.description}</p> : null}
+        </div>
+        {ctx.can("initiative:write") && enabled ? (
+          <ButtonLink href={`${base}/initiatives/new?department=${dept.id}`} size="sm" className="shrink-0">
+            New initiative
+          </ButtonLink>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -133,7 +154,14 @@ export default async function DepartmentPage({ params }: PageProps<"/w/[slug]/de
           </Card>
 
           <Card>
-            <CardHeader title="Radar" description={platforms.length ? "News that affects the platforms this department builds on." : "Shows news once this department's initiatives list their platforms."} />
+            <CardHeader
+              title="Radar"
+              description={
+                platforms.length
+                  ? "News that affects the platforms this department builds on."
+                  : "Shows news once this department's initiatives list their platforms."
+              }
+            />
             {alerts.length ? <AlertList alerts={alerts} slug={ctx.org.slug} canDismiss={ctx.can("initiative:write")} showSummary={false} /> : null}
             {stories.length ? (
               <CardBody className="space-y-3">
@@ -148,27 +176,29 @@ export default async function DepartmentPage({ params }: PageProps<"/w/[slug]/de
             ) : null}
           </Card>
 
-          <Card>
-            <CardHeader title="Ideas" description={canTriage ? "Ideas sent to this department. You can triage them." : "Ideas sent to this department."} />
-            {deptIdeas.length ? (
-              <ul className="divide-y divide-slate-100">
-                {deptIdeas.map((idea) => (
-                  <li key={idea.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
-                    <Link href={`${base}/ideas/${idea.id}`} className="min-w-0 truncate font-medium text-slate-900 hover:text-radar-700">
-                      {idea.title}
-                    </Link>
-                    <span className="shrink-0 text-xs text-slate-500">
-                      {idea.submitterName} · {timeAgo(idea.createdAt)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <CardBody>
-                <p className="text-sm text-slate-500">No open ideas.</p>
-              </CardBody>
-            )}
-          </Card>
+          {canTriage ? (
+            <Card>
+              <CardHeader title="Ideas" description="Ideas sent to this department. You can triage them." />
+              {deptIdeas.length ? (
+                <ul className="divide-y divide-slate-100">
+                  {deptIdeas.map((idea) => (
+                    <li key={idea.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
+                      <Link href={`${base}/ideas/${idea.id}`} className="min-w-0 truncate font-medium text-slate-900 hover:text-radar-700">
+                        {idea.title}
+                      </Link>
+                      <span className="shrink-0 text-xs text-slate-500">
+                        {idea.submitterName} · {timeAgo(idea.createdAt)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <CardBody>
+                  <p className="text-sm text-slate-500">No open ideas.</p>
+                </CardBody>
+              )}
+            </Card>
+          ) : null}
         </div>
 
         <aside className="space-y-6">
@@ -259,7 +289,12 @@ export default async function DepartmentPage({ params }: PageProps<"/w/[slug]/de
                   <ActionForm action={deleteDepartment} className="border-t border-slate-100 pt-4">
                     <input type="hidden" name="slug" value={ctx.org.slug} />
                     <input type="hidden" name="departmentId" value={dept.id} />
-                    <ConfirmSubmit message={`Delete ${dept.name}? Its initiatives and ideas stay and become company-wide.`} variant="ghost" size="sm" className="text-red-700">
+                    <ConfirmSubmit
+                      message={`Delete ${dept.name}? Its initiatives and ideas stay and become company-wide.`}
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-700"
+                    >
                       Delete department
                     </ConfirmSubmit>
                   </ActionForm>

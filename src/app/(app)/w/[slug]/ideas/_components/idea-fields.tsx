@@ -12,7 +12,15 @@ const URGENCY_HINTS: Record<string, string> = {
  * The idea questions, shared by the in-app form and the public intake link. Written for employees,
  * not the AI team: plain questions, examples, and "a rough guess is fine".
  */
-export function IdeaFields({ departments = [] }: { departments?: string[] }) {
+export function IdeaFields({
+  departments = [],
+  departmentOptions = [],
+}: {
+  /** Free-text suggestions (business units) when the workspace has no departments. */
+  departments?: string[];
+  /** Real departments: when present, the idea is routed to one (its leads can triage it). */
+  departmentOptions?: { id: string; name: string }[];
+}) {
   return (
     <div className="space-y-6">
       <section className="space-y-4">
@@ -38,16 +46,29 @@ export function IdeaFields({ departments = [] }: { departments?: string[] }) {
           <Textarea id="idea-outcome" name="desiredOutcome" maxLength={2000} rows={2} className="min-h-16" placeholder="e.g. Replies drafted in seconds; the team just checks and sends." />
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Department or team" htmlFor="idea-department">
-            <Input id="idea-department" name="department" maxLength={100} list={departments.length ? "idea-departments" : undefined} placeholder="e.g. Customer Service" />
-            {departments.length ? (
-              <datalist id="idea-departments">
-                {departments.map((d) => (
-                  <option key={d} value={d} />
+          {departmentOptions.length ? (
+            <Field label="Department" htmlFor="idea-department-id" hint="Sends it to that department's leads.">
+              <Select id="idea-department-id" name="departmentId" defaultValue="">
+                <option value="">Not sure</option>
+                {departmentOptions.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
                 ))}
-              </datalist>
-            ) : null}
-          </Field>
+              </Select>
+            </Field>
+          ) : (
+            <Field label="Department or team" htmlFor="idea-department">
+              <Input id="idea-department" name="department" maxLength={100} list={departments.length ? "idea-departments" : undefined} placeholder="e.g. Customer Service" />
+              {departments.length ? (
+                <datalist id="idea-departments">
+                  {departments.map((d) => (
+                    <option key={d} value={d} />
+                  ))}
+                </datalist>
+              ) : null}
+            </Field>
+          )}
           <Field label="Systems or data involved" htmlFor="idea-systems" hint="Optional, e.g. Salesforce, SAP, shared drive.">
             <Input id="idea-systems" name="systemsInvolved" maxLength={300} />
           </Field>

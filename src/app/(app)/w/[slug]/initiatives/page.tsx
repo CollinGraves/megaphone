@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ButtonLink, Card, EmptyState, Input, PageHeader, Select, Table, Td, Th, buttonClass } from "@/components/ui";
 import { HEALTH, STAGES } from "@/lib/taxonomy";
 import { cn, formatUsd } from "@/lib/utils";
+import { departmentOptions } from "@/lib/departments.server";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { HealthBadge, PLATFORM_OPTIONS, PlatformList, ScorePill, StageBadge } from "../_components/badges";
 import { ExportCsvButton } from "../_components/export-button";
@@ -24,11 +25,13 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
     health: one(sp.health),
     platform: one(sp.platform),
     bu: one(sp.bu),
+    dept: one(sp.dept),
     q: one(sp.q),
   };
   const archived = one(sp.view) === "archived";
 
-  const { items } = await loadPortfolio(ctx.org, { archived });
+  const [{ items }, departments] = await Promise.all([loadPortfolio(ctx.org, { archived }), departmentOptions(ctx.org)]);
+  const deptName = new Map(departments.map((d) => [d.id, d.name]));
   const businessUnits = [...new Set(items.map((i) => i.businessUnit).filter((b): b is string => Boolean(b)))].sort();
   const usedPlatforms = new Set(items.flatMap((i) => i.platforms));
   const platformOptions = PLATFORM_OPTIONS.filter((p) => usedPlatforms.has(p.slug));
@@ -40,6 +43,7 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
       (!filters.health || i.health === filters.health) &&
       (!filters.platform || i.platforms.includes(filters.platform)) &&
       (!filters.bu || i.businessUnit === filters.bu) &&
+      (!filters.dept || (filters.dept === "none" ? !i.departmentId : i.departmentId === filters.dept)) &&
       (!q ||
         [i.title, i.problemStatement, i.proposedSolution, i.ownerName, i.sponsor, i.businessUnit, ...i.models, ...i.tags]
           .filter(Boolean)
@@ -72,7 +76,14 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
         }
       />
 
-      <form method="get" className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(12rem,1fr)_repeat(4,minmax(0,10rem))_auto]" role="search">
+      <form
+        method="get"
+        className={cn(
+          "mb-4 grid gap-2 sm:grid-cols-2",
+          departments.length ? "lg:grid-cols-[minmax(12rem,1fr)_repeat(5,minmax(0,9rem))_auto]" : "lg:grid-cols-[minmax(12rem,1fr)_repeat(4,minmax(0,10rem))_auto]",
+        )}
+        role="search"
+      >
         {archived ? <input type="hidden" name="view" value="archived" /> : null}
         <label className="relative">
           <span className="sr-only">Search</span>
@@ -103,6 +114,17 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
             </option>
           ))}
         </Select>
+        {departments.length ? (
+          <Select name="dept" defaultValue={filters.dept ?? ""} aria-label="Department">
+            <option value="">All departments</option>
+            <option value="none">Company-wide</option>
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </Select>
+        ) : null}
         <Select name="bu" defaultValue={filters.bu ?? ""} aria-label="Business unit">
           <option value="">All business units</option>
           {businessUnits.map((bu) => (
@@ -173,8 +195,10 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
                     <Link href={`${base}/initiatives/${i.id}`} className="font-medium text-slate-900 hover:text-radar-700 hover:underline">
                       {i.title}
                     </Link>
-                    {i.businessUnit || i.ownerName ? (
-                      <div className="mt-0.5 text-xs text-slate-500">{[i.businessUnit, i.ownerName].filter(Boolean).join(" · ")}</div>
+                    {i.businessUnit || i.ownerName || (i.departmentId && deptName.has(i.departmentId)) ? (
+                      <div className="mt-0.5 text-xs text-slate-500">
+                        {[i.departmentId ? deptName.get(i.departmentId) : null, i.businessUnit, i.ownerName].filter(Boolean).join(" · ")}
+                      </div>
                     ) : null}
                   </Td>
                   <Td>

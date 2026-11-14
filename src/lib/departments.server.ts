@@ -1,7 +1,8 @@
 import "server-only";
 import { and, asc, count, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "@/db";
-import { departmentMembers, departments, ideas, initiatives, memberships, user, type Department, type DepartmentRole } from "@/db/schema";
+import { hasFeature } from "@/lib/plans";
+import { departmentMembers, departments, ideas, initiatives, memberships, user, type Department, type DepartmentRole, type Organization } from "@/db/schema";
 import type { WorkspaceContext } from "@/lib/workspace";
 import { canInDepartment } from "./departments";
 import type { Capability } from "./permissions";
@@ -93,4 +94,23 @@ export async function canForDepartment(ctx: WorkspaceContext, capability: Capabi
     .where(and(eq(departmentMembers.departmentId, departmentId), eq(departmentMembers.userId, ctx.user.id)))
     .limit(1);
   return canInDepartment(ctx.access, capability, row?.role);
+}
+
+/** Departments to offer in pickers (empty when the plan doesn't include them). */
+export async function departmentOptions(org: Pick<Organization, "id" | "plan">): Promise<{ id: string; name: string }[]> {
+  if (!hasFeature(org.plan, "departments")) return [];
+  return db.select({ id: departments.id, name: departments.name }).from(departments).where(eq(departments.orgId, org.id)).orderBy(asc(departments.name));
+}
+
+/**
+ * Resolve a submitted department field: undefined when the form had no such field (leave as is), null for
+ * "company-wide", or a department id that belongs to this workspace.
+ */
+export async function resolveDepartmentField(org: Pick<Organization, "id" | "plan">, form: FormData): Promise<string | null | undefined> {
+  if (!form.has("departmentId") || !hasFeature(org.plan, "departments")) return undefined;
+  const raw = String(form.get("departmentId") ?? "").trim();
+  if (!raw) return null;
+  const [row] = await db.select({ id: departments.id }).from(departments).where(and(eq(departments.id, raw), eq(departments.orgId, org.id))).limit(1);
+  if (!row) throw new Error("Unknown department");
+  return row.id;
 }

@@ -7,6 +7,7 @@ import { cache } from "react";
 import { RadarMark } from "@/components/logo";
 import { Card } from "@/components/ui";
 import { db } from "@/db";
+import { departmentOptions } from "@/lib/departments.server";
 import { memberships, organizations } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth/session";
 import { hasFeature } from "@/lib/plans";
@@ -121,6 +122,7 @@ export default async function IntakePage({ params }: PageProps<"/intake/[token]"
             domains={org.intakeAllowedDomains}
             defaultName={current?.name}
             defaultEmail={current?.email}
+            departments={await departmentOptions(org)}
           />
         </Card>
 

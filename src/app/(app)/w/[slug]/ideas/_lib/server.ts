@@ -3,7 +3,8 @@ import { and, asc, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { after } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
-import { activityLog, ideas, ideaUrgency, memberships, user, type Idea, type Organization } from "@/db/schema";
+import { activityLog, departmentMembers, departments, ideas, ideaUrgency, memberships, user, type Idea, type Organization } from "@/db/schema";
+import { resolveDepartmentField } from "@/lib/departments.server";
 import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
 import { appUrl } from "@/lib/env";
 import { IDEA_FREQUENCIES, estimateAnnualHours, frequencyLabel } from "@/lib/ideas";
@@ -50,6 +51,21 @@ export function parseIdeaFields(form: FormData): IdeaFields {
     systemsInvolved: get(form, "systemsInvolved"),
     urgency: get(form, "urgency") || "medium",
   });
+}
+
+/**
+ * Route an idea to a real department when the form offered one. Anything that isn't one of this
+ * workspace's departments is ignored (the idea stays unrouted); the name also fills the text field.
+ */
+export async function withDepartment<T extends { department: string | null }>(
+  org: Pick<Organization, "id" | "plan">,
+  form: FormData,
+  values: T,
+): Promise<T & { departmentId?: string }> {
+  const id = await resolveDepartmentField(org, form).catch(() => null);
+  if (!id) return values;
+  const [d] = await db.select({ name: departments.name }).from(departments).where(eq(departments.id, id)).limit(1);
+  return { ...values, departmentId: id, department: d?.name ?? values.department };
 }
 
 /* ───────────────────────────── Limits ───────────────────────────── */
@@ -128,8 +144,16 @@ export async function notifyTriagersOfNewIdea(org: Pick<Organization, "id" | "na
     .where(and(eq(memberships.orgId, org.id), inArray(memberships.role, [...TRIAGE_ROLES])))
     .orderBy(asc(memberships.createdAt))
     .limit(MAX_TRIAGE_RECIPIENTS + 1);
+  // The department's leads come first: it's their idea to triage.
+  const leads = idea.departmentId
+    ? await db
+        .select({ email: user.email })
+        .from(departmentMembers)
+        .innerJoin(user, eq(user.id, departmentMembers.userId))
+        .where(and(eq(departmentMembers.departmentId, idea.departmentId), eq(departmentMembers.role, "lead")))
+    : [];
   const submitter = idea.submitterEmail.toLowerCase();
-  const to = [...new Set(recipients.map((r) => r.email.toLowerCase()))].filter((e) => e !== submitter).slice(0, MAX_TRIAGE_RECIPIENTS);
+  const to = [...new Set([...leads, ...recipients].map((r) => r.email.toLowerCase()))].filter((e) => e !== submitter).slice(0, MAX_TRIAGE_RECIPIENTS);
 
   const hours = estimateAnnualHours(idea);
   const facts = [
