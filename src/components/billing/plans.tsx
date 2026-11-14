@@ -18,7 +18,8 @@ export function PricingGroup({ children, className }: { children: ReactNode; cla
 }
 
 export function IntervalToggle({ defaultInterval = "month", className }: { defaultInterval?: BillingInterval; className?: string }) {
-  const option = "relative cursor-pointer rounded-md px-3.5 py-1.5 text-sm font-medium text-slate-600 transition-colors has-checked:bg-white has-checked:text-slate-900 has-checked:shadow-xs has-focus-visible:ring-2 has-focus-visible:ring-radar-500";
+  const option =
+    "relative cursor-pointer rounded-md px-3.5 py-1.5 text-sm font-medium text-slate-600 transition-colors has-checked:bg-white has-checked:text-slate-900 has-checked:shadow-xs has-focus-visible:ring-2 has-focus-visible:ring-radar-500";
   return (
     <fieldset className={cn("inline-flex items-center gap-1 rounded-lg bg-slate-100 p-1", className)}>
       <legend className="sr-only">Billing interval</legend>
@@ -67,7 +68,7 @@ function Price({ plan, interval }: { plan: PlanDefinition; interval: BillingInte
             <span className="font-medium text-radar-700">save {formatUsd(annualSavings(plan.id as "team" | "business"))}</span>
           </>
         ) : (
-          "Billed monthly · per workspace"
+          "Billed monthly · one price for your whole company"
         )}
       </p>
     </div>
@@ -123,16 +124,17 @@ export function PlanCard({
 }
 
 const BASE_ROWS: { label: string; free: ReactNode; team: ReactNode; business: ReactNode }[] = [
-  { label: "AI initiatives", free: "Up to 5", team: "Up to 25", business: "Unlimited" },
-  { label: "Teammates", free: "Unlimited", team: "Unlimited", business: "Unlimited" },
-  { label: "Prioritization & impact tracking", free: true, team: true, business: true },
-  { label: "Systems & data dependencies", free: true, team: true, business: true },
-  { label: "Radar alerts tied to your stack", free: true, team: true, business: true },
-  { label: "In-app idea submissions & triage", free: true, team: true, business: true },
-  { label: "AI use-case register & risk classification", free: true, team: true, business: true },
+  { label: "AI projects you can track", free: "Up to 5", team: "Up to 25", business: "Unlimited" },
+  { label: "AI build plans each month", free: "3", team: "15", business: "60" },
+  { label: "People you can invite", free: "Unlimited", team: "Unlimited", business: "Unlimited" },
+  { label: "Rank projects and track hours and dollars saved", free: true, team: true, business: true },
+  { label: "List the data each project needs", free: true, team: true, business: true },
+  { label: "News alerts for the AI tools you use", free: true, team: true, business: true },
+  { label: "Team members send in ideas, and you sort through them", free: true, team: true, business: true },
+  { label: "A list of every AI tool and how risky it is", free: true, team: true, business: true },
 ];
 
-const FEATURE_ROWS: Feature[] = ["intake_link", "export_csv", "mcp_workspace", "mcp_write", "governance_workflow", "governance_export"];
+const FEATURE_ROWS: Feature[] = ["intake_link", "export_csv", "mcp_workspace", "mcp_write", "governance_workflow", "governance_export", "departments"];
 
 function Cell({ value }: { value: ReactNode }) {
   if (value === true) return <Check className="mx-auto size-4 text-radar-600" aria-label="Included" />;
@@ -144,45 +146,54 @@ export function FeatureComparison() {
   const has = (plan: PlanDefinition, f: Feature) => (plan.features as readonly string[]).includes(f);
   const rows = [
     ...BASE_ROWS,
-    ...FEATURE_ROWS.map((f) => ({ label: FEATURE_LABELS[f].name, hint: FEATURE_LABELS[f].description, free: has(PLANS.free, f), team: has(PLANS.team, f), business: has(PLANS.business, f) })),
+    ...FEATURE_ROWS.map((f) => ({
+      label: FEATURE_LABELS[f].name,
+      hint: FEATURE_LABELS[f].description,
+      free: has(PLANS.free, f),
+      team: has(PLANS.team, f),
+      business: has(PLANS.business, f),
+    })),
   ];
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-xs">
-      <table className="w-full min-w-[34rem] text-left text-sm">
-        <caption className="sr-only">Feature comparison</caption>
-        <thead>
-          <tr className="border-b border-slate-200 bg-slate-50">
-            <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Feature
-            </th>
-            {[PLANS.free, PLANS.team, PLANS.business].map((p) => (
-              <th key={p.id} scope="col" className="w-24 px-3 py-3 text-center text-sm font-semibold text-slate-900 sm:w-32">
-                {p.name}
+    <>
+      <p className="mb-2 text-xs text-slate-500 sm:hidden">Swipe the table sideways to see the Team plan and the Business plan.</p>
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-xs">
+        <table className="w-full min-w-[34rem] text-left text-sm">
+          <caption className="sr-only">Feature comparison</caption>
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50">
+              <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Feature
               </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {rows.map((r) => (
-            <tr key={r.label}>
-              <th scope="row" className="px-4 py-3 font-normal text-slate-700">
-                <span className="font-medium text-slate-900">{r.label}</span>
-                {"hint" in r && r.hint ? <span className="mt-0.5 block text-xs text-slate-500">{r.hint as string}</span> : null}
-              </th>
-              <td className="px-3 py-3 text-center">
-                <Cell value={r.free} />
-              </td>
-              <td className="px-3 py-3 text-center">
-                <Cell value={r.team} />
-              </td>
-              <td className="px-3 py-3 text-center">
-                <Cell value={r.business} />
-              </td>
+              {[PLANS.free, PLANS.team, PLANS.business].map((p) => (
+                <th key={p.id} scope="col" className="w-24 px-3 py-3 text-center text-sm font-semibold text-slate-900 sm:w-32">
+                  {p.name}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {rows.map((r) => (
+              <tr key={r.label}>
+                <th scope="row" className="px-4 py-3 font-normal text-slate-700">
+                  <span className="font-medium text-slate-900">{r.label}</span>
+                  {"hint" in r && r.hint ? <span className="mt-0.5 block text-xs text-slate-500">{r.hint as string}</span> : null}
+                </th>
+                <td className="px-3 py-3 text-center">
+                  <Cell value={r.free} />
+                </td>
+                <td className="px-3 py-3 text-center">
+                  <Cell value={r.team} />
+                </td>
+                <td className="px-3 py-3 text-center">
+                  <Cell value={r.business} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 
@@ -190,22 +201,22 @@ export function FeatureComparison() {
 export const SERVICES = [
   {
     name: "Guided Launch",
-    summary: "We set up your workspace with you in a few weeks.",
+    summary: "North Labs sets up your workspace with you in a few weeks.",
     points: [
-      "Portfolio workshop with your leadership team",
-      "Your initiatives scored, sized and prioritized",
-      "Systems, data dependencies and governance policy configured",
-      "Idea intake rolled out to the company",
+      "A working session with your leaders to list every AI project",
+      "Each project scored, sized and ranked",
+      "Your systems, data needs and approval rules set up",
+      "An idea link shared with the whole company",
     ],
   },
   {
     name: "Managed AI office",
-    summary: "North Labs runs the portfolio alongside your team.",
+    summary: "North Labs runs your AI project list with your team.",
     points: [
       "A North Labs team working inside your workspace",
-      "Quarterly portfolio and impact reviews",
-      "Governance reviews and vendor guidance",
-      "Delivery help on the initiatives that matter most",
+      "A review of every project and its results each quarter",
+      "Safety reviews and advice on which AI tools to use",
+      "Help building the projects that matter most",
     ],
   },
 ] as const;

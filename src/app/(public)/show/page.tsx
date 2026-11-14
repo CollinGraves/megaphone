@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: SHOW_NAME,
-  description: `${SHOW_TAGLINE} The stories that matter, what they mean for mid-market companies, and AI built live on air.`,
+  description: `${SHOW_TAGLINE} A video show about the week's AI news, what it means for mid-size companies, and a viewer's AI idea built live.`,
   alternates: { canonical: "/show" },
 };
 
@@ -27,15 +27,15 @@ export default async function ShowPage() {
           <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">{SHOW_NAME}</h1>
           <p className="mt-3 max-w-2xl text-lg text-slate-300">{SHOW_TAGLINE}</p>
           <p className="mt-2 max-w-2xl text-sm text-slate-400">
-            The week&apos;s AI news and what it means for a 200–2,000 person company. Plus a viewer&apos;s idea, built live. With {SHOW_HOST} at{" "}
-            {BRAND_COMPANY}.
+            A video show about the week&apos;s AI news and what it means for companies with 200 to 2,000 people. In each episode, we also build a
+            viewer&apos;s AI idea live. Hosted by {SHOW_HOST} at {BRAND_COMPANY}.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <ButtonLink href="/sign-up?src=show" variant="accent">
-              Get the radar, free
+              Get AI news by email, free
             </ButtonLink>
             <ButtonLink href="/contact?from=show" variant="secondary">
-              Pitch an idea for the show
+              Send us an idea to build on the show
             </ButtonLink>
           </div>
         </div>

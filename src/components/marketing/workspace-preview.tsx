@@ -3,10 +3,10 @@ import { Bell, Gauge } from "lucide-react";
 /** Illustrative workspace dashboard (example data) used on marketing pages. */
 export function WorkspacePreview() {
   const rows = [
-    { name: "Invoice exception triage", stage: "Production", platform: "Claude", value: "$412K / yr", w: "92%" },
-    { name: "Sales call summaries", stage: "Pilot", platform: "Copilot", value: "$186K / yr", w: "71%" },
+    { name: "Invoice error checker", stage: "Live", platform: "Claude", value: "$412K / yr", w: "92%" },
+    { name: "Sales call summaries", stage: "Testing", platform: "Copilot", value: "$186K / yr", w: "71%" },
     { name: "Supplier risk monitoring", stage: "Building", platform: "OpenAI", value: "$240K / yr", w: "64%" },
-    { name: "Maintenance assistant", stage: "Evaluating", platform: "Gemini", value: "$95K / yr", w: "48%" },
+    { name: "Maintenance assistant", stage: "Exploring", platform: "Gemini", value: "$95K / yr", w: "48%" },
   ];
   return (
     <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/60" aria-hidden>
@@ -15,7 +15,7 @@ export function WorkspacePreview() {
       </div>
       <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
         {[
-          ["Projects", "14"],
+          ["AI projects", "14"],
           ["Value / yr", "$1.2M"],
           ["Hours / yr", "18,400"],
         ].map(([label, value]) => (
@@ -43,7 +43,7 @@ export function WorkspacePreview() {
       </div>
       <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
         <Bell className="mt-0.5 size-3.5 shrink-0" />
-        A vendor you use changed its pricing. 2 projects affected.
+        A tool you use changed its price. 2 projects are affected.
       </div>
     </div>
   );

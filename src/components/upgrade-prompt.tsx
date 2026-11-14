@@ -37,7 +37,7 @@ export function UpgradePrompt({
       <p className={cn("flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-slate-600", className)}>
         <Lock className="size-3.5 shrink-0 text-violet-600" aria-hidden />
         <span>
-          {title ?? info.name} is on the <span className="font-medium text-slate-900">{plan.name}</span> plan.
+          {title ?? info.name}: included in the <span className="font-medium text-slate-900">{plan.name} plan</span>.
         </span>
         {canManageBilling ? (
           <Link href={href} className="inline-flex items-center gap-0.5 font-medium text-violet-700 hover:underline">
@@ -60,7 +60,7 @@ export function UpgradePrompt({
           <p className="text-sm font-semibold text-slate-900">
             {title ?? info.name}{" "}
             <span className="ml-1 inline-flex translate-y-[-1px] items-center rounded-md bg-violet-100 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-violet-800">
-              {plan.name}
+              {plan.name} plan
             </span>
           </p>
           <p className="mt-0.5 text-sm text-slate-600">{description ?? info.description}</p>

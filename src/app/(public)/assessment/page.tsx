@@ -23,7 +23,7 @@ import { BRAND } from "@/lib/brand";
 export const metadata: Metadata = {
   title: "Free AI readiness assessment",
   description:
-    "A free 5-minute AI readiness score for your company: strategy, use cases, data, technology, people and governance, plus where to start.",
+    "A free 5-minute check of how ready your company is for AI. Get a score in six areas and learn where to start.",
   alternates: { canonical: "/assessment" },
 };
 
@@ -37,8 +37,8 @@ const DIMENSION_ICONS: Record<DimensionId, typeof Compass> = {
 };
 
 const CLAIM_MESSAGES: Record<string, string> = {
-  invalid: "That results link is invalid or has expired. You can take the assessment again; it only takes a few minutes.",
-  taken: "Those results have already been saved to a different account. Sign in with that account to see them, or take the assessment again.",
+  invalid: "That results link doesn't work anymore. You can take the assessment again. It only takes a few minutes.",
+  taken: "Those results are saved to a different account. Sign in with that account to see them, or take the assessment again.",
 };
 
 /** Illustrative example only (clearly labelled), used for the hero preview. */
@@ -67,7 +67,8 @@ export default async function AssessmentLandingPage({ searchParams }: PageProps<
             </div>
             <h1 className="mt-6 text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">How ready is your company for AI?</h1>
             <p className="mt-6 max-w-xl text-lg text-slate-300">
-              {QUESTIONS.length} questions. You get a score in six areas, your biggest gaps and the first projects worth doing.
+              Answer {QUESTIONS.length} quick questions. You get a score in six areas, see your biggest gaps and learn which AI projects to start
+              with.
             </p>
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
               <ButtonLink href={startHref} variant="accent" size="lg">
@@ -90,8 +91,8 @@ export default async function AssessmentLandingPage({ searchParams }: PageProps<
       {/* What we assess */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
         <div className="max-w-2xl">
-          <h2 className="text-3xl font-semibold tracking-tight text-slate-900">What it scores</h2>
-          <p className="mt-3 text-slate-600">AI projects rarely stall on the technology. These six areas decide whether they pay off.</p>
+          <h2 className="text-3xl font-semibold tracking-tight text-slate-900">The six areas the assessment scores</h2>
+          <p className="mt-3 text-slate-600">AI projects rarely fail because of the technology. These six areas decide if they pay off.</p>
         </div>
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {DIMENSIONS.map((d) => {
@@ -112,23 +113,23 @@ export default async function AssessmentLandingPage({ searchParams }: PageProps<
       {/* What you get */}
       <section className="border-y border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900">What you get</h2>
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-900">What you get from the assessment</h2>
           <div className="mt-8 grid gap-8 md:grid-cols-3">
             {[
               {
                 icon: BarChart3,
                 title: "A score",
-                body: "Overall and for each area, 0 to 100, on screen as soon as you finish.",
+                body: "A score from 0 to 100, overall and for each area. You see it as soon as you finish.",
               },
               {
                 icon: Lightbulb,
                 title: "Your gaps",
-                body: "Your weakest areas in plain language, each with a next step.",
+                body: "Your weakest areas, in plain words, each with a next step.",
               },
               {
                 icon: FolderKanban,
                 title: "A starter list",
-                body: `Projects for the teams you pick, ready to load into a free workspace (up to ${TRIAL_INITIATIVE_LIMIT}).`,
+                body: `AI project ideas for the teams you pick. Add up to ${TRIAL_INITIATIVE_LIMIT} of them to a free ${BRAND} Workspace in one click.`,
               },
             ].map(({ icon: Icon, title, body }) => (
               <div key={title}>
@@ -143,8 +144,8 @@ export default async function AssessmentLandingPage({ searchParams }: PageProps<
 
       {/* Maturity levels */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-        <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Four levels of AI maturity</h2>
-        <p className="mt-2 max-w-2xl text-slate-600">Your score puts you at one of four levels.</p>
+        <h2 className="text-2xl font-semibold tracking-tight text-slate-900">The four levels of AI readiness</h2>
+        <p className="mt-2 max-w-2xl text-slate-600">Your assessment score puts your company at one of these four levels.</p>
         <ol className="mt-8 grid gap-4 md:grid-cols-4">
           {LEVELS.map((l, i) => (
             <li key={l.id} className="rounded-xl border border-slate-200 bg-white p-5">
@@ -180,8 +181,8 @@ export default async function AssessmentLandingPage({ searchParams }: PageProps<
       <section className="bg-ink-900">
         <div className="mx-auto flex max-w-7xl flex-col items-start gap-6 px-4 py-14 sm:px-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-2xl font-semibold text-white">Find out where AI should go first.</h2>
-            <p className="mt-1 text-slate-300">Five minutes. Free. Your scores appear instantly.</p>
+            <h2 className="text-2xl font-semibold text-white">Find out where your company should use AI first.</h2>
+            <p className="mt-1 text-slate-300">It takes five minutes and it&apos;s free. You see your scores right away.</p>
           </div>
           <ButtonLink href={startHref} variant="accent" size="lg">
             Start the assessment <ArrowRight className="size-4" aria-hidden />
@@ -194,24 +195,24 @@ export default async function AssessmentLandingPage({ searchParams }: PageProps<
 
 const FAQ = [
   {
-    q: "Who is this for?",
-    a: "Leaders who want an honest read on their company's AI readiness, whether you're just starting or already running AI in production.",
+    q: "Who is the assessment for?",
+    a: "Leaders who want an honest look at how ready their company is for AI. It works whether you're just starting or already use AI every day.",
   },
   {
-    q: "Is it really free?",
-    a: `Yes. Your scores show as soon as you finish. The full report with next steps and a starter list needs a free ${BRAND} account.`,
+    q: "Is the assessment really free?",
+    a: `Yes. You see your scores as soon as you finish. To see the full report, with next steps and project ideas, make a free ${BRAND} account.`,
   },
   {
-    q: "How is my score calculated?",
-    a: "Each answer scores 0 to 4. An area's score is the average of its answers, scaled to 100. Your overall score is the average of the six areas. Advice targets your lowest areas.",
+    q: "How is my score worked out?",
+    a: "Each answer is worth 0 to 4 points. Each area's score is the average of its answers, turned into a number out of 100. Your overall score is the average of the six areas. The advice focuses on your lowest areas.",
   },
   {
     q: "What happens to my answers?",
-    a: "They're saved with your report so you can come back to it. North Labs may use them to see how we could help, and may get in touch. We don't sell your data.",
+    a: "We save your answers with your report, so you can come back to it. North Labs may use them to see how we could help, and may get in touch. We don't sell your data.",
   },
   {
     q: "Who is North Labs?",
-    a: "An AI consultancy for mid-market companies. We help decide what to build first, build it and measure the results.",
+    a: "An AI consulting company for mid-size businesses. We help companies pick what to build first, build it and measure the results.",
   },
 ];
 
@@ -225,7 +226,7 @@ function ExampleReport() {
       <div className="mt-4 flex items-center gap-5">
         <ScoreRing score={48} size={112} />
         <div className="min-w-0 flex-1">
-          <div className="text-xs text-slate-500">Maturity level</div>
+          <div className="text-xs text-slate-500">Readiness level</div>
           <div className="text-xl font-semibold">Experimenting</div>
           <div className="mt-3">
             <LevelScale levelId="experimenting" />
@@ -234,7 +235,7 @@ function ExampleReport() {
       </div>
       <DimensionBars scores={EXAMPLE_SCORES} showBand={false} className="mt-6 space-y-3" />
       <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-        Focus first: <strong>Data readiness</strong>. Map the systems your top use cases depend on.
+        Focus first: <strong>Data readiness</strong>. List the systems your top AI projects need.
       </div>
       <p className="mt-3 text-center text-[11px] text-slate-400">Your report is tailored to your answers</p>
     </div>

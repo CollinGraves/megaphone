@@ -49,14 +49,14 @@ describe("plans", () => {
     expect(planForFeature("mcp_workspace").name).toBe("Team");
     expect(planForFeature("governance_export").name).toBe("Business");
     expect(planForFeature("mcp_write").name).toBe("Business");
-    expect(featureGateMessage("trial", "intake_link")).toMatch(/available on the Team plan.*on Free/);
-    expect(featureGateMessage("team", "governance_workflow")).toMatch(/Business plan.*on Team/);
+    expect(featureGateMessage("trial", "intake_link")).toMatch(/comes with the Team plan.*has the Free plan/);
+    expect(featureGateMessage("team", "governance_workflow")).toMatch(/the Business plan.*has the Team plan/);
   });
 
   it("cap messages", () => {
     expect(initiativeCapMessage("trial", 4)).toBeNull();
-    expect(initiativeCapMessage("trial", 5)).toMatch(/Upgrade to Team/);
-    expect(initiativeCapMessage("team", 25)).toMatch(/Upgrade to Business/);
+    expect(initiativeCapMessage("trial", 5)).toMatch(/Upgrade to the Team plan/);
+    expect(initiativeCapMessage("team", 25)).toMatch(/Upgrade to the Business plan/);
     expect(initiativeCapMessage("business", 500)).toBeNull();
   });
 

@@ -17,8 +17,8 @@ export function bandFor(score: number): Band {
 }
 
 export const BAND_LABELS: Record<Band, string> = {
-  foundational: "Foundational gap",
-  developing: "Developing",
+  foundational: "Big gap",
+  developing: "Getting there",
   strength: "Strength",
 };
 
@@ -30,116 +30,116 @@ type Playbook = {
 
 const PLAYBOOK: Record<DimensionId, Playbook> = {
   strategy: {
-    strength: "Leadership owns AI, with a strategy and funding tied to business goals.",
+    strength: "Leaders own AI, with a plan and money tied to business goals.",
     foundational: {
-      headline: "AI has no clear owner or business mandate yet",
+      headline: "No leader owns AI yet, and it has no clear business goal",
       steps: [
-        "Name one executive sponsor accountable for AI outcomes, not just AI tooling.",
-        "Agree on two or three business goals AI should support this year (e.g. faster service, lower cost to serve).",
-        "Set aside a small, ring-fenced budget for a first round of pilots.",
+        "Name one senior leader in charge of AI results, not just AI tools.",
+        "Agree on two or three business goals AI should help with this year, like faster service or lower costs.",
+        "Set aside a small budget just for your first few AI tests.",
       ],
     },
     developing: {
-      headline: "Turn AI ambition into a funded plan",
+      headline: "Turn your AI goals into a plan with a budget",
       steps: [
-        "Write a one-page AI strategy: goals, priority functions, guardrails and how success is measured.",
-        "Form a small cross-functional steering group that meets monthly to approve and review initiatives.",
-        "Fund initiatives individually against expected value instead of from scattered team budgets.",
+        "Write a one-page AI plan: your goals, which teams go first, your safety rules and how you'll measure success.",
+        "Form a small group from across the company that meets monthly to approve and review AI projects.",
+        "Fund each AI project based on what it should return, not from scattered team budgets.",
       ],
     },
   },
   value: {
-    strength: "You pick AI use cases deliberately and measure what they deliver.",
+    strength: "You choose AI projects with care and measure what they deliver.",
     foundational: {
-      headline: "No pipeline of prioritized, measurable use cases",
+      headline: "You don't have a ranked list of AI projects you can measure",
       steps: [
-        "Run a short ideation session with each priority function to list repetitive, high-volume work.",
-        "Score each idea on value, feasibility, alignment and risk, and pick one or two to pilot.",
-        "Record a baseline (time, cost, error rate) before each pilot starts so impact can be shown.",
+        "Meet with each key team for an hour to list work that is repeated often.",
+        "Score each idea on value, effort, fit and risk. Pick one or two to test.",
+        "Before each test starts, write down today's time, cost and error rate, so you can show the change.",
       ],
     },
     developing: {
-      headline: "Manage AI as a portfolio, not a set of experiments",
+      headline: "Manage AI as one ranked list, not a set of one-off tests",
       steps: [
-        "Keep a single prioritized list of AI initiatives with an owner, stage and expected value for each.",
-        "Re-score the list quarterly and stop pilots that aren't showing results.",
-        "Track actual impact (hours saved, cost, revenue) monthly for everything in production.",
+        "Keep one ranked list of AI projects, with an owner, a stage and an expected value for each.",
+        "Score the list again every three months, and stop tests that aren't working.",
+        "Each month, track what every live project really saves or earns (hours, costs, sales).",
       ],
     },
   },
   data: {
-    strength: "Your data and knowledge are accessible, owned and ready for AI.",
+    strength: "Your data and documents are easy to reach, have owners and are ready for AI.",
     foundational: {
-      headline: "The data AI needs is hard to find, reach or trust",
+      headline: "The data AI needs is hard to find, get to or trust",
       steps: [
-        "For your top use cases, list the systems and documents each one depends on and who owns them.",
-        "Start with use cases that run on data you already control well (documents, tickets, emails).",
-        "Assign owners to the handful of datasets that matter most and fix the worst quality issues first.",
+        "For your top AI projects, list the systems and documents each one needs, and who owns them.",
+        "Start with projects that use data you already manage well, like documents, help tickets or emails.",
+        "Give owners to the few data sets that matter most. Fix the worst problems first.",
       ],
     },
     developing: {
-      headline: "Make key data and knowledge AI-ready",
+      headline: "Get your key data and documents ready for AI",
       steps: [
-        "Expose priority datasets through governed APIs or a warehouse instead of manual exports.",
-        "Clean up and permission the knowledge base (policies, procedures, contracts) AI assistants will search.",
-        "Track data access as a dependency for each initiative so blockers surface early.",
+        "Let tools reach your most important data through secure connections, not manual exports.",
+        "Clean up the documents AI assistants will search (policies, how-to guides, contracts), and set who can see what.",
+        "For each AI project, track what data it needs and whether you have access, so problems show up early.",
       ],
     },
   },
   technology: {
-    strength: "People have safe, capable AI tools, and AI can connect to your core systems.",
+    strength: "People have safe, useful AI tools, and AI can connect to your main systems.",
     foundational: {
-      headline: "Employees lack safe, approved AI tools",
+      headline: "Employees don't have safe, approved AI tools",
       steps: [
-        "Choose an enterprise AI assistant with single sign-on and data protections, and retire personal-account use.",
-        "Start with the platforms you already license (e.g. your productivity suite or CRM) where they fit.",
-        "Document which systems AI may connect to and which data must never leave them.",
+        "Pick a company AI assistant with secure sign-in and data protection. Stop the use of personal accounts.",
+        "Start with tools you already pay for, like your email and office apps or your sales system, where they fit.",
+        "Write down which systems AI may connect to, and which data must never leave them.",
       ],
     },
     developing: {
-      headline: "Move from tools to a reusable AI platform",
+      headline: "Move from single tools to one AI setup you can reuse",
       steps: [
-        "Standardize how AI connects to core systems (APIs, connectors) so each project doesn't start from scratch.",
-        "Add evaluation and monitoring for AI in production: quality, cost and failure rates.",
-        "Keep platform choices vendor-neutral so you can switch models as prices and capabilities change.",
+        "Use one standard way to connect AI to your main systems, so each project doesn't start from zero.",
+        "Test and watch AI that's in use: its quality, its cost and how often it fails.",
+        "Avoid getting locked into one company's AI, so you can switch as prices and quality change.",
       ],
     },
   },
   people: {
-    strength: "Your people are AI-literate, skilled and willing to change how they work.",
+    strength: "Your people understand AI, have the skills and are open to new ways of working.",
     foundational: {
-      headline: "Low AI literacy and few people who can build",
+      headline: "Few people understand AI or can build with it",
       steps: [
-        "Run hands-on AI basics sessions for leaders and frontline teams, using your own workflows as examples.",
-        "Identify a few enthusiastic champions in each function and give them time to experiment.",
-        "Talk openly about how roles will change, to reduce anxiety and surface good ideas.",
+        "Run hands-on AI basics classes for leaders and front-line teams, using your own work as examples.",
+        "Find a few AI fans in each team and give them time to try things.",
+        "Talk openly about how jobs will change. It eases worry and brings out good ideas.",
       ],
     },
     developing: {
-      headline: "Build skills and a champions network",
+      headline: "Build skills, and a group of AI helpers in every team",
       steps: [
-        "Offer role-based training (prompting for everyone, building for power users, oversight for managers).",
-        "Pair a small internal team with a delivery partner to build capability while shipping.",
-        "Recognize and share wins publicly so adoption spreads beyond early enthusiasts.",
+        "Offer training for each role: writing prompts for everyone, building for power users, and checking AI work for managers.",
+        "Pair a small team of your own with an outside partner, so you learn while you build.",
+        "Share wins with everyone, so more people start using AI.",
       ],
     },
   },
   governance: {
-    strength: "Clear policies and risk review let you scale AI responsibly.",
+    strength: "Clear rules and safety checks let you use more AI, safely.",
     foundational: {
-      headline: "No guardrails for safe, compliant AI use",
+      headline: "There are no rules yet for using AI safely and legally",
       steps: [
-        "Publish a short AI acceptable-use policy: approved tools, what data can be used, and who to ask.",
-        "Keep an inventory of AI tools and use cases already in use, including unofficial ones.",
-        "Require a lightweight privacy and security check before any customer-facing AI goes live.",
+        "Share a short set of AI rules: which tools are approved, what data can be used, and who to ask.",
+        "Keep a list of every AI tool and project in use, including unofficial ones.",
+        "Require a quick privacy and security check before any AI that customers see goes live.",
       ],
     },
     developing: {
-      headline: "Make risk review consistent and proportionate",
+      headline: "Check every AI project for risk, the same way each time",
       steps: [
-        "Classify every use case into risk tiers, with stricter review for decisions that affect people.",
-        "Define human-oversight rules for each tier (spot checks, full review, or a person decides).",
-        "Schedule periodic re-review of AI systems in production as models and regulations change.",
+        "Sort every AI project by how risky it is. Check projects that make decisions about people more closely.",
+        "For each risk level, set how a person checks the AI's work: spot checks, full review, or a person decides.",
+        "Re-check live AI on a schedule, as AI tools and laws change.",
       ],
     },
   },

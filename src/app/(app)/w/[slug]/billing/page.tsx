@@ -121,8 +121,8 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
         <Alert tone="neutral" className="flex gap-2 border-violet-200 bg-violet-50 text-violet-950">
           <Lock className="mt-0.5 size-4 shrink-0 text-violet-700" />
           <span>
-            <strong>{FEATURE_LABELS[upgradeFeature].name}</strong> is included in the{" "}
-            {(PLANS.team.features as readonly string[]).includes(upgradeFeature) ? "Team and Business plans" : "Business plan"}. Pick a plan below to unlock it.
+            <strong>{FEATURE_LABELS[upgradeFeature].name}</strong>: included in{" "}
+            {(PLANS.team.features as readonly string[]).includes(upgradeFeature) ? "the Team plan and the Business plan" : "the Business plan"}. Pick a plan below to get it.
           </span>
         </Alert>
       ) : null}

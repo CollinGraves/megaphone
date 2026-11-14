@@ -86,9 +86,9 @@ export default async function AssessmentResultsPage({ searchParams }: PageProps<
               <ul className="space-y-2.5 text-sm text-slate-700">
                 {[
                   "Your strengths and gaps, explained",
-                  "Next steps for your three priority areas",
-                  `${templates.length} starter initiatives matched to your focus areas`,
-                  "A free AI portfolio workspace, pre-filled for you",
+                  "Next steps for the three areas to fix first",
+                  `${templates.length} AI project ideas that fit your weakest areas`,
+                  `A free ${BRAND} Workspace with those projects already added`,
                 ].map((t) => (
                   <li key={t} className="flex gap-2">
                     <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-radar-600" aria-hidden /> {t}
