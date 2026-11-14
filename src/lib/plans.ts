@@ -17,6 +17,7 @@ export const FEATURES = [
   "mcp_write", // workspace write tools over MCP
   "governance_workflow", // review requests, approvals, policy stage gate, reminders
   "governance_export", // AI use-case inventory CSV for auditors
+  "departments", // departments with their own members, leads, initiatives, ideas and radar
 ] as const;
 export type Feature = (typeof FEATURES)[number];
 
@@ -41,7 +42,7 @@ export const PLANS = {
   free: {
     id: "free",
     name: "Free",
-    tagline: "Get your first AI initiatives organized.",
+    tagline: "Up to 5 projects. Free for good.",
     initiativeLimit: 5,
     briefsPerMonth: 3,
     features: [],
@@ -60,7 +61,7 @@ export const PLANS = {
   team: {
     id: "team",
     name: "Team",
-    tagline: "Run your company's AI portfolio in one place.",
+    tagline: "Up to 25 projects, plus company-wide idea intake.",
     initiativeLimit: 25,
     briefsPerMonth: 15,
     features: ["intake_link", "export_csv", "mcp_workspace"],
@@ -78,7 +79,7 @@ export const PLANS = {
   business: {
     id: "business",
     name: "Business",
-    tagline: "Govern and scale AI across the company.",
+    tagline: "Unlimited projects, approvals and an audit trail.",
     initiativeLimit: null,
     briefsPerMonth: 60,
     features: ALL,
@@ -91,13 +92,14 @@ export const PLANS = {
       "Governance approvals & review reminders",
       "Approval gate before pilot / production",
       "AI use-case inventory export for auditors",
+      "Departments with their own leads",
       "MCP write access",
     ],
   },
   managed: {
     id: "managed",
     name: "Managed by North Labs",
-    tagline: "The easy button: we run it with you.",
+    tagline: "We run it with your team.",
     initiativeLimit: null,
     briefsPerMonth: null,
     features: ALL,
@@ -195,6 +197,7 @@ export const FEATURE_LABELS: Record<Feature, { name: string; description: string
   mcp_write: { name: "MCP write access", description: "Submit ideas and record impact from your AI assistant." },
   governance_workflow: { name: "Governance approvals", description: "Review requests, approvals, an approval gate before pilot / production and review reminders." },
   governance_export: { name: "AI use-case inventory export", description: "An auditor-ready CSV of every AI use case, its risk tier, oversight and approval." },
+  departments: { name: "Departments", description: "Give Finance, Sales and other teams their own members, leads, initiatives, ideas and radar." },
 };
 
 /** User-facing error when a server action needs a feature the workspace's plan doesn't include. */

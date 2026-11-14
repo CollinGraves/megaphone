@@ -9,15 +9,14 @@ export async function SiteHeader({ dark = false }: { dark?: boolean }) {
   const link = dark ? "text-sm text-slate-300 hover:text-white" : "text-sm text-slate-600 hover:text-slate-900";
   return (
     <header className={dark ? "bg-ink-950" : "border-b border-slate-200 bg-white"}>
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:gap-6 sm:px-6">
         <Logo dark={dark} />
         <nav className="ml-4 hidden items-center gap-6 md:flex">
           <Link href="/radar" className={link}>
             Top stories
           </Link>
           <Link href="/assessment?src=nav" className={`${link} hidden whitespace-nowrap lg:inline`}>
-            <span className="xl:hidden">AI readiness</span>
-            <span className="hidden xl:inline">AI readiness assessment</span>
+            Readiness score
           </Link>
           <Link href="/show" className={link}>
             Show
@@ -29,21 +28,21 @@ export async function SiteHeader({ dark = false }: { dark?: boolean }) {
             Pricing
           </Link>
           <Link href="/contact" className={link}>
-            Talk to North Labs
+            Contact
           </Link>
         </nav>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
           {user ? (
             <ButtonLink href="/feed" variant={dark ? "accent" : "primary"} size="sm">
               Open my feed
             </ButtonLink>
           ) : (
             <>
-              <Link href="/sign-in" className={`${link} px-2`}>
+              <Link href="/sign-in" className={`${link} whitespace-nowrap px-2`}>
                 Sign in
               </Link>
               <ButtonLink href="/sign-up?src=header" variant={dark ? "accent" : "primary"} size="sm">
-                Get your free radar
+                Get the radar
               </ButtonLink>
             </>
           )}
@@ -60,12 +59,12 @@ export function SiteFooter() {
         <div>
           <span className="font-medium text-slate-700">{BRAND}</span> is built and run by North Labs.
         </div>
-        <nav className="flex flex-wrap gap-5">
+        <nav className="flex flex-wrap gap-x-5 gap-y-2">
           <Link href="/radar" className="hover:text-slate-900">
             Top stories
           </Link>
           <Link href="/assessment?src=footer" className="hover:text-slate-900">
-            AI readiness assessment
+            Readiness score
           </Link>
           <Link href="/show" className="hover:text-slate-900">
             The show

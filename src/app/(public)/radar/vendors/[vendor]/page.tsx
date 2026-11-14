@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: PageProps<"/radar/vendors/[ve
   if (!v) return {};
   return {
     title: `${v.label} AI news`,
-    description: `Every significant ${v.label} AI announcement — models, products, pricing and partnerships — in one place.`,
+    description: `${v.label} AI news: models, products, pricing and partnerships.`,
     alternates: { canonical: `/radar/vendors/${v.slug}` },
   };
 }

@@ -185,7 +185,7 @@ export default async function BuildPage({ params, searchParams }: PageProps<"/w/
                     <option value="done">Done</option>
                   </Select>
                   <Textarea name="message" rows={2} placeholder="What changed?" required minLength={3} />
-                  <Input name="link" type="url" placeholder="Link (PR, ticket, demo) — optional" />
+                  <Input name="link" type="url" placeholder="Link to a PR, ticket or demo (optional)" />
                   <SubmitButton variant="secondary" size="sm" className="w-full">
                     Post update
                   </SubmitButton>
@@ -381,7 +381,7 @@ function BriefView({ brief: b, version, generator, createdAt, author }: { brief:
               <div key={i} className="flex gap-2 text-sm">
                 <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600" />
                 <div>
-                  <span className="font-medium text-slate-900">{r.risk}</span> <span className="text-slate-600">— {r.mitigation}</span>
+                  <span className="font-medium text-slate-900">{r.risk}.</span> <span className="text-slate-600">{r.mitigation}</span>
                 </div>
               </div>
             ))}

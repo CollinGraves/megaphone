@@ -1,7 +1,10 @@
 "use server";
 
+import { classifyEmail, companyDomain, emailDomain } from "@/lib/email-domains";
+import { deleteWorkspace, DeletionBlocked } from "@/lib/deletion";
 import { and, count, eq, inArray, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
 import { activityLog, consultantAssignments, invitations, memberships, organizations, orgPlan, orgRole, orgStatus, user } from "@/db/schema";
@@ -117,6 +120,8 @@ export async function provisionWorkspace(_prev: ProvisionState, form: FormData):
         industry: input.industry,
         plan: input.plan,
         defaultHourlyRate: input.defaultHourlyRate,
+        // Colleagues signing up from the client's domain are pointed here instead of creating a duplicate.
+        emailDomain: classifyEmail(input.ownerEmail) === "work" ? companyDomain(emailDomain(input.ownerEmail)) : null,
         provisionedById: me.id,
       })
       .returning({ id: organizations.id, name: organizations.name, slug: organizations.slug });
@@ -308,4 +313,20 @@ export async function removeMember(_prev: ActionState, form: FormData): Promise<
   await db.delete(memberships).where(and(eq(memberships.orgId, orgId), eq(memberships.userId, userId)));
   revalidateOrg(orgId);
   return { ok: true };
+}
+
+export async function adminDeleteWorkspace(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requirePlatformAdmin();
+  const orgId = String(form.get("orgId") ?? "");
+  const [org] = await db.select({ id: organizations.id, slug: organizations.slug }).from(organizations).where(eq(organizations.id, orgId)).limit(1);
+  if (!org) return { error: "Workspace not found." };
+  if (String(form.get("confirm") ?? "").trim() !== org.slug) return { error: `Type ${org.slug} to confirm.` };
+  try {
+    await deleteWorkspace(org.id, me);
+  } catch (err) {
+    if (err instanceof DeletionBlocked) return { error: err.message };
+    throw err;
+  }
+  revalidatePath("/admin/workspaces");
+  redirect("/admin/workspaces?deleted=1");
 }

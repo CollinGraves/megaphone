@@ -244,7 +244,9 @@ export function ImportanceMeter({ value, className }: { value: number; className
 
 export function Table({ className, ...props }: ComponentProps<"table">) {
   return (
-    <div className="overflow-x-auto">
+    // `relative` keeps absolutely positioned descendants (e.g. sr-only labels) inside the scroll box,
+    // so they can't widen the page on narrow screens.
+    <div className="relative overflow-x-auto">
       <table className={cn("w-full text-left text-sm", className)} {...props} />
     </div>
   );

@@ -1,6 +1,6 @@
 /**
  * Self-serve workspace creation rules. Pure module: the server action gathers the facts (how many
- * workspaces this person created, whether their company already has a Free workspace) and these
+ * workspaces this person created, whether their company domain already has a workspace) and these
  * functions decide. Unit-tested in workspace-creation.test.ts.
  */
 import { slugify } from "@/lib/ingest/heuristics";
@@ -28,8 +28,8 @@ export type CreationFacts = {
   companyDomain: string | null;
   /** Workspaces this person created themselves. */
   createdCount: number;
-  /** An existing Free workspace whose members include people from the same company domain. */
-  domainFreeWorkspace: ExistingDomainWorkspace | null;
+  /** An existing workspace that belongs to the person's company domain (any plan). */
+  domainWorkspace: ExistingDomainWorkspace | null;
 };
 
 export type CreationCheck =
@@ -40,22 +40,23 @@ export function checkWorkspaceCreation(f: CreationFacts): CreationCheck {
   if (f.emailKind === "disposable" || f.emailKind === "invalid") {
     return { ok: false, reason: "email", message: "Use your work email address to create a workspace." };
   }
+  // One workspace per company domain, for everyone (staff included): colleagues ask to join instead.
+  if (f.companyDomain && f.domainWorkspace) {
+    const w = f.domainWorkspace;
+    // Only name the owner to colleagues on the same domain.
+    const owner = w.ownerName && w.ownerDomain === f.companyDomain ? `Its owner, ${w.ownerName},` : "An admin";
+    return {
+      ok: false,
+      reason: "domain_exists",
+      message: `${w.name} already has a workspace for @${f.companyDomain}. Ask to join it so your company keeps one AI portfolio. ${owner} will get your request.`,
+    };
+  }
   if (f.isStaff) return { ok: true, nudge: null };
   if (f.createdCount >= MAX_CREATED_WORKSPACES) {
     return {
       ok: false,
       reason: "limit",
       message: `You've already created ${MAX_CREATED_WORKSPACES} workspaces, the most one person can create. Ask a colleague to invite you to an existing workspace, or talk to North Labs if you need more.`,
-    };
-  }
-  if (f.companyDomain && f.domainFreeWorkspace) {
-    const w = f.domainFreeWorkspace;
-    // Only name the owner to colleagues on the same domain.
-    const owner = w.ownerName && w.ownerDomain === f.companyDomain ? `its owner, ${w.ownerName},` : "its owner";
-    return {
-      ok: false,
-      reason: "domain_exists",
-      message: `${w.name} already has a free workspace for @${f.companyDomain}. Ask ${owner} to invite you so your company keeps one shared AI portfolio.`,
     };
   }
   return { ok: true, nudge: f.emailKind === "work" ? null : "personal_email" };

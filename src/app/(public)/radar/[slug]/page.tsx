@@ -13,7 +13,6 @@ import { getRelatedStories, getStoryBySlug } from "@/lib/stories";
 import { categoryLabel, industryLabel, vendorLabel } from "@/lib/taxonomy";
 import { track } from "@/lib/tracking";
 import { formatDate, timeAgo } from "@/lib/utils";
-import { BRAND } from "@/lib/brand";
 
 export async function generateMetadata({ params }: PageProps<"/radar/[slug]">): Promise<Metadata> {
   const { slug } = await params;
@@ -142,19 +141,19 @@ export default async function StoryPage({ params }: PageProps<"/radar/[slug]">) 
           ) : null}
           {!user ? (
             <div className="rounded-xl bg-ink-900 p-5 text-white">
-              <h2 className="font-semibold">Stories like this, filtered for you</h2>
+              <h2 className="font-semibold">Get stories like this by email</h2>
               <p className="mt-1.5 text-sm text-slate-300">
-                {BRAND} watches hundreds of sources and sends you only what matters to your role and industry.
+                Filtered to your industry and the tools your company runs.
               </p>
               <ButtonLink href="/sign-up?src=story_sidebar" variant="accent" className="mt-4 w-full">
-                Get your free radar
+                Get the radar
               </ButtonLink>
             </div>
           ) : null}
           <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="font-semibold text-slate-900">What does this mean for your company?</h2>
+            <h2 className="font-semibold text-slate-900">What does this mean for you?</h2>
             <p className="mt-1.5 text-sm text-slate-600">
-              North Labs helps teams turn AI news into a prioritized roadmap, and track the impact of every initiative.
+              North Labs helps companies decide what to build, build it and measure the results.
             </p>
             <ButtonLink href={`/contact?from=story&story=${story.slug}`} variant="secondary" className="mt-4 w-full">
               Talk to North Labs

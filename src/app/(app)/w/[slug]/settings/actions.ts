@@ -1,11 +1,13 @@
 "use server";
 
-import { and, eq, gt, isNull, ne } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull, ne } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
-import { invitations, memberships, orgRole, organizations, user, type OrgRole } from "@/db/schema";
+import { departmentMembers, departments, invitations, memberships, orgRole, organizations, user, type OrgRole } from "@/db/schema";
 import { createInvitation } from "@/lib/invitations";
+import { decideJoinRequest, JoinRequestError } from "@/lib/join-requests";
+import { deleteWorkspace, DeletionBlocked } from "@/lib/deletion";
 import { canAssignRole } from "@/lib/permissions";
 import { INDUSTRY_SLUGS, ORG_ROLES, labelFrom } from "@/lib/taxonomy";
 import type { ActionState } from "@/lib/utils";
@@ -148,7 +150,18 @@ export async function removeMember(_prev: ActionState, form: FormData): Promise<
     const member = await getMember(ctx, zId().parse(form.get("userId")));
     assertCanManage(ctx, member.role);
     if (member.role === "owner") await assertNotLastOwner(ctx, member.userId);
-    await db.delete(memberships).where(and(eq(memberships.orgId, ctx.org.id), eq(memberships.userId, member.userId)));
+    await db.transaction(async (tx) => {
+      await tx.delete(memberships).where(and(eq(memberships.orgId, ctx.org.id), eq(memberships.userId, member.userId)));
+      // Leaving the workspace means leaving its departments too.
+      await tx
+        .delete(departmentMembers)
+        .where(
+          and(
+            eq(departmentMembers.userId, member.userId),
+            inArray(departmentMembers.departmentId, tx.select({ id: departments.id }).from(departments).where(eq(departments.orgId, ctx.org.id))),
+          ),
+        );
+    });
     await logActivity(ctx, "member.removed", { name: member.name, email: member.email });
     revalidateWorkspace(ctx.org.slug);
     // Removing yourself (as a plain member) ends your access.
@@ -177,5 +190,44 @@ export async function revokeInvitation(_prev: ActionState, form: FormData): Prom
     await db.update(invitations).set({ revokedAt: new Date() }).where(eq(invitations.id, inv.id));
     await logActivity(ctx, "invitation.revoked", { email: inv.email, role: inv.role });
     revalidateWorkspace(ctx.org.slug);
+  });
+}
+
+/* ───────────────────────────── Join requests ───────────────────────────── */
+
+export async function decideJoinRequestAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  return runAction(async () => {
+    const ctx = await authorize(form, "members:manage");
+    const v = z
+      .object({ requestId: zId(), decision: z.enum(["approve", "decline"]), role: roleSchema.default("editor") })
+      .parse({ requestId: form.get("requestId"), decision: form.get("decision"), role: form.get("role") ?? undefined });
+    if (v.decision === "approve" && !canAssignRole(ctx.access.role, v.role)) {
+      throw new ActionError(`Your role can't add people as ${labelFrom(ORG_ROLES, v.role).toLowerCase()}.`);
+    }
+    try {
+      await decideJoinRequest({ orgId: ctx.org.id, requestId: v.requestId, decision: v.decision, role: v.role, actor: ctx.user });
+    } catch (err) {
+      if (err instanceof JoinRequestError) throw new ActionError(err.message);
+      throw err;
+    }
+    revalidateWorkspace(ctx.org.slug);
+    // The request's row disappears once handled, so confirm at the top of the page instead.
+    redirect(`/w/${ctx.org.slug}/settings?request=${v.decision === "approve" ? `approved&role=${v.role}` : "declined"}`);
+  });
+}
+
+/* ───────────────────────────── Delete workspace ───────────────────────────── */
+
+export async function deleteWorkspaceAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  return runAction(async () => {
+    const ctx = await authorize(form, "settings:manage");
+    if (String(form.get("confirm") ?? "").trim() !== ctx.org.slug) throw new ActionError(`Type ${ctx.org.slug} to confirm.`);
+    try {
+      await deleteWorkspace(ctx.org.id, ctx.user);
+    } catch (err) {
+      if (err instanceof DeletionBlocked) throw new ActionError(err.message);
+      throw err;
+    }
+    redirect("/feed?deleted=workspace");
   });
 }

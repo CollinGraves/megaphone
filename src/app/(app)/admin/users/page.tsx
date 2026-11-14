@@ -3,14 +3,15 @@ import Link from "next/link";
 import { and, count, desc, eq, ilike, or, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { platformRole, user } from "@/db/schema";
-import { Badge, Button, ButtonLink, Card, Input, PageHeader, Select, Table, Td, Th } from "@/components/ui";
+import { DangerDelete } from "@/components/danger-delete";
+import { Alert, Badge, Button, ButtonLink, Card, Input, PageHeader, Select, Table, Td, Th } from "@/components/ui";
 import { requirePlatformAdmin } from "@/lib/auth/session";
 import { formatDate } from "@/lib/utils";
 import { intParam, oneOf, param } from "../_lib/params";
 import { AutoSubmitSelect } from "../_components/auto-submit-select";
 import { InlineForm } from "../_components/inline-form";
 import { Pager } from "../_components/pager";
-import { setPlatformRole } from "./actions";
+import { adminDeleteUser, setPlatformRole } from "./actions";
 
 export const metadata: Metadata = { title: "Users" };
 
@@ -58,6 +59,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
         title="Users & platform roles"
         description="Grant North Labs staff access to the admin console. Roles take effect on the user's next request."
       />
+      {param(sp, "deleted") ? <Alert tone="success" className="mb-4">Account deleted.</Alert> : null}
 
       <div className="mb-4 grid gap-3 sm:grid-cols-3">
         {platformRole.enumValues.map((r) => (
@@ -117,8 +119,18 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
                     <span className="font-medium text-slate-900">{u.name}</span>
                   )}
                   <div className="text-xs text-slate-500">{u.email}</div>
+                  {u.id !== me.id ? (
+                    <details className="mt-1 max-w-xs text-xs">
+                      <summary className="cursor-pointer text-slate-400 hover:text-red-700">Delete account…</summary>
+                      <div className="mt-2 rounded-lg border border-red-200 p-3">
+                        <DangerDelete action={adminDeleteUser} expected={u.email} hidden={{ userId: u.id }} label="Delete account">
+                          <p className="text-slate-600">Removes the person, their sign-ins, memberships and API keys. Workspaces they solely own must get another owner first.</p>
+                        </DangerDelete>
+                      </div>
+                    </details>
+                  ) : null}
                 </Td>
-                <Td className="hidden md:table-cell">{u.company ?? <span className="text-slate-400">—</span>}</Td>
+                <Td className="hidden md:table-cell">{u.company ?? <span className="text-slate-400">–</span>}</Td>
                 <Td className="hidden whitespace-nowrap text-slate-500 sm:table-cell">{formatDate(u.createdAt)}</Td>
                 <Td>
                   {u.id === me.id ? (

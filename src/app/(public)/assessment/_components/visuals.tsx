@@ -36,7 +36,7 @@ export function ScoreRing({ score, size = 160, dark = false, label = "Overall re
         <span className={cn("font-semibold tabular-nums tracking-tight", dark ? "text-white" : "text-slate-900")} style={{ fontSize: size * 0.28 }}>
           {pct}
         </span>
-        <span className={cn("text-xs", dark ? "text-slate-400" : "text-slate-500")}>out of 100</span>
+        {size >= 100 ? <span className={cn("text-xs", dark ? "text-slate-400" : "text-slate-500")}>out of 100</span> : null}
       </div>
     </div>
   );

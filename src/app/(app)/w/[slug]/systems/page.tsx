@@ -30,7 +30,7 @@ export default async function SystemsPage({ params }: PageProps<"/w/[slug]/syste
         <EmptyState
           icon={<Database className="size-8" />}
           title="No systems yet"
-          description="Add the systems of record your initiatives rely on — CRM, ERP, data warehouse, document stores."
+          description="Add the systems your initiatives rely on: CRM, ERP, data warehouse, document stores."
         />
       ) : (
         <Card className="overflow-hidden">
@@ -57,12 +57,12 @@ export default async function SystemsPage({ params }: PageProps<"/w/[slug]/syste
                       {s.vendor ? <div className="text-xs text-slate-500">{s.vendor}</div> : null}
                     </Td>
                     <Td className="whitespace-nowrap">{labelFrom(SYSTEM_CATEGORIES, s.category)}</Td>
-                    <Td>{s.owner ?? <span className="text-slate-400">—</span>}</Td>
+                    <Td>{s.owner ?? <span className="text-slate-400">–</span>}</Td>
                     <Td className="text-right font-semibold tabular-nums text-slate-900">{u?.initiativeCount ?? 0}</Td>
                     <Td className="whitespace-nowrap text-xs">
                       {u?.blocked ? <span className="mr-2 font-medium text-red-700">{u.blocked} blocked</span> : null}
                       {u?.requested ? <span className="font-medium text-amber-700">{u.requested} pending</span> : null}
-                      {!u?.blocked && !u?.requested ? <span className="text-slate-400">{u ? "No issues" : "—"}</span> : null}
+                      {!u?.blocked && !u?.requested ? <span className="text-slate-400">{u ? "No issues" : "–"}</span> : null}
                     </Td>
                     <Td className="text-right tabular-nums">{u?.sensitive ? <span className="font-medium text-violet-700">{u.sensitive}</span> : <span className="text-slate-400">0</span>}</Td>
                   </tr>

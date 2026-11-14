@@ -3,7 +3,7 @@ import { IntakeSettings } from "./intake-settings";
 import { and, asc, desc, eq, gt, isNull } from "drizzle-orm";
 import type { Metadata } from "next";
 import { ActionForm, ConfirmSubmit, SubmitButton } from "@/components/forms";
-import { Badge, Card, CardBody, CardHeader, Field, Input, PageHeader, Select, Table, Td, Th } from "@/components/ui";
+import { Alert, Badge, Card, CardBody, CardHeader, Field, Input, PageHeader, Select, Table, Td, Th } from "@/components/ui";
 import { db } from "@/db";
 import { consultantAssignments, invitations, memberships, user, type OrgRole } from "@/db/schema";
 import { inviteUrl } from "@/lib/invitations";
@@ -13,8 +13,11 @@ import { INDUSTRIES, ORG_ROLES, industryLabel, labelFrom } from "@/lib/taxonomy"
 import { formatDate, formatUsd, timeAgo } from "@/lib/utils";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { CopyButton, InlineForm } from "../_components/client";
-import { changeRole, inviteMember, removeMember, revokeInvitation, updateInsightsSharing, updateProfile, updateWeights } from "./actions";
+import { changeRole, decideJoinRequestAction, deleteWorkspaceAction, inviteMember, removeMember, revokeInvitation, updateInsightsSharing, updateProfile, updateWeights } from "./actions";
 import { BRAND, BRAND_COMPANY } from "@/lib/brand";
+import { listPendingJoinRequests } from "@/lib/join-requests";
+import { workspaceDeletionBlocker } from "@/lib/deletion";
+import { DangerDelete } from "@/components/danger-delete";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -25,15 +28,18 @@ const WEIGHT_FIELDS = [
   { key: "risk", label: "Risk (inverted)" },
 ] as const;
 
-export default async function SettingsPage({ params }: PageProps<"/w/[slug]/settings">) {
+export default async function SettingsPage({ params, searchParams }: PageProps<"/w/[slug]/settings">) {
   const { slug } = await params;
+  const sp = await searchParams;
+  const decided = sp.request === "approved" ? "approved" : sp.request === "declined" ? "declined" : null;
+  const grantedRole = typeof sp.role === "string" && ORG_ROLES.some((r) => r.slug === sp.role) ? labelFrom(ORG_ROLES, sp.role).toLowerCase() : null;
   const ctx = await getWorkspaceOrNotFound(slug);
   const org = ctx.org;
   const canSettings = ctx.can("settings:manage");
   const canMembers = ctx.can("members:manage");
   const actorRole = ctx.access.role;
 
-  const [members, consultants, pending] = await Promise.all([
+  const [members, consultants, pending, joinRequestsPending] = await Promise.all([
     db
       .select({ userId: user.id, name: user.name, email: user.email, jobTitle: user.jobTitle, role: memberships.role, joinedAt: memberships.createdAt })
       .from(memberships)
@@ -54,16 +60,23 @@ export default async function SettingsPage({ params }: PageProps<"/w/[slug]/sett
           .where(and(eq(invitations.orgId, org.id), isNull(invitations.acceptedAt), isNull(invitations.revokedAt), gt(invitations.expiresAt, new Date())))
           .orderBy(desc(invitations.createdAt))
       : Promise.resolve([]),
+    canMembers ? listPendingJoinRequests(org.id) : Promise.resolve([]),
   ]);
 
   const ownerCount = members.filter((m) => m.role === "owner").length;
   const isMemberOwner = members.some((m) => m.userId === ctx.user.id && m.role === "owner");
+  const deletionBlocker = workspaceDeletionBlocker(org);
   const assignableRoles = ORG_ROLES.filter((r) => canAssignRole(actorRole, r.slug));
   const weights = normalizeWeights(org.scoringWeights);
 
   return (
     <>
       <PageHeader eyebrow="Workspace" title="Settings" description="Workspace profile, how initiatives are prioritized, and who has access." />
+      {decided ? (
+        <Alert tone="success" className="mb-6">
+          {decided === "approved" ? `Request approved. They're now a member${grantedRole ? ` (${grantedRole})` : ""} and we've emailed them.` : "Request declined. We've let them know."}
+        </Alert>
+      ) : null}
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Card>
@@ -97,7 +110,7 @@ export default async function SettingsPage({ params }: PageProps<"/w/[slug]/sett
                 <dt className="text-slate-500">Name</dt>
                 <dd className="text-slate-900">{org.name}</dd>
                 <dt className="text-slate-500">Industry</dt>
-                <dd className="text-slate-900">{org.industry ? industryLabel(org.industry) : "—"}</dd>
+                <dd className="text-slate-900">{org.industry ? industryLabel(org.industry) : "Not set"}</dd>
                 <dt className="text-slate-500">Default hourly rate</dt>
                 <dd className="text-slate-900">{formatUsd(org.defaultHourlyRate)}/h</dd>
               </dl>
@@ -137,6 +150,56 @@ export default async function SettingsPage({ params }: PageProps<"/w/[slug]/sett
           </CardBody>
         </Card>
       </div>
+
+      {joinRequestsPending.length ? (
+        <Card className="mt-6 scroll-mt-20 border-radar-300" id="join-requests">
+          <CardHeader
+            title={`Join requests (${joinRequestsPending.length})`}
+            description={`People from @${org.emailDomain ?? "your domain"} asking to join. They'll get an email either way.`}
+          />
+          <ul className="divide-y divide-slate-100">
+            {joinRequestsPending.map((r) => (
+              <li key={r.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <div className="font-medium text-slate-900">{r.name}</div>
+                  <div className="break-all text-sm text-slate-500">
+                    {r.email}
+                    {r.jobTitle ? ` · ${r.jobTitle}` : ""} · {timeAgo(r.createdAt)}
+                  </div>
+                  {r.message ? <p className="mt-1.5 text-sm text-slate-700">&ldquo;{r.message}&rdquo;</p> : null}
+                </div>
+                <div className="flex shrink-0 flex-wrap items-start gap-2">
+                  <ActionForm action={decideJoinRequestAction} className="flex items-center gap-2 space-y-0">
+                    <input type="hidden" name="slug" value={org.slug} />
+                    <input type="hidden" name="requestId" value={r.id} />
+                    <input type="hidden" name="decision" value="approve" />
+                    <Select name="role" defaultValue="editor" aria-label={`Role for ${r.name}`} className="w-auto">
+                      {assignableRoles
+                        .filter((role) => role.slug !== "owner")
+                        .map((role) => (
+                          <option key={role.slug} value={role.slug}>
+                            {role.label}
+                          </option>
+                        ))}
+                    </Select>
+                    <SubmitButton size="sm" pendingText="Adding…">
+                      Approve
+                    </SubmitButton>
+                  </ActionForm>
+                  <ActionForm action={decideJoinRequestAction} className="space-y-0">
+                    <input type="hidden" name="slug" value={org.slug} />
+                    <input type="hidden" name="requestId" value={r.id} />
+                    <input type="hidden" name="decision" value="decline" />
+                    <SubmitButton size="sm" variant="ghost" pendingText="Declining…">
+                      Decline
+                    </SubmitButton>
+                  </ActionForm>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : null}
 
       <Card className="mt-6">
         <CardHeader
@@ -319,6 +382,19 @@ export default async function SettingsPage({ params }: PageProps<"/w/[slug]/sett
         <GovernanceSettings ctx={ctx} />
         <IntakeSettings ctx={ctx} />
       </div>
+
+      {canSettings ? (
+        <Card className="mt-6 border-red-200" id="danger-zone">
+          <CardHeader title="Delete this workspace" description="Permanently removes the workspace and everything in it: initiatives, ideas, departments, impact data, activity and API keys. This can't be undone." />
+          <CardBody>
+            {deletionBlocker ? (
+              <p className="text-sm text-slate-700">{deletionBlocker}</p>
+            ) : (
+              <DangerDelete action={deleteWorkspaceAction} expected={org.slug} hidden={{ slug: org.slug }} label="Delete workspace" />
+            )}
+          </CardBody>
+        </Card>
+      ) : null}
     </>
   );
 }

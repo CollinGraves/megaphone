@@ -7,21 +7,28 @@ import { Alert, Button, Field, Input } from "@/components/ui";
 import type { ActionState } from "@/lib/utils";
 import { submitIntakeIdea } from "./actions";
 
-type Props = { token: string; orgName: string; domains: string[]; defaultName?: string; defaultEmail?: string };
+type Props = {
+  token: string;
+  orgName: string;
+  domains: string[];
+  defaultName?: string;
+  defaultEmail?: string;
+  departments?: { id: string; name: string }[];
+};
 
 export function IntakeForm(props: Props) {
   const [round, setRound] = useState(0);
   return <IntakeFormInner key={round} {...props} onAnother={() => setRound((r) => r + 1)} />;
 }
 
-function IntakeFormInner({ token, orgName, domains, defaultName, defaultEmail, onAnother }: Props & { onAnother: () => void }) {
+function IntakeFormInner({ token, orgName, domains, defaultName, defaultEmail, departments, onAnother }: Props & { onAnother: () => void }) {
   const [state, formAction, pending] = useActionState<ActionState, FormData>(submitIntakeIdea, null);
 
   if (state?.ok) {
     return (
       <div className="py-6 text-center" role="status">
         <CheckCircle2 className="mx-auto size-10 text-radar-600" />
-        <h2 className="mt-3 text-lg font-semibold text-slate-900">Thanks — your idea is in!</h2>
+        <h2 className="mt-3 text-lg font-semibold text-slate-900">Thanks, your idea is in!</h2>
         <p className="mx-auto mt-1 max-w-md text-sm text-slate-600">
           {orgName}’s AI team reviews every idea. {state.message ? <>We’ve sent a confirmation to <strong className="text-slate-900">{state.message}</strong> and will</> : "We’ll"}{" "}
           email you when they’ve made a decision.
@@ -53,7 +60,7 @@ function IntakeFormInner({ token, orgName, domains, defaultName, defaultEmail, o
         </label>
       </div>
 
-      <IdeaFields />
+      <IdeaFields departmentOptions={departments} />
 
       <section className="space-y-4 border-t border-slate-100 pt-5">
         <div>

@@ -89,7 +89,7 @@ export async function GovernanceSection({
             ? "Approving sets the next review date"
             : "Renewing the approval resets the next review date"}{" "}
           ({policy.reviewIntervalMonths} months from today).
-          {i.approvalRequestedById === ctx.user.id ? " You requested this review yourself — the register records it as self-approved." : ""}
+          {i.approvalRequestedById === ctx.user.id ? " You requested this review yourself, so the register marks it as self-approved." : ""}
         </p>
         <ActionForm action={decideReview} className="mt-3 space-y-3" resetOnSuccess>
           {hidden}
@@ -122,7 +122,7 @@ export async function GovernanceSection({
     <Card id="governance" className="scroll-mt-24">
       <CardHeader
         title="AI governance"
-        description="Risk classification, human oversight and approval — this initiative’s entry in the AI use-case register."
+        description="Risk classification, human oversight and approval. This is the initiative’s entry in the AI use-case register."
         action={<ApprovalBadge status={i.approvalStatus} />}
       />
       <CardBody className="space-y-5">
@@ -222,7 +222,7 @@ export async function GovernanceSection({
             ) : (
               <Step
                 icon={<CircleDot className="size-3.5 text-slate-300" />}
-                title={i.approvalDecidedAt ? "Reopened — the previous decision no longer applies" : "Review not requested yet"}
+                title={i.approvalDecidedAt ? "Reopened: the previous decision no longer applies" : "Review not requested yet"}
                 meta={i.approvalDecidedAt ? "A new review is needed; see the governance history below." : undefined}
               />
             )}
@@ -358,7 +358,7 @@ export async function GovernanceSection({
                   <TriSelect id={`gov-ai-${i.id}`} name="affectsIndividuals" value={i.affectsIndividuals} />
                 </Field>
               </div>
-              <Field label="Governance notes" htmlFor={`gov-notes-${i.id}`} hint="Controls, monitoring, vendor terms, DPIA or model-card links — whatever reviewers and auditors should see.">
+              <Field label="Governance notes" htmlFor={`gov-notes-${i.id}`} hint="Controls, monitoring, vendor terms, DPIA or model-card links. Anything reviewers and auditors should see.">
                 <Textarea id={`gov-notes-${i.id}`} name="governanceNotes" rows={3} maxLength={5000} defaultValue={i.governanceNotes ?? ""} />
               </Field>
               <SubmitButton size="sm" variant="secondary">

@@ -2,10 +2,12 @@
 
 import { and, count, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
 import { consultantAssignments, leadProfiles, platformRole, user } from "@/db/schema";
 import { requirePlatformAdmin } from "@/lib/auth/session";
+import { deleteUserAccount, DeletionBlocked } from "@/lib/deletion";
 import type { ActionState } from "@/lib/utils";
 
 const roleSchema = z.object({ userId: z.string().min(1).max(64), role: z.enum(platformRole.enumValues) });
@@ -40,4 +42,22 @@ export async function setPlatformRole(_prev: ActionState, form: FormData): Promi
   revalidatePath("/admin/leads");
   revalidatePath("/admin");
   return result;
+}
+
+export async function adminDeleteUser(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const me = await requirePlatformAdmin();
+  const userId = String(form.get("userId") ?? "");
+  const [target] = await db.select({ email: user.email }).from(user).where(eq(user.id, userId)).limit(1);
+  if (!target) return { error: "User not found." };
+  if (String(form.get("confirm") ?? "").trim().toLowerCase() !== target.email.toLowerCase()) return { error: `Type ${target.email} to confirm.` };
+  try {
+    await deleteUserAccount(userId, me);
+  } catch (err) {
+    if (err instanceof DeletionBlocked) return { error: err.message };
+    throw err;
+  }
+  revalidatePath("/admin/users");
+  revalidatePath("/admin/leads");
+  // The row (and the form inside it) disappears, so confirm at the top of the page.
+  redirect("/admin/users?deleted=1");
 }

@@ -3,15 +3,7 @@
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import {
-  INTAKE_DAILY_LIMIT_PER_EMAIL,
-  INTAKE_DAILY_LIMIT_PER_ORG,
-  countRecentIdeas,
-  logIdeaActivity,
-  notifyTriagersOfNewIdea,
-  parseIdeaFields,
-  sendIntakeConfirmation,
-} from "@/app/(app)/w/[slug]/ideas/_lib/server";
+import { countRecentIdeas, INTAKE_DAILY_LIMIT_PER_EMAIL, INTAKE_DAILY_LIMIT_PER_ORG, logIdeaActivity, notifyTriagersOfNewIdea, parseIdeaFields, sendIntakeConfirmation, withDepartment } from "@/app/(app)/w/[slug]/ideas/_lib/server";
 import { db } from "@/db";
 import { ideas, organizations } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -65,7 +57,7 @@ export async function submitIntakeIdea(_prev: ActionState, form: FormData): Prom
     countRecentIdeas(org.id, { channel: "intake_link" }),
   ]);
   if (mine >= INTAKE_DAILY_LIMIT_PER_EMAIL)
-    return { error: `You’ve already submitted ${INTAKE_DAILY_LIMIT_PER_EMAIL} ideas today — thank you! Please come back tomorrow to share more.` };
+    return { error: `You’ve already sent ${INTAKE_DAILY_LIMIT_PER_EMAIL} ideas today. Thank you! Please come back tomorrow for more.` };
   if (everyone >= INTAKE_DAILY_LIMIT_PER_ORG) return { error: "The AI team has received a lot of ideas today. Please try again tomorrow." };
 
   // Signed in with the same address? Link the idea to the account so it shows up under "My ideas".
@@ -74,7 +66,7 @@ export async function submitIntakeIdea(_prev: ActionState, form: FormData): Prom
 
   const [created] = await db
     .insert(ideas)
-    .values({ ...fields, orgId: org.id, submitterName: submitter.name, submitterEmail: check.email, submittedById, channel: "intake_link" })
+    .values({ ...(await withDepartment(org, form, fields)), orgId: org.id, submitterName: submitter.name, submitterEmail: check.email, submittedById, channel: "intake_link" })
     .returning();
   await logIdeaActivity(org.id, submittedById, "idea.submitted", {
     ideaId: created.id,

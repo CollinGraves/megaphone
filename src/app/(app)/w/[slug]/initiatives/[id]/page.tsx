@@ -8,6 +8,7 @@ import { ActionForm, ConfirmSubmit, SubmitButton } from "@/components/forms";
 import { Alert, Badge, ButtonLink, Card, CardBody, CardHeader, Textarea } from "@/components/ui";
 import { db } from "@/db";
 import { buildBriefs, comments, dataDependencies, initiatives, systems, user } from "@/db/schema";
+import { canForDepartment } from "@/lib/departments.server";
 import { firstYearCost } from "@/lib/impact";
 import { scoreBreakdown } from "@/lib/scoring";
 import { BUILD_APPROACHES, labelFrom } from "@/lib/taxonomy";
@@ -175,7 +176,7 @@ export default async function InitiativePage({ params }: PageProps<"/w/[slug]/in
             org={ctx.org}
             initiative={initiative}
             canEdit={canEdit}
-            canApprove={ctx.can("governance:approve")}
+            canApprove={await canForDepartment(ctx, "governance:approve", initiative.departmentId)}
           />
 
           <Card>
@@ -360,7 +361,7 @@ function Detail({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="grid grid-cols-[8.5rem_1fr] gap-3">
       <dt className="text-slate-500">{label}</dt>
-      <dd className={cn("min-w-0", empty ? "text-slate-400" : "text-slate-900")}>{empty ? "—" : children}</dd>
+      <dd className={cn("min-w-0", empty ? "text-slate-400" : "text-slate-900")}>{empty ? "–" : children}</dd>
     </div>
   );
 }

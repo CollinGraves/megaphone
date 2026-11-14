@@ -146,7 +146,7 @@ function ProvisionFormInner({ consultants, onReset }: { consultants: Consultant[
             <Select id="plan" name="plan" defaultValue={v?.plan || "engagement"}>
               {(Object.keys(PLAN_LABELS) as (keyof typeof PLAN_LABELS)[]).map((p) => (
                 <option key={p} value={p}>
-                  {PLAN_LABELS[p]} — {PLAN_HINTS[p]}
+                  {PLAN_LABELS[p]}: {PLAN_HINTS[p]}
                 </option>
               ))}
             </Select>

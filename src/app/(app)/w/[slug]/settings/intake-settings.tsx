@@ -24,13 +24,13 @@ export async function IntakeSettings({ ctx }: { ctx: WorkspaceContext }) {
       <Card id="intake" className="scroll-mt-24">
         <CardHeader
           title="Idea intake link"
-          description={`A shareable link where anyone at ${org.name} can submit an AI idea with their work email — no account needed. Members can always submit ideas from inside the workspace.`}
+          description={`A shareable link where anyone at ${org.name} can submit an AI idea with their work email. No account needed. Members can always submit ideas from inside the workspace.`}
           action={token ? <Badge tone="amber">Paused</Badge> : <Badge>Off</Badge>}
         />
         <CardBody className="space-y-3">
           <UpgradePrompt feature="intake_link" slug={org.slug} canManageBilling={ctx.can("billing:manage")}>
             {token ? (
-              <p className="mt-1.5 text-sm text-amber-800">Your existing link is paused and isn’t accepting ideas. Upgrade to switch it back on — the URL stays the same.</p>
+              <p className="mt-1.5 text-sm text-amber-800">Your existing link is paused and isn’t accepting ideas. Upgrade to switch it back on. The URL stays the same.</p>
             ) : null}
           </UpgradePrompt>
           {token && canSettings ? (
@@ -70,7 +70,7 @@ export async function IntakeSettings({ ctx }: { ctx: WorkspaceContext }) {
         title="Idea intake link"
         description={
           <>
-            A shareable link where anyone at {org.name} can submit an AI idea with their work email — no account needed. Submissions land in{" "}
+            A shareable link where anyone at {org.name} can submit an AI idea with their work email, no account needed. Submissions land in{" "}
             <Link href={`/w/${org.slug}/ideas`} className="underline hover:text-slate-800">
               Ideas
             </Link>{" "}

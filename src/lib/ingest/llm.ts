@@ -74,6 +74,8 @@ You receive a batch of newly fetched articles and a list of stories already publ
 2. Deduplicate: if the article covers the same underlying event as an existing story, assign it to that story's id. Different outlets covering the same announcement are the SAME story. Follow-ups that add genuinely new facts (e.g. a price change announced days after a launch) are NEW stories.
 3. Otherwise, group it with other new articles about the same event under a short group_key (e.g. "g1"), and describe each new group once in new_stories.
 
+Write titles, summaries and "why it matters" in plain, direct English. Never use em dashes.
+
 Every article must appear exactly once in "articles", including irrelevant ones (give them assignment "none"). Every group_key you use must appear exactly once in new_stories.
 
 Categories: ${CATEGORIES.map((c) => `${c.slug} (${c.description})`).join("; ")}.

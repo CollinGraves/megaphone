@@ -16,10 +16,11 @@ import {
   suggestRiskTier,
   yesNo,
 } from "@/lib/governance";
+import { canForDepartment } from "@/lib/departments.server";
 import { featureGateMessage, hasFeature } from "@/lib/plans";
 import { HUMAN_OVERSIGHT_LEVELS, RISK_TIERS, labelFrom } from "@/lib/taxonomy";
 import { formatDate, type ActionState } from "@/lib/utils";
-import { logActivity, type WorkspaceContext } from "@/lib/workspace";
+import { logActivity, type WorkspaceContext, ForbiddenError } from "@/lib/workspace";
 import { ActionError, authorize, revalidateWorkspace, runAction, zId, zOptText } from "../_lib/action-utils";
 import { getOwnedInitiative } from "../_lib/guards";
 import { loadDependencySensitivities } from "./data";
@@ -90,7 +91,7 @@ async function applyClassification(ctx: WorkspaceContext, initiative: Initiative
   revalidateWorkspace(ctx.org.slug);
   return {
     ok: true,
-    message: reopen ? "Classification saved. The previous decision no longer applies — request a new review." : "Classification saved.",
+    message: reopen ? "Classification saved. The previous decision no longer applies, so request a new review." : "Classification saved.",
   };
 }
 
@@ -187,9 +188,11 @@ const decisionSchema = z.object({
 
 export async function decideReview(_prev: ActionState, form: FormData): Promise<ActionState> {
   return runAction(async () => {
-    const ctx = await authorize(form, "governance:approve");
+    const ctx = await authorize(form, "workspace:view");
     requireGovernanceWorkflow(ctx);
     const initiative = await getOwnedInitiative(ctx, zId().parse(field(form, "initiativeId")));
+    // Owners/admins approve anything; a department's leads approve that department's initiatives.
+    if (!(await canForDepartment(ctx, "governance:approve", initiative.departmentId))) throw new ForbiddenError();
     const { decision, note } = decisionSchema.parse({ decision: field(form, "decision"), note: field(form, "note") });
 
     if (!canDecide(initiative.approvalStatus)) throw new ActionError("There’s no review to decide. An editor needs to request one first.");

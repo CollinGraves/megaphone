@@ -130,9 +130,9 @@ export default async function AccountPage({ params }: PageProps<"/admin/accounts
                   {contacts.map((c) => (
                     <tr key={c.id}>
                       <Td className="font-medium text-slate-900">{c.fullName}</Td>
-                      <Td>{c.title ?? "—"}</Td>
+                      <Td>{c.title ?? "–"}</Td>
                       <Td>
-                        {c.email ?? "—"}{" "}
+                        {c.email ?? "–"}{" "}
                         {c.email && knownEmails.has(c.email) ? <Badge tone="radar">On {BRAND}</Badge> : null}
                       </Td>
                       <Td>

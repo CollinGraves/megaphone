@@ -2,15 +2,16 @@ import { ArrowRight, Check, Handshake, Info, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ActionForm, SubmitButton } from "@/components/forms";
-import { Alert, ButtonLink, Card, Field, Input, Select } from "@/components/ui";
+import { Alert, ButtonLink, Card, Field, Input, Select, Textarea } from "@/components/ui";
 import { db } from "@/db";
 import { companyNameFor } from "@/lib/assessment/server";
 import { requireUser } from "@/lib/auth/session";
 import { BRAND } from "@/lib/brand";
 import { PLANS } from "@/lib/plans";
 import { INDUSTRIES } from "@/lib/taxonomy";
+import { timeAgo } from "@/lib/utils";
 import { checkWorkspaceCreation } from "@/lib/workspace-creation";
-import { createWorkspace } from "./actions";
+import { cancelJoinRequestAction, createWorkspace, requestToJoin } from "./actions";
 import { loadCreationFacts } from "./data";
 
 export const metadata: Metadata = { title: "Create a free AI workspace" };
@@ -29,8 +30,7 @@ export default async function NewWorkspacePage() {
         <div className="text-xs font-medium uppercase tracking-wide text-radar-700">{BRAND} Workspace · Free</div>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Create your company’s AI workspace</h1>
         <p className="mt-2 max-w-xl text-sm text-slate-600 sm:text-base">
-          One place to prioritize every AI initiative, track its impact and the data it depends on. Free for up to {PLANS.free.initiativeLimit} initiatives — no card,
-          no sales call.
+          Prioritize every AI initiative and track its impact and the data it needs. Free for up to {PLANS.free.initiativeLimit} initiatives. No card, no sales call.
         </p>
 
         <Card className="mt-6 p-5 sm:p-6">
@@ -75,27 +75,40 @@ export default async function NewWorkspacePage() {
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-radar-50 text-radar-700 ring-1 ring-radar-200">
                   <Users className="size-4" />
                 </span>
-                <div>
+                <div className="min-w-0">
                   <h2 className="font-semibold text-slate-900">
-                    {domainWs.isMember ? `You’re already in ${domainWs.name}’s workspace` : `Your company already has a free workspace`}
+                    {domainWs.isMember ? `You're already in ${domainWs.name}` : `${domainWs.name} already has a workspace`}
                   </h2>
                   <p className="mt-1 text-sm text-slate-600">
                     {domainWs.isMember
-                      ? "Each company gets one free workspace so everyone works from the same AI portfolio."
-                      : check.message}
+                      ? "Each company gets one workspace so everyone works from the same AI portfolio."
+                      : domainWs.pendingRequest
+                        ? `You asked to join ${timeAgo(domainWs.pendingRequest.createdAt)}. We'll email you when an admin responds.`
+                        : check.message}
                   </p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {domainWs.isMember ? (
-                  <ButtonLink href={`/w/${domainWs.slug}`}>
-                    Open {domainWs.name} <ArrowRight className="size-4" />
-                  </ButtonLink>
-                ) : null}
-                <ButtonLink href="/contact?from=workspace_new_domain" variant="secondary">
-                  Talk to North Labs
+              {domainWs.isMember ? (
+                <ButtonLink href={`/w/${domainWs.slug}`}>
+                  Open {domainWs.name} <ArrowRight className="size-4" />
                 </ButtonLink>
-              </div>
+              ) : domainWs.pendingRequest ? (
+                <ActionForm action={cancelJoinRequestAction}>
+                  <input type="hidden" name="requestId" value={domainWs.pendingRequest.id} />
+                  <SubmitButton variant="secondary" size="sm" pendingText="Cancelling…">
+                    Cancel request
+                  </SubmitButton>
+                </ActionForm>
+              ) : (
+                <ActionForm action={requestToJoin} className="space-y-3">
+                  <Field label="Note to the admins (optional)" htmlFor="join-message" hint="Your team or role helps them say yes quickly.">
+                    <Textarea id="join-message" name="message" rows={2} maxLength={500} placeholder="I run finance ops and want to add our AP automation idea." />
+                  </Field>
+                  <SubmitButton pendingText="Sending…">
+                    Request to join {domainWs.name} <ArrowRight className="size-4" />
+                  </SubmitButton>
+                </ActionForm>
+              )}
             </div>
           ) : (
             <div className="space-y-4">

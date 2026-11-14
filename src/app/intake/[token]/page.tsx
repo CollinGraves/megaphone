@@ -7,6 +7,7 @@ import { cache } from "react";
 import { RadarMark } from "@/components/logo";
 import { Card } from "@/components/ui";
 import { db } from "@/db";
+import { departmentOptions } from "@/lib/departments.server";
 import { memberships, organizations } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth/session";
 import { hasFeature } from "@/lib/plans";
@@ -88,7 +89,7 @@ export default async function IntakePage({ params }: PageProps<"/intake/[token]"
           <div className="mb-1 text-xs font-medium uppercase tracking-wide text-radar-700">AI idea intake</div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Submit an AI idea to {org.name}’s AI team</h1>
           <p className="mt-2 max-w-2xl text-sm text-slate-600 sm:text-base">
-            Know a task that eats hours every week, or a process that’s slow and error-prone? You’re closest to the work — tell us where AI could help. No account needed.
+            Know a task that eats hours every week, or a process that’s slow and error-prone? You’re closest to the work, so tell us where AI could help. No account needed.
           </p>
           <ol className="mt-5 grid gap-2 sm:grid-cols-3">
             {STEPS.map(({ icon: Icon, text }, i) => (
@@ -121,6 +122,7 @@ export default async function IntakePage({ params }: PageProps<"/intake/[token]"
             domains={org.intakeAllowedDomains}
             defaultName={current?.name}
             defaultEmail={current?.email}
+            departments={await departmentOptions(org)}
           />
         </Card>
 

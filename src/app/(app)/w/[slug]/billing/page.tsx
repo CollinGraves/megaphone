@@ -100,7 +100,7 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
         description={
           summary.kind === "managed"
             ? `${org.name} is managed by North Labs.`
-            : "Choose the plan that fits your AI portfolio. Upgrade, switch or cancel any time — no services required."
+            : "Pick a plan. Upgrade, switch or cancel any time."
         }
       />
 
@@ -110,7 +110,7 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
           <span>
             {summary.kind === "subscribed"
               ? `You’re on ${plan.name}. Thanks for subscribing!`
-              : "Payment received. We’re activating your plan — this usually takes a few seconds. Refresh the page if it hasn’t updated."}
+              : "Payment received. Your plan usually activates within a few seconds. Refresh if it hasn’t updated."}
           </span>
         </Alert>
       ) : checkout === "canceled" ? (
@@ -238,7 +238,7 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
               <div>
                 <h2 className="font-semibold text-slate-900">Managed by North Labs</h2>
                 <p className="mt-0.5 text-sm text-slate-600">
-                  Every feature is included and your North Labs team works alongside you. There’s nothing to buy here — talk to your North Labs contact about changes to your agreement.
+                  Every feature is included and your North Labs team works alongside you. There’s nothing to buy here. Talk to your North Labs contact about changes to your agreement.
                 </p>
               </div>
             </div>

@@ -66,7 +66,7 @@ export async function saveIntakeDomains(_prev: ActionState, form: FormData): Pro
     const { domains, invalid, rejected } = parseAllowedDomains(raw);
     if (invalid.length) throw new ActionError(`Not a valid domain: ${invalid.slice(0, 3).join(", ")}.`);
     if (rejected.length)
-      throw new ActionError(`${rejected.join(", ")} ${rejected.length === 1 ? "is a personal email provider" : "are personal email providers"} — anyone could use ${rejected.length === 1 ? "it" : "them"}. Use your company's domains.`);
+      throw new ActionError(`${rejected.join(", ")} ${rejected.length === 1 ? "is a personal email provider" : "are personal email providers"}, so anyone could use ${rejected.length === 1 ? "it" : "them"}. Use your company's domains.`);
     await db.update(organizations).set({ intakeAllowedDomains: domains }).where(eq(organizations.id, ctx.org.id));
     await logActivity(ctx, "intake.domains_updated", { domains });
     revalidateWorkspace(ctx.org.slug);

@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, or } from "drizzle-orm";
 import { Lightbulb, Link2, Plus, Search } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -8,6 +8,7 @@ import { ideas } from "@/db/schema";
 import { estimateAnnualHours, ideaSignal, urgencyRank } from "@/lib/ideas";
 import { IDEA_STATUSES } from "@/lib/taxonomy";
 import { cn, formatNumber, timeAgo } from "@/lib/utils";
+import { myDepartmentRoles } from "@/lib/departments.server";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { CopyButton } from "../_components/client";
 import { ChannelLabel, IdeaStatusBadge, SignalMeter, UrgencyBadge } from "./_components/badges";
@@ -36,14 +37,22 @@ export default async function IdeasPage({ params, searchParams }: PageProps<"/w/
   const sp = await searchParams;
   const ctx = await getWorkspaceOrNotFound(slug);
   const base = `/w/${ctx.org.slug}`;
-  const canTriage = ctx.can("ideas:triage");
+  const roles = await myDepartmentRoles(ctx.org.id, ctx.user.id);
+  const ledDepartments = [...roles].filter(([, r]) => r === "lead").map(([id]) => id);
+  // Department leads triage their departments' ideas, so the list works like a triager's for them.
+  const canTriage = ctx.can("ideas:triage") || ledDepartments.length > 0;
   const canSubmit = ctx.can("ideas:submit");
 
-  // Triagers see every idea; everyone else only sees what they submitted.
+  // Triagers see every idea; leads also see their departments' ideas; everyone else only their own.
+  const scope = ctx.can("ideas:triage")
+    ? undefined
+    : ledDepartments.length
+      ? or(eq(ideas.submittedById, ctx.user.id), inArray(ideas.departmentId, ledDepartments))
+      : eq(ideas.submittedById, ctx.user.id);
   const all = await db
     .select()
     .from(ideas)
-    .where(and(eq(ideas.orgId, ctx.org.id), canTriage ? undefined : eq(ideas.submittedById, ctx.user.id)))
+    .where(and(eq(ideas.orgId, ctx.org.id), scope))
     .orderBy(desc(ideas.createdAt))
     .limit(2000);
 
@@ -114,7 +123,7 @@ export default async function IdeasPage({ params, searchParams }: PageProps<"/w/
           title={canTriage ? "No ideas yet" : "You haven’t submitted any ideas yet"}
           description={
             canTriage
-              ? "Ideas submitted by colleagues — in the workspace or through the intake link — land here for triage."
+              ? "Ideas from colleagues, in the workspace or through the intake link, land here for triage."
               : "Spotted a repetitive task, a slow process or a question AI could answer? Share it with the AI team."
           }
           action={
@@ -212,7 +221,7 @@ export default async function IdeasPage({ params, searchParams }: PageProps<"/w/
                             <span className="ml-0.5 text-xs font-normal text-slate-500 md:hidden"> h/yr</span>
                           </span>
                         ) : (
-                          <span className="text-slate-400">—</span>
+                          <span className="text-slate-400">–</span>
                         )}
                       </div>
                       <div className="md:pt-0.5">
@@ -250,7 +259,7 @@ function IntakeCallout({ token, orgName, settingsHref }: { token: string | null;
           <div className="font-medium text-slate-900">{token ? "Intake link is on" : "Collect ideas from everyone"}</div>
           <p className="text-slate-500">
             {token
-              ? `Anyone at ${orgName} can submit an idea with their work email — no account needed.`
+              ? `Anyone at ${orgName} can submit an idea with their work email. No account needed.`
               : `Turn on the shareable intake link so anyone at ${orgName} can submit ideas without an account.`}
           </p>
         </div>

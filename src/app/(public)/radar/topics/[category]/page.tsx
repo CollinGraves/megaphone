@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: PageProps<"/radar/topics/[cat
   const c = CATEGORIES.find((x) => x.slug === category);
   if (!c) return {};
   return {
-    title: `${c.label} — latest AI news`,
+    title: `${c.label}: latest AI news`,
     description: `The latest AI news on ${c.label.toLowerCase()}: ${c.description.toLowerCase()}.`,
     alternates: { canonical: `/radar/topics/${c.slug}` },
   };
@@ -30,7 +30,7 @@ export default async function TopicPage({ params, searchParams }: PageProps<"/ra
   return (
     <RadarIndex
       title={c.label}
-      description={`${c.description}. The latest stories, newest first.`}
+      description={`${c.description}. Newest first.`}
       stories={stories.slice(0, PAGE_SIZE)}
       hasMore={stories.length > PAGE_SIZE}
       page={page}

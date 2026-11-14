@@ -413,7 +413,7 @@ function Row({ label, value }: { label: string; value: ReactNode }) {
   return (
     <>
       <dt className="text-slate-500">{label}</dt>
-      <dd className="min-w-0 truncate text-slate-900">{value ?? <span className="text-slate-400">—</span>}</dd>
+      <dd className="min-w-0 truncate text-slate-900">{value ?? <span className="text-slate-400">–</span>}</dd>
     </>
   );
 }

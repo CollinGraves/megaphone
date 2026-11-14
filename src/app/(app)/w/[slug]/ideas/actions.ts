@@ -5,17 +5,29 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
 import { ideas, impactMetrics, initiatives, type Idea } from "@/db/schema";
+import { canForDepartment } from "@/lib/departments.server";
 import { ideaToInitiativeDefaults } from "@/lib/ideas";
 import { initiativeCapMessage, initiativeLimit } from "@/lib/plans";
 import type { ActionState } from "@/lib/utils";
-import { logActivity, type WorkspaceContext } from "@/lib/workspace";
+import { ForbiddenError, logActivity, type WorkspaceContext } from "@/lib/workspace";
 import { ActionError, authorize, revalidateWorkspace, runAction, zId, zOptText } from "../_lib/action-utils";
-import { notifySubmitterOfDecision, notifyTriagersOfNewIdea, parseIdeaFields } from "./_lib/server";
+import { notifySubmitterOfDecision, notifyTriagersOfNewIdea, parseIdeaFields, withDepartment } from "./_lib/server";
 
 const field = (form: FormData, key: string) => {
   const v = form.get(key);
   return typeof v === "string" ? v : undefined;
 };
+
+/**
+ * Triage guard: workspace triagers can triage any idea; a department's leads can triage the ideas routed
+ * to their department. Returns the context and the (tenant-checked) idea.
+ */
+async function authorizeTriage(form: FormData): Promise<{ ctx: WorkspaceContext; idea: Idea }> {
+  const ctx = await authorize(form, "workspace:view");
+  const idea = await getOwnedIdea(ctx, zId().parse(field(form, "id")));
+  if (!(await canForDepartment(ctx, "ideas:triage", idea.departmentId))) throw new ForbiddenError();
+  return { ctx, idea };
+}
 
 /** Tenant guard: the idea must belong to the caller's workspace (a miss reads as "not found"). */
 async function getOwnedIdea(ctx: WorkspaceContext, id: string): Promise<Idea> {
@@ -35,7 +47,7 @@ const ideaPath = (ctx: WorkspaceContext, id: string) => `/w/${ctx.org.slug}/idea
 export async function submitIdea(_prev: ActionState, form: FormData): Promise<ActionState> {
   return runAction(async () => {
     const ctx = await authorize(form, "ideas:submit");
-    const values = parseIdeaFields(form);
+    const values = await withDepartment(ctx.org, form, parseIdeaFields(form));
     const [created] = await db
       .insert(ideas)
       .values({
@@ -61,8 +73,7 @@ const notesSchema = zOptText(5000);
 /** Move to "under review" (also re-opens a declined/duplicate idea) and save triage notes. */
 export async function reviewIdea(_prev: ActionState, form: FormData): Promise<ActionState> {
   return runAction(async () => {
-    const ctx = await authorize(form, "ideas:triage");
-    const idea = await getOwnedIdea(ctx, zId().parse(field(form, "id")));
+    const { ctx, idea } = await authorizeTriage(form);
     if (idea.status === "accepted") throw new ActionError("This idea has already been converted to an initiative.");
     const triageNotes = notesSchema.parse(field(form, "triageNotes"));
     const reopening = idea.status === "declined" || idea.status === "duplicate";
@@ -98,8 +109,7 @@ const convertSchema = z.object({
  */
 export async function convertIdea(_prev: ActionState, form: FormData): Promise<ActionState> {
   return runAction(async () => {
-    const ctx = await authorize(form, "ideas:triage");
-    const idea = await getOwnedIdea(ctx, zId().parse(field(form, "id")));
+    const { ctx, idea } = await authorizeTriage(form);
     if (idea.status === "accepted") throw new ActionError("This idea has already been converted to an initiative.");
     const v = convertSchema.parse({
       title: field(form, "title") ?? idea.title,
@@ -136,6 +146,7 @@ export async function convertIdea(_prev: ActionState, form: FormData): Promise<A
           businessUnit: v.businessUnit,
           orgId: ctx.org.id,
           sourceIdeaId: idea.id,
+          departmentId: idea.departmentId,
           createdById: ctx.user.id,
         })
         .returning({ id: initiatives.id });
@@ -160,8 +171,7 @@ const declineSchema = z.object({
 
 export async function declineIdea(_prev: ActionState, form: FormData): Promise<ActionState> {
   return runAction(async () => {
-    const ctx = await authorize(form, "ideas:triage");
-    const idea = await getOwnedIdea(ctx, zId().parse(field(form, "id")));
+    const { ctx, idea } = await authorizeTriage(form);
     if (idea.status === "accepted") throw new ActionError("This idea has already been converted to an initiative.");
     const v = declineSchema.parse({ reason: field(form, "reason") ?? "", notify: field(form, "notify") === "1" });
     await db
@@ -183,8 +193,7 @@ const duplicateSchema = z.object({
 
 export async function markDuplicate(_prev: ActionState, form: FormData): Promise<ActionState> {
   return runAction(async () => {
-    const ctx = await authorize(form, "ideas:triage");
-    const idea = await getOwnedIdea(ctx, zId().parse(field(form, "id")));
+    const { ctx, idea } = await authorizeTriage(form);
     if (idea.status === "accepted") throw new ActionError("This idea has already been converted to an initiative.");
     const v = duplicateSchema.parse({ target: field(form, "target") ?? "", notify: field(form, "notify") === "1" });
     const [kind, targetId] = v.target.split(":") as ["idea" | "initiative", string];

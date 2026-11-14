@@ -1,9 +1,9 @@
 import { and, count, eq, inArray, isNull } from "drizzle-orm";
-import { BellRing, CreditCard, Database, Lightbulb, LayoutDashboard, ListChecks, Settings, ShieldCheck } from "lucide-react";
+import { BellRing, Building, CreditCard, Database, Lightbulb, LayoutDashboard, ListChecks, Settings, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui";
 import { db } from "@/db";
-import { ideas, initiatives } from "@/db/schema";
+import { departmentMembers, ideas, initiatives, joinRequests } from "@/db/schema";
 import { ORG_ROLES, labelFrom } from "@/lib/taxonomy";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { WorkspaceNav, type NavItem } from "./_components/client";
@@ -28,24 +28,44 @@ export async function generateMetadata({ params }: LayoutProps<"/w/[slug]">): Pr
 export default async function WorkspaceLayout({ children, params }: LayoutProps<"/w/[slug]">) {
   const { slug } = await params;
   const ctx = await getWorkspaceOrNotFound(slug);
-  const [alertCount, [newIdeas], [pendingReviews]] = await Promise.all([
+  const [alertCount, [newIdeas], [pendingReviews], [joinCount]] = await Promise.all([
     countOpenAlerts(ctx.org.id),
     db.select({ n: count() }).from(ideas).where(and(eq(ideas.orgId, ctx.org.id), inArray(ideas.status, ["new"]))),
+    // Owners/admins count every pending review; department leads count their departments' reviews.
     db
       .select({ n: count() })
       .from(initiatives)
-      .where(and(eq(initiatives.orgId, ctx.org.id), eq(initiatives.approvalStatus, "pending"), isNull(initiatives.archivedAt))),
+      .where(
+        and(
+          eq(initiatives.orgId, ctx.org.id),
+          eq(initiatives.approvalStatus, "pending"),
+          isNull(initiatives.archivedAt),
+          ctx.can("governance:approve")
+            ? undefined
+            : inArray(
+                initiatives.departmentId,
+                db
+                  .select({ id: departmentMembers.departmentId })
+                  .from(departmentMembers)
+                  .where(and(eq(departmentMembers.userId, ctx.user.id), eq(departmentMembers.role, "lead"))),
+              ),
+        ),
+      ),
+    ctx.can("members:manage")
+      ? db.select({ n: count() }).from(joinRequests).where(and(eq(joinRequests.orgId, ctx.org.id), eq(joinRequests.status, "pending")))
+      : Promise.resolve([{ n: 0 }]),
   ]);
   const base = `/w/${ctx.org.slug}`;
 
   const nav: NavItem[] = [
     { href: base, label: "Dashboard", icon: <LayoutDashboard />, exact: true },
     { href: `${base}/initiatives`, label: "Initiatives", icon: <ListChecks /> },
+    { href: `${base}/departments`, label: "Departments", icon: <Building /> },
     { href: `${base}/ideas`, label: "Ideas", icon: <Lightbulb />, count: ctx.can("ideas:triage") ? newIdeas?.n : undefined },
-    { href: `${base}/governance`, label: "Governance", icon: <ShieldCheck />, count: ctx.can("governance:approve") ? pendingReviews?.n : undefined },
+    { href: `${base}/governance`, label: "Governance", icon: <ShieldCheck />, count: pendingReviews?.n || undefined },
     { href: `${base}/systems`, label: "Systems & data", icon: <Database /> },
     { href: `${base}/alerts`, label: "Radar alerts", icon: <BellRing />, count: alertCount },
-    { href: `${base}/settings`, label: "Settings", icon: <Settings /> },
+    { href: `${base}/settings`, label: "Settings", icon: <Settings />, count: joinCount?.n || undefined },
     ...(ctx.can("billing:manage") ? [{ href: `${base}/billing`, label: "Plan & billing", icon: <CreditCard /> }] : []),
   ];
 

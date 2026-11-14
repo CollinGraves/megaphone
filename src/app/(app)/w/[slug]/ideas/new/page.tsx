@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { ButtonLink, Card, CardBody, PageHeader } from "@/components/ui";
+import { departmentOptions } from "@/lib/departments.server";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { listBusinessUnits } from "../../_lib/queries";
 import { IdeaFields } from "../_components/idea-fields";
@@ -22,7 +23,7 @@ export default async function NewIdeaPage({ params }: PageProps<"/w/[slug]/ideas
   const ctx = await getWorkspaceOrNotFound(slug);
   if (!ctx.can("ideas:submit")) notFound();
   const base = `/w/${ctx.org.slug}`;
-  const departments = await listBusinessUnits(ctx.org.id);
+  const [departments, realDepartments] = await Promise.all([listBusinessUnits(ctx.org.id), departmentOptions(ctx.org)]);
 
   return (
     <>
@@ -32,14 +33,14 @@ export default async function NewIdeaPage({ params }: PageProps<"/w/[slug]/ideas
       <PageHeader
         eyebrow="Ideas"
         title="Submit an AI idea"
-        description={`Have a task that eats time, or a process AI could improve? Tell ${ctx.org.name}'s AI team — they review every idea.`}
+        description={`Have a task that eats time, or a process AI could improve? Tell ${ctx.org.name}'s AI team. They review every idea.`}
       />
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="min-w-0 lg:col-span-2">
           <CardBody className="py-5">
             <ActionForm action={submitIdea} className="space-y-6">
               <input type="hidden" name="slug" value={ctx.org.slug} />
-              <IdeaFields departments={departments} />
+              <IdeaFields departments={departments} departmentOptions={realDepartments} />
               <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs text-slate-500">
                   Submitting as <span className="font-medium text-slate-700">{ctx.user.name}</span> ({ctx.user.email})

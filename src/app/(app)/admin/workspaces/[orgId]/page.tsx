@@ -1,3 +1,5 @@
+import { DangerDelete } from "@/components/danger-delete";
+import { workspaceDeletionBlocker } from "@/lib/deletion";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { and, count, desc, eq, isNull, notInArray } from "drizzle-orm";
@@ -14,6 +16,7 @@ import { AutoSubmitSelect } from "../../_components/auto-submit-select";
 import { OrgStatusBadge, PLAN_LABELS, PlanBadge } from "../../_components/badges";
 import { InlineForm } from "../../_components/inline-form";
 import {
+  adminDeleteWorkspace,
   assignConsultant,
   inviteMember,
   removeMember,
@@ -339,7 +342,7 @@ export default async function WorkspaceDetailPage({ params }: PageProps<"/admin/
                   <dt className="text-slate-500">Plan</dt>
                   <dd className="text-slate-900">{PLAN_LABELS[org.plan]}</dd>
                   <dt className="text-slate-500">Industry</dt>
-                  <dd className="text-slate-900">{org.industry ? industryLabel(org.industry) : "—"}</dd>
+                  <dd className="text-slate-900">{org.industry ? industryLabel(org.industry) : "–"}</dd>
                   <dt className="text-slate-500">Hourly rate</dt>
                   <dd className="text-slate-900">{formatUsd(org.defaultHourlyRate)}</dd>
                 </dl>
@@ -441,6 +444,19 @@ export default async function WorkspaceDetailPage({ params }: PageProps<"/admin/
           </Card>
         </div>
       </div>
+
+      {admin ? (
+        <Card className="mt-6 border-red-200">
+          <CardHeader title="Delete workspace" description="Permanently removes this workspace and all of its data. Members keep their accounts. This can't be undone." />
+          <CardBody>
+            {workspaceDeletionBlocker(org) ? (
+              <p className="text-sm text-slate-700">{workspaceDeletionBlocker(org)}</p>
+            ) : (
+              <DangerDelete action={adminDeleteWorkspace} expected={org.slug} hidden={{ orgId: org.id }} label="Delete workspace" />
+            )}
+          </CardBody>
+        </Card>
+      ) : null}
     </>
   );
 }

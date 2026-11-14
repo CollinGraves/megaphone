@@ -6,7 +6,7 @@ const facts = (f: Partial<CreationFacts> = {}): CreationFacts => ({
   emailKind: "work",
   companyDomain: "acme.com",
   createdCount: 0,
-  domainFreeWorkspace: null,
+  domainWorkspace: null,
   ...f,
 });
 
@@ -20,27 +20,33 @@ describe("checkWorkspaceCreation", () => {
     expect(checkWorkspaceCreation(facts({ createdCount: MAX_CREATED_WORKSPACES }))).toMatchObject({ ok: false, reason: "limit" });
   });
 
-  it("one Free workspace per company domain; names the owner only to same-domain colleagues", () => {
-    const sameDomain = checkWorkspaceCreation(facts({ domainFreeWorkspace: { name: "Acme", ownerName: "Olivia Owner", ownerDomain: "acme.com" } }));
+  it("one workspace per company domain; names the owner only to same-domain colleagues", () => {
+    const sameDomain = checkWorkspaceCreation(facts({ domainWorkspace: { name: "Acme", ownerName: "Olivia Owner", ownerDomain: "acme.com" } }));
     expect(sameDomain).toMatchObject({ ok: false, reason: "domain_exists" });
     expect(!sameDomain.ok && sameDomain.message).toMatch(/Olivia Owner/);
 
-    const otherOwner = checkWorkspaceCreation(facts({ domainFreeWorkspace: { name: "Acme", ownerName: "Pat Personal", ownerDomain: null } }));
+    const otherOwner = checkWorkspaceCreation(facts({ domainWorkspace: { name: "Acme", ownerName: "Pat Personal", ownerDomain: null } }));
     expect(otherOwner).toMatchObject({ ok: false, reason: "domain_exists" });
     expect(!otherOwner.ok && otherOwner.message).not.toMatch(/Pat/);
   });
 
-  it("North Labs staff are exempt from the caps", () => {
-    expect(checkWorkspaceCreation(facts({ isStaff: true, createdCount: 10, domainFreeWorkspace: { name: "X", ownerName: "Y", ownerDomain: "acme.com" } }))).toEqual({
-      ok: true,
-      nudge: null,
+  it("North Labs staff skip the per-person cap but not the company-domain rule", () => {
+    expect(checkWorkspaceCreation(facts({ isStaff: true, createdCount: 10 }))).toEqual({ ok: true, nudge: null });
+    expect(checkWorkspaceCreation(facts({ isStaff: true, domainWorkspace: { name: "X", ownerName: "Y", ownerDomain: "acme.com" } }))).toMatchObject({
+      ok: false,
+      reason: "domain_exists",
     });
+  });
+
+  it("points to the company workspace before the per-person cap", () => {
+    const r = checkWorkspaceCreation(facts({ createdCount: MAX_CREATED_WORKSPACES, domainWorkspace: { name: "Acme", ownerName: null, ownerDomain: null } }));
+    expect(r).toMatchObject({ ok: false, reason: "domain_exists" });
   });
 
   it("personal emails can create one but get a nudge", () => {
     expect(checkWorkspaceCreation(facts({ emailKind: "personal", companyDomain: null }))).toEqual({ ok: true, nudge: "personal_email" });
     // The domain rule doesn't apply without a company domain.
-    expect(checkWorkspaceCreation(facts({ emailKind: "personal", companyDomain: null, domainFreeWorkspace: { name: "Gmail co", ownerName: null, ownerDomain: null } })).ok).toBe(true);
+    expect(checkWorkspaceCreation(facts({ emailKind: "personal", companyDomain: null, domainWorkspace: { name: "Gmail co", ownerName: null, ownerDomain: null } })).ok).toBe(true);
     expect(checkWorkspaceCreation(facts({ emailKind: "personal", companyDomain: null, createdCount: MAX_CREATED_WORKSPACES })).ok).toBe(false);
   });
 

@@ -95,6 +95,11 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {!user.emailVerified ? <VerifyEmailBanner email={user.email} /> : null}
+      {params.deleted === "workspace" ? (
+        <Alert tone="success" className="mb-6">
+          Workspace deleted.
+        </Alert>
+      ) : null}
       {params.welcome ? (
         <Alert tone="success" className="mb-6">
           <strong>Your radar is live.</strong> This feed is filtered to your interests.{" "}
@@ -102,7 +107,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
         </Alert>
       ) : null}
       <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
-        <div>
+        <div className="min-w-0">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <nav className="flex gap-1 overflow-x-auto rounded-lg bg-slate-100 p-1">
               {TABS.map((t) => (
