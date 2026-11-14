@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { departmentMembers, departments, invitations, memberships, orgRole, organizations, user, type OrgRole } from "@/db/schema";
 import { createInvitation } from "@/lib/invitations";
 import { decideJoinRequest, JoinRequestError } from "@/lib/join-requests";
+import { deleteWorkspace, DeletionBlocked } from "@/lib/deletion";
 import { canAssignRole } from "@/lib/permissions";
 import { INDUSTRY_SLUGS, ORG_ROLES, labelFrom } from "@/lib/taxonomy";
 import type { ActionState } from "@/lib/utils";
@@ -212,5 +213,21 @@ export async function decideJoinRequestAction(_prev: ActionState, form: FormData
     revalidateWorkspace(ctx.org.slug);
     // The request's row disappears once handled, so confirm at the top of the page instead.
     redirect(`/w/${ctx.org.slug}/settings?request=${v.decision === "approve" ? `approved&role=${v.role}` : "declined"}`);
+  });
+}
+
+/* ───────────────────────────── Delete workspace ───────────────────────────── */
+
+export async function deleteWorkspaceAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  return runAction(async () => {
+    const ctx = await authorize(form, "settings:manage");
+    if (String(form.get("confirm") ?? "").trim() !== ctx.org.slug) throw new ActionError(`Type ${ctx.org.slug} to confirm.`);
+    try {
+      await deleteWorkspace(ctx.org.id, ctx.user);
+    } catch (err) {
+      if (err instanceof DeletionBlocked) throw new ActionError(err.message);
+      throw err;
+    }
+    redirect("/feed?deleted=workspace");
   });
 }

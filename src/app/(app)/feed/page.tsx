@@ -95,6 +95,11 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {!user.emailVerified ? <VerifyEmailBanner email={user.email} /> : null}
+      {params.deleted === "workspace" ? (
+        <Alert tone="success" className="mb-6">
+          Workspace deleted.
+        </Alert>
+      ) : null}
       {params.welcome ? (
         <Alert tone="success" className="mb-6">
           <strong>Your radar is live.</strong> This feed is filtered to your interests.{" "}

@@ -4,7 +4,7 @@ import { and, count, desc, eq, inArray, isNull } from "drizzle-orm";
 import { Building2, ExternalLink, Plus } from "lucide-react";
 import { db } from "@/db";
 import { consultantAssignments, initiatives, memberships, organizations, user } from "@/db/schema";
-import { Badge, ButtonLink, Card, EmptyState, PageHeader, Table, Td, Th } from "@/components/ui";
+import { Alert, Badge, ButtonLink, Card, EmptyState, PageHeader, Table, Td, Th } from "@/components/ui";
 import { requireStaff } from "@/lib/auth/session";
 import { STALLED_AFTER_DAYS, loadActivations, type Activation } from "@/lib/onboarding";
 import { industryLabel } from "@/lib/taxonomy";
@@ -81,6 +81,7 @@ export default async function WorkspacesPage({ searchParams }: PageProps<"/admin
           ) : null
         }
       />
+      {param(sp, "deleted") ? <Alert tone="success" className="mb-4">Workspace deleted.</Alert> : null}
 
       {allOrgs.length > 0 ? (
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

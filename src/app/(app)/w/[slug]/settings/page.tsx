@@ -13,9 +13,11 @@ import { INDUSTRIES, ORG_ROLES, industryLabel, labelFrom } from "@/lib/taxonomy"
 import { formatDate, formatUsd, timeAgo } from "@/lib/utils";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { CopyButton, InlineForm } from "../_components/client";
-import { changeRole, decideJoinRequestAction, inviteMember, removeMember, revokeInvitation, updateInsightsSharing, updateProfile, updateWeights } from "./actions";
+import { changeRole, decideJoinRequestAction, deleteWorkspaceAction, inviteMember, removeMember, revokeInvitation, updateInsightsSharing, updateProfile, updateWeights } from "./actions";
 import { BRAND, BRAND_COMPANY } from "@/lib/brand";
 import { listPendingJoinRequests } from "@/lib/join-requests";
+import { workspaceDeletionBlocker } from "@/lib/deletion";
+import { DangerDelete } from "@/components/danger-delete";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -63,6 +65,7 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
 
   const ownerCount = members.filter((m) => m.role === "owner").length;
   const isMemberOwner = members.some((m) => m.userId === ctx.user.id && m.role === "owner");
+  const deletionBlocker = workspaceDeletionBlocker(org);
   const assignableRoles = ORG_ROLES.filter((r) => canAssignRole(actorRole, r.slug));
   const weights = normalizeWeights(org.scoringWeights);
 
@@ -379,6 +382,19 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
         <GovernanceSettings ctx={ctx} />
         <IntakeSettings ctx={ctx} />
       </div>
+
+      {canSettings ? (
+        <Card className="mt-6 border-red-200" id="danger-zone">
+          <CardHeader title="Delete this workspace" description="Permanently removes the workspace and everything in it: initiatives, ideas, departments, impact data, activity and API keys. This can't be undone." />
+          <CardBody>
+            {deletionBlocker ? (
+              <p className="text-sm text-slate-700">{deletionBlocker}</p>
+            ) : (
+              <DangerDelete action={deleteWorkspaceAction} expected={org.slug} hidden={{ slug: org.slug }} label="Delete workspace" />
+            )}
+          </CardBody>
+        </Card>
+      ) : null}
     </>
   );
 }
