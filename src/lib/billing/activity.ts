@@ -17,7 +17,7 @@ export function describeBillingEvent(action: string, d: Record<string, unknown>)
     case "billing.plan_changed":
       return `changed the plan to ${planLabel(s(d.to))}${every(d.interval)}`;
     case "billing.canceled":
-      return `ended the ${planLabel(s(d.from))} subscription; the workspace is back on Free`;
+      return `ended the ${planLabel(s(d.from))} subscription; the workspace is back on the Free plan`;
     case "billing.status_changed":
       return d.status === "past_due" ? "missed a subscription payment (past due)" : `subscription status changed to ${s(d.status).replace(/_/g, " ")}`;
     case "billing.cancel_scheduled":

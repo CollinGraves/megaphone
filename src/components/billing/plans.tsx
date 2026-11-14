@@ -18,7 +18,8 @@ export function PricingGroup({ children, className }: { children: ReactNode; cla
 }
 
 export function IntervalToggle({ defaultInterval = "month", className }: { defaultInterval?: BillingInterval; className?: string }) {
-  const option = "relative cursor-pointer rounded-md px-3.5 py-1.5 text-sm font-medium text-slate-600 transition-colors has-checked:bg-white has-checked:text-slate-900 has-checked:shadow-xs has-focus-visible:ring-2 has-focus-visible:ring-radar-500";
+  const option =
+    "relative cursor-pointer rounded-md px-3.5 py-1.5 text-sm font-medium text-slate-600 transition-colors has-checked:bg-white has-checked:text-slate-900 has-checked:shadow-xs has-focus-visible:ring-2 has-focus-visible:ring-radar-500";
   return (
     <fieldset className={cn("inline-flex items-center gap-1 rounded-lg bg-slate-100 p-1", className)}>
       <legend className="sr-only">Billing interval</legend>
@@ -145,45 +146,54 @@ export function FeatureComparison() {
   const has = (plan: PlanDefinition, f: Feature) => (plan.features as readonly string[]).includes(f);
   const rows = [
     ...BASE_ROWS,
-    ...FEATURE_ROWS.map((f) => ({ label: FEATURE_LABELS[f].name, hint: FEATURE_LABELS[f].description, free: has(PLANS.free, f), team: has(PLANS.team, f), business: has(PLANS.business, f) })),
+    ...FEATURE_ROWS.map((f) => ({
+      label: FEATURE_LABELS[f].name,
+      hint: FEATURE_LABELS[f].description,
+      free: has(PLANS.free, f),
+      team: has(PLANS.team, f),
+      business: has(PLANS.business, f),
+    })),
   ];
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-xs">
-      <table className="w-full min-w-[34rem] text-left text-sm">
-        <caption className="sr-only">Feature comparison</caption>
-        <thead>
-          <tr className="border-b border-slate-200 bg-slate-50">
-            <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Feature
-            </th>
-            {[PLANS.free, PLANS.team, PLANS.business].map((p) => (
-              <th key={p.id} scope="col" className="w-24 px-3 py-3 text-center text-sm font-semibold text-slate-900 sm:w-32">
-                {p.name}
+    <>
+      <p className="mb-2 text-xs text-slate-500 sm:hidden">Swipe the table sideways to see the Team plan and the Business plan.</p>
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-xs">
+        <table className="w-full min-w-[34rem] text-left text-sm">
+          <caption className="sr-only">Feature comparison</caption>
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50">
+              <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Feature
               </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {rows.map((r) => (
-            <tr key={r.label}>
-              <th scope="row" className="px-4 py-3 font-normal text-slate-700">
-                <span className="font-medium text-slate-900">{r.label}</span>
-                {"hint" in r && r.hint ? <span className="mt-0.5 block text-xs text-slate-500">{r.hint as string}</span> : null}
-              </th>
-              <td className="px-3 py-3 text-center">
-                <Cell value={r.free} />
-              </td>
-              <td className="px-3 py-3 text-center">
-                <Cell value={r.team} />
-              </td>
-              <td className="px-3 py-3 text-center">
-                <Cell value={r.business} />
-              </td>
+              {[PLANS.free, PLANS.team, PLANS.business].map((p) => (
+                <th key={p.id} scope="col" className="w-24 px-3 py-3 text-center text-sm font-semibold text-slate-900 sm:w-32">
+                  {p.name}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {rows.map((r) => (
+              <tr key={r.label}>
+                <th scope="row" className="px-4 py-3 font-normal text-slate-700">
+                  <span className="font-medium text-slate-900">{r.label}</span>
+                  {"hint" in r && r.hint ? <span className="mt-0.5 block text-xs text-slate-500">{r.hint as string}</span> : null}
+                </th>
+                <td className="px-3 py-3 text-center">
+                  <Cell value={r.free} />
+                </td>
+                <td className="px-3 py-3 text-center">
+                  <Cell value={r.team} />
+                </td>
+                <td className="px-3 py-3 text-center">
+                  <Cell value={r.business} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 

@@ -76,7 +76,7 @@ export async function SelfServeMetrics() {
         <Metric label="MRR" value={formatUsd(mrr)} hint={`ARR ${formatUsd(mrr * 12)}`} />
         <Metric label="Team" value={formatNumber(byPlan.team.paying)} hint={breakdown(byPlan.team)} />
         <Metric label="Business" value={formatNumber(byPlan.business.paying)} hint={breakdown(byPlan.business)} />
-        <Metric label="Self-serve · 30 days" value={formatNumber(created?.last30 ?? 0)} hint={`${formatNumber(created?.total ?? 0)} self-serve workspaces, ${formatNumber(created?.free ?? 0)} on Free`} />
+        <Metric label="Self-serve · 30 days" value={formatNumber(created?.last30 ?? 0)} hint={`${formatNumber(created?.total ?? 0)} self-serve workspaces, ${formatNumber(created?.free ?? 0)} on the Free plan`} />
         <Metric
           label="Free → paid · 30 days"
           value={formatNumber(conversions?.last30 ?? 0)}
