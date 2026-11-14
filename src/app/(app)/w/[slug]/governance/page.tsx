@@ -56,7 +56,7 @@ export default async function GovernancePage({ params, searchParams }: PageProps
     <PageHeader
       eyebrow="AI governance"
       title="AI use-case register"
-      description={`Every AI use case across ${ctx.org.name}, whatever platform it runs on — risk tier, human oversight, data sensitivity and approval in one inventory.`}
+      description={`Every AI use case at ${ctx.org.name}, on any platform, with its risk tier, oversight, data sensitivity and approval status.`}
       actions={
         ctx.can("export") && items.length > 0 ? (
           canExport ? (
@@ -170,7 +170,7 @@ export default async function GovernancePage({ params, searchParams }: PageProps
           )}
           {attention.length > 8 ? (
             <p className="border-t border-slate-100 px-5 py-2.5 text-xs text-slate-500">
-              + {attention.length - 8} more —{" "}
+              + {attention.length - 8} more.{" "}
               <Link href={href({ attention: true })} className="font-medium text-radar-700 hover:underline">
                 see all
               </Link>
@@ -228,7 +228,7 @@ export default async function GovernancePage({ params, searchParams }: PageProps
                           <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                             <RiskTierBadge tier={i.riskTier} />
                             <span>
-                              {i.requestedByName ?? "Someone"} · {i.approvalRequestedAt ? timeAgo(i.approvalRequestedAt) : "—"}
+                              {i.requestedByName ?? "Someone"} · {i.approvalRequestedAt ? timeAgo(i.approvalRequestedAt) : "–"}
                             </span>
                           </span>
                         </span>
@@ -384,9 +384,9 @@ export default async function GovernancePage({ params, searchParams }: PageProps
                   <Td className="min-w-24 text-sm">
                     <OversightText level={i.humanOversight} />
                   </Td>
-                  <Td>{i.maxSensitivity ? <SensitivityBadge sensitivity={i.maxSensitivity} /> : <span className="text-slate-400">—</span>}</Td>
+                  <Td>{i.maxSensitivity ? <SensitivityBadge sensitivity={i.maxSensitivity} /> : <span className="text-slate-400">–</span>}</Td>
                   <Td className="min-w-28 text-sm">
-                    {i.platforms.length ? <div className="text-slate-800">{i.platforms.map(platformLabel).join(", ")}</div> : <span className="text-slate-400">—</span>}
+                    {i.platforms.length ? <div className="text-slate-800">{i.platforms.map(platformLabel).join(", ")}</div> : <span className="text-slate-400">–</span>}
                     {i.models.length ? <div className="mt-0.5 text-xs text-slate-500">{i.models.join(", ")}</div> : null}
                   </Td>
                   <Td>

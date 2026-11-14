@@ -65,21 +65,21 @@ export function RadarIndex({
         <aside className="space-y-6">
           {!signedIn ? (
             <div className="rounded-xl bg-ink-900 p-5 text-white">
-              <h2 className="font-semibold">Get your personal AI radar</h2>
+              <h2 className="font-semibold">Get it filtered for you</h2>
               <p className="mt-1.5 text-sm text-slate-300">
-                Pick the topics and vendors you care about. We&apos;ll send a short digest with only what matters to you.
+                Pick your topics and vendors. We&apos;ll email a short digest of just those.
               </p>
               <ButtonLink href="/sign-up?src=radar_sidebar" variant="accent" className="mt-4 w-full">
-                Create a free account
+                Sign up free
               </ButtonLink>
             </div>
           ) : null}
           {!signedIn ? (
             <div className="rounded-xl border border-radar-200 bg-radar-50 p-5">
-              <div className="text-xs font-semibold uppercase tracking-wide text-radar-700">Free · 5 minutes</div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-radar-700">Free, 5 minutes</div>
               <h2 className="mt-1 font-semibold text-slate-900">How ready is your company for AI?</h2>
               <p className="mt-1.5 text-sm text-slate-600">
-                Score your readiness across six dimensions and get a prioritized plan with starter initiatives.
+                Get a score, your weak spots and where to start.
               </p>
               <ButtonLink href="/assessment?src=radar_sidebar" variant="secondary" className="mt-4 w-full">
                 Take the assessment
@@ -140,11 +140,11 @@ function InlineCta() {
   return (
     <div className="mt-4 flex flex-col items-start gap-3 rounded-xl border border-radar-200 bg-radar-50 p-5 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <div className="font-semibold text-slate-900">Too much to keep up with?</div>
-        <div className="text-sm text-slate-600">Get a personalized weekly digest. Free, takes 30 seconds.</div>
+        <div className="font-semibold text-slate-900">Only want what affects you?</div>
+        <div className="text-sm text-slate-600">Get a weekly digest filtered to your company. Free.</div>
       </div>
       <ButtonLink href="/sign-up?src=radar_inline" variant="primary">
-        Personalize my radar
+        Filter my radar
       </ButtonLink>
     </div>
   );

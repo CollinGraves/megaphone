@@ -30,22 +30,22 @@ export const SEED_SOURCES: SeedSource[] = [
   { name: "Hugging Face Blog", homepageUrl: "https://huggingface.co/blog", feedUrl: "https://huggingface.co/blog/feed.xml", vendor: "huggingface", defaultCategory: "open_source", authority: 4 },
   { name: "Salesforce News", homepageUrl: "https://www.salesforce.com/news/", feedUrl: "https://www.salesforce.com/news/feed/", vendor: "salesforce", authority: 4, aiOnly: false },
   { name: "Databricks Blog", homepageUrl: "https://www.databricks.com/blog", feedUrl: "https://www.databricks.com/feed", vendor: "databricks", authority: 4, aiOnly: false },
-  { name: "GitHub Blog — AI & ML", homepageUrl: "https://github.blog/ai-and-ml/", feedUrl: "https://github.blog/ai-and-ml/feed/", vendor: "microsoft", authority: 4 },
+  { name: "GitHub Blog (AI & ML)", homepageUrl: "https://github.blog/ai-and-ml/", feedUrl: "https://github.blog/ai-and-ml/feed/", vendor: "microsoft", authority: 4 },
   { name: "Apple Machine Learning Research", homepageUrl: "https://machinelearning.apple.com", feedUrl: "https://machinelearning.apple.com/rss.xml", vendor: "apple", defaultCategory: "research", authority: 4 },
 
   // ── Tech & business press ──
   { name: "TechCrunch AI", homepageUrl: "https://techcrunch.com/category/artificial-intelligence/", feedUrl: "https://techcrunch.com/category/artificial-intelligence/feed/", authority: 4 },
   { name: "The Verge AI", homepageUrl: "https://www.theverge.com/ai-artificial-intelligence", feedUrl: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", authority: 4 },
   { name: "VentureBeat AI", homepageUrl: "https://venturebeat.com/category/ai/", feedUrl: "https://venturebeat.com/category/ai/feed/", authority: 3 },
-  { name: "MIT Technology Review — AI", homepageUrl: "https://www.technologyreview.com/topic/artificial-intelligence/", feedUrl: "https://www.technologyreview.com/topic/artificial-intelligence/feed", authority: 4 },
-  { name: "Ars Technica — AI", homepageUrl: "https://arstechnica.com/ai/", feedUrl: "https://arstechnica.com/ai/feed/", authority: 4 },
-  { name: "Wired — AI", homepageUrl: "https://www.wired.com/tag/ai/", feedUrl: "https://www.wired.com/feed/tag/ai/latest/rss", authority: 4 },
-  { name: "The Register — AI/ML", homepageUrl: "https://www.theregister.com/software/ai_ml/", feedUrl: "https://www.theregister.com/software/ai_ml/headlines.atom", authority: 3 },
-  { name: "ZDNET — AI", homepageUrl: "https://www.zdnet.com/topic/artificial-intelligence/", feedUrl: "https://www.zdnet.com/topic/artificial-intelligence/rss.xml", authority: 3 },
-  { name: "SiliconANGLE — AI", homepageUrl: "https://siliconangle.com/category/ai/", feedUrl: "https://siliconangle.com/category/ai/feed/", authority: 3 },
+  { name: "MIT Technology Review (AI)", homepageUrl: "https://www.technologyreview.com/topic/artificial-intelligence/", feedUrl: "https://www.technologyreview.com/topic/artificial-intelligence/feed", authority: 4 },
+  { name: "Ars Technica (AI)", homepageUrl: "https://arstechnica.com/ai/", feedUrl: "https://arstechnica.com/ai/feed/", authority: 4 },
+  { name: "Wired (AI)", homepageUrl: "https://www.wired.com/tag/ai/", feedUrl: "https://www.wired.com/feed/tag/ai/latest/rss", authority: 4 },
+  { name: "The Register (AI/ML)", homepageUrl: "https://www.theregister.com/software/ai_ml/", feedUrl: "https://www.theregister.com/software/ai_ml/headlines.atom", authority: 3 },
+  { name: "ZDNET (AI)", homepageUrl: "https://www.zdnet.com/topic/artificial-intelligence/", feedUrl: "https://www.zdnet.com/topic/artificial-intelligence/rss.xml", authority: 3 },
+  { name: "SiliconANGLE (AI)", homepageUrl: "https://siliconangle.com/category/ai/", feedUrl: "https://siliconangle.com/category/ai/feed/", authority: 3 },
   { name: "The Decoder", homepageUrl: "https://the-decoder.com", feedUrl: "https://the-decoder.com/feed/", authority: 3 },
-  { name: "Fierce Healthcare — AI", homepageUrl: "https://www.fiercehealthcare.com/ai-and-machine-learning", feedUrl: "https://www.fiercehealthcare.com/rss/xml", authority: 3, aiOnly: false },
-  { name: "Finextra — AI", homepageUrl: "https://www.finextra.com", feedUrl: "https://www.finextra.com/rss/channel.aspx?channel=ai", authority: 3 },
+  { name: "Fierce Healthcare (AI)", homepageUrl: "https://www.fiercehealthcare.com/ai-and-machine-learning", feedUrl: "https://www.fiercehealthcare.com/rss/xml", authority: 3, aiOnly: false },
+  { name: "Finextra (AI)", homepageUrl: "https://www.finextra.com", feedUrl: "https://www.finextra.com/rss/channel.aspx?channel=ai", authority: 3 },
 
   // ── Analysts, newsletters & practitioners ──
   { name: "Simon Willison", homepageUrl: "https://simonwillison.net", feedUrl: "https://simonwillison.net/atom/everything/", authority: 3, aiOnly: false, maxItemsPerFetch: 15 },
@@ -73,5 +73,5 @@ export const SEED_SOURCES: SeedSource[] = [
   // ── Policy & regulation ──
   { name: "NIST News", homepageUrl: "https://www.nist.gov/news-events/news", feedUrl: "https://www.nist.gov/news-events/news/rss.xml", defaultCategory: "regulation", authority: 4, aiOnly: false },
   { name: "FTC Press Releases", homepageUrl: "https://www.ftc.gov/news-events/news/press-releases", feedUrl: "https://www.ftc.gov/feeds/press-release.xml", defaultCategory: "regulation", authority: 4, aiOnly: false },
-  { name: "European Commission — Digital Strategy", homepageUrl: "https://digital-strategy.ec.europa.eu/en/news", feedUrl: "https://digital-strategy.ec.europa.eu/en/rss.xml", defaultCategory: "regulation", authority: 4, aiOnly: false },
+  { name: "European Commission (Digital Strategy)", homepageUrl: "https://digital-strategy.ec.europa.eu/en/news", feedUrl: "https://digital-strategy.ec.europa.eu/en/rss.xml", defaultCategory: "regulation", authority: 4, aiOnly: false },
 ];

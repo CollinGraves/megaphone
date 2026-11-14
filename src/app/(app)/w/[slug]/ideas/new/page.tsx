@@ -32,7 +32,7 @@ export default async function NewIdeaPage({ params }: PageProps<"/w/[slug]/ideas
       <PageHeader
         eyebrow="Ideas"
         title="Submit an AI idea"
-        description={`Have a task that eats time, or a process AI could improve? Tell ${ctx.org.name}'s AI team — they review every idea.`}
+        description={`Have a task that eats time, or a process AI could improve? Tell ${ctx.org.name}'s AI team. They review every idea.`}
       />
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="min-w-0 lg:col-span-2">

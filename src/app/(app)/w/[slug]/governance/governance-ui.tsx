@@ -34,7 +34,7 @@ export function OversightText({ level }: { level: string | null }) {
 }
 
 export function ReviewDue({ due, state }: { due: string | null; state: ReviewState }) {
-  if (!due || state === "none") return <span className="text-slate-400">—</span>;
+  if (!due || state === "none") return <span className="text-slate-400">–</span>;
   return (
     <span className="inline-flex flex-col items-start gap-1">
       <span className={cn("whitespace-nowrap tabular-nums", state === "overdue" ? "font-medium text-red-700" : "text-slate-700")}>{formatDate(due)}</span>

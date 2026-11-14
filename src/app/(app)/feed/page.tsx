@@ -102,7 +102,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
         </Alert>
       ) : null}
       <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
-        <div>
+        <div className="min-w-0">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <nav className="flex gap-1 overflow-x-auto rounded-lg bg-slate-100 p-1">
               {TABS.map((t) => (

@@ -27,15 +27,15 @@ export default async function ShowPage() {
           <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">{SHOW_NAME}</h1>
           <p className="mt-3 max-w-2xl text-lg text-slate-300">{SHOW_TAGLINE}</p>
           <p className="mt-2 max-w-2xl text-sm text-slate-400">
-            The AI stories that actually matter, what they mean for a 200–2,000 person company, and ideas from viewers built live on
-            air. With {SHOW_HOST} at {BRAND_COMPANY}.
+            The week&apos;s AI news and what it means for a 200–2,000 person company. Plus a viewer&apos;s idea, built live. With {SHOW_HOST} at{" "}
+            {BRAND_COMPANY}.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <ButtonLink href="/sign-up?src=show" variant="accent">
-              Get the daily radar, free
+              Get the radar, free
             </ButtonLink>
             <ButtonLink href="/contact?from=show" variant="secondary">
-              Pitch an idea for build-it-live
+              Pitch an idea for the show
             </ButtonLink>
           </div>
         </div>

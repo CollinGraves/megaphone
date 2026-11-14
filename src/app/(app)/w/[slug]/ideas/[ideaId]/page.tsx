@@ -104,7 +104,7 @@ export default async function IdeaPage({ params, searchParams }: PageProps<"/w/[
 
       {sp.submitted && mine ? (
         <Alert tone="success" className="mb-5">
-          <span className="font-medium">Thanks — your idea is in.</span> {ctx.org.name}’s AI team will review it, and you’ll get an email when they decide. You can follow it here any time.
+          <span className="font-medium">Thanks, your idea is in.</span> {ctx.org.name}’s AI team will review it, and you’ll get an email when they decide. You can follow it here any time.
         </Alert>
       ) : null}
 
@@ -141,17 +141,17 @@ export default async function IdeaPage({ params, searchParams }: PageProps<"/w/[
             <CardHeader title="Size of the opportunity" description="The submitter’s rough estimate of the task as it is today." />
             <CardBody>
               <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-                <Metric label="How often">{frequencyLabel(idea.frequency) ?? "—"}</Metric>
-                <Metric label="People affected">{idea.peopleAffected != null ? formatNumber(idea.peopleAffected) : "—"}</Metric>
-                <Metric label="Hours / week / person">{idea.hoursPerWeek != null ? formatNumber(idea.hoursPerWeek) : "—"}</Metric>
-                <Metric label="Hours / yr today">{annualHours != null ? formatNumber(annualHours) : "—"}</Metric>
+                <Metric label="How often">{frequencyLabel(idea.frequency) ?? "–"}</Metric>
+                <Metric label="People affected">{idea.peopleAffected != null ? formatNumber(idea.peopleAffected) : "–"}</Metric>
+                <Metric label="Hours / week / person">{idea.hoursPerWeek != null ? formatNumber(idea.hoursPerWeek) : "–"}</Metric>
+                <Metric label="Hours / yr today">{annualHours != null ? formatNumber(annualHours) : "–"}</Metric>
               </dl>
               <div className="mt-4 flex flex-col gap-1 border-t border-slate-100 pt-3 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
                 <span className="inline-flex items-center gap-2">
                   <SignalMeter idea={idea} />
                   <span>
                     <span className="font-medium text-slate-700">{SIGNAL_LABELS[signal.level]}</span>
-                    {signal.reasons.length ? ` — ${signal.reasons.join(", ")}` : ""}
+                    {signal.reasons.length ? `: ${signal.reasons.join(", ")}` : ""}
                   </span>
                 </span>
                 {annualHours != null ? (
@@ -383,7 +383,7 @@ function Detail({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="grid grid-cols-[5.75rem_1fr] gap-2">
       <dt className="text-slate-500">{label}</dt>
-      <dd className="min-w-0 text-slate-900">{children ?? <span className="text-slate-400">—</span>}</dd>
+      <dd className="min-w-0 text-slate-900">{children ?? <span className="text-slate-400">–</span>}</dd>
     </div>
   );
 }

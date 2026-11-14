@@ -43,7 +43,7 @@ export async function submitContactRequest(_prev: ActionState, form: FormData): 
       to: notify,
       subject: `New ${BRAND} contact request: ${data.name}${data.company ? ` (${data.company})` : ""}`,
       html: emailLayout({
-        body: `<p><strong>${escapeHtml(data.name)}</strong> &lt;${escapeHtml(data.email)}&gt;${data.company ? ` — ${escapeHtml(data.company)}` : ""}</p><p>${escapeHtml(data.message ?? "(no message)")}</p><p style="color:#64748b">Source: ${escapeHtml(data.source ?? "contact page")}</p>`,
+        body: `<p><strong>${escapeHtml(data.name)}</strong> &lt;${escapeHtml(data.email)}&gt;${data.company ? ` (${escapeHtml(data.company)})` : ""}</p><p>${escapeHtml(data.message ?? "(no message)")}</p><p style="color:#64748b">Source: ${escapeHtml(data.source ?? "contact page")}</p>`,
       }),
     });
   }

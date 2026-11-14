@@ -5,7 +5,7 @@ import { IDEA_URGENCY } from "@/lib/taxonomy";
 const URGENCY_HINTS: Record<string, string> = {
   low: "Would be nice someday",
   medium: "Real pain, worth doing this year",
-  high: "Costing us now — customers, revenue or risk",
+  high: "Costing us now (customers, revenue or risk)",
 };
 
 /**
@@ -34,7 +34,7 @@ export function IdeaFields({ departments = [] }: { departments?: string[] }) {
             placeholder="e.g. Our 6-person claims team reads every warranty email, looks up the order in SAP and types a reply. Most are the same five questions."
           />
         </Field>
-        <Field label="What would good look like?" htmlFor="idea-outcome" hint="Optional. The outcome you'd hope for — not the technology.">
+        <Field label="What would good look like?" htmlFor="idea-outcome" hint="Optional. Describe the outcome, not the technology.">
           <Textarea id="idea-outcome" name="desiredOutcome" maxLength={2000} rows={2} className="min-h-16" placeholder="e.g. Replies drafted in seconds; the team just checks and sends." />
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -57,7 +57,7 @@ export function IdeaFields({ departments = [] }: { departments?: string[] }) {
       <section className="space-y-4 border-t border-slate-100 pt-5">
         <div>
           <h3 className="text-sm font-semibold text-slate-900">How big is it?</h3>
-          <p className="mt-0.5 text-xs text-slate-500">A rough guess is fine — it helps the AI team see where the hours are.</p>
+          <p className="mt-0.5 text-xs text-slate-500">A rough guess is fine. It shows the AI team where the hours go.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="How often does it happen?" htmlFor="idea-frequency">

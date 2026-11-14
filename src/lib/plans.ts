@@ -41,7 +41,7 @@ export const PLANS = {
   free: {
     id: "free",
     name: "Free",
-    tagline: "Get your first AI initiatives organized.",
+    tagline: "Up to 5 projects. Free for good.",
     initiativeLimit: 5,
     briefsPerMonth: 3,
     features: [],
@@ -60,7 +60,7 @@ export const PLANS = {
   team: {
     id: "team",
     name: "Team",
-    tagline: "Run your company's AI portfolio in one place.",
+    tagline: "Up to 25 projects, plus company-wide idea intake.",
     initiativeLimit: 25,
     briefsPerMonth: 15,
     features: ["intake_link", "export_csv", "mcp_workspace"],
@@ -78,7 +78,7 @@ export const PLANS = {
   business: {
     id: "business",
     name: "Business",
-    tagline: "Govern and scale AI across the company.",
+    tagline: "Unlimited projects, approvals and an audit trail.",
     initiativeLimit: null,
     briefsPerMonth: 60,
     features: ALL,
@@ -97,7 +97,7 @@ export const PLANS = {
   managed: {
     id: "managed",
     name: "Managed by North Labs",
-    tagline: "The easy button: we run it with you.",
+    tagline: "We run it with your team.",
     initiativeLimit: null,
     briefsPerMonth: null,
     features: ALL,

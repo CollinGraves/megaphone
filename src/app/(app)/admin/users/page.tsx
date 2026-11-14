@@ -118,7 +118,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
                   )}
                   <div className="text-xs text-slate-500">{u.email}</div>
                 </Td>
-                <Td className="hidden md:table-cell">{u.company ?? <span className="text-slate-400">—</span>}</Td>
+                <Td className="hidden md:table-cell">{u.company ?? <span className="text-slate-400">–</span>}</Td>
                 <Td className="hidden whitespace-nowrap text-slate-500 sm:table-cell">{formatDate(u.createdAt)}</Td>
                 <Td>
                   {u.id === me.id ? (

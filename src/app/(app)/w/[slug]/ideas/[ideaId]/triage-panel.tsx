@@ -102,7 +102,7 @@ export function TriagePanel({
           <h3 id="review-heading" className="text-sm font-semibold text-slate-900">
             {idea.status === "under_review" ? "Review notes" : closed ? "Reopen for review" : "Start reviewing"}
           </h3>
-          <p className="mt-0.5 text-sm text-slate-500">Internal notes for the AI team — never shown to the submitter.</p>
+          <p className="mt-0.5 text-sm text-slate-500">Internal notes for the AI team. The submitter never sees them.</p>
           <ActionForm action={reviewIdea} className="mt-3 space-y-3">
             {hidden}
             <label htmlFor="triage-notes" className="sr-only">

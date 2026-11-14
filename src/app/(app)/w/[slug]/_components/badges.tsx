@@ -71,7 +71,7 @@ export function platformLabel(slug: string) {
 }
 
 export function PlatformList({ platforms, className }: { platforms: string[]; className?: string }) {
-  if (platforms.length === 0) return <span className="text-slate-400">—</span>;
+  if (platforms.length === 0) return <span className="text-slate-400">–</span>;
   return (
     <div className={cn("flex flex-wrap gap-1", className)}>
       {platforms.map((p) => (

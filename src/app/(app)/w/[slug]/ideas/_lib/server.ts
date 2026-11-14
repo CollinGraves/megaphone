@@ -198,7 +198,7 @@ export function notifySubmitterOfDecision(
     subject = `Your AI idea was accepted: ${idea.title}`;
     body =
       p(`Hi ${first},`) +
-      p(`Good news — ${escapeHtml(org.name)}'s AI team accepted your idea <strong>“${escapeHtml(idea.title)}”</strong>. It's now on the AI roadmap as the initiative <strong>“${escapeHtml(decision.initiativeTitle)}”</strong>, where the team will evaluate it.`) +
+      p(`Good news: ${escapeHtml(org.name)}'s AI team accepted your idea <strong>“${escapeHtml(idea.title)}”</strong>. It's now on the AI roadmap as the initiative <strong>“${escapeHtml(decision.initiativeTitle)}”</strong>, where the team will evaluate it.`) +
       p("Thanks for helping the company find where AI can make a difference.") +
       link;
     text = `${org.name}'s AI team accepted your idea "${idea.title}". It's now on the AI roadmap as "${decision.initiativeTitle}".`;
@@ -208,7 +208,7 @@ export function notifySubmitterOfDecision(
       p(`Hi ${first},`) +
       p(`Thanks for submitting <strong>“${escapeHtml(idea.title)}”</strong>. ${escapeHtml(org.name)}'s AI team reviewed it and decided not to take it forward right now:`) +
       quote(decision.reason) +
-      p("Please keep the ideas coming — a different angle or more detail on the time it would save can change the picture.") +
+      p("Please keep the ideas coming. A different angle, or more detail on the time it would save, can change the answer.") +
       link;
     text = `${org.name}'s AI team reviewed your idea "${idea.title}" and decided not to take it forward right now: ${decision.reason}`;
   } else {
@@ -217,7 +217,7 @@ export function notifySubmitterOfDecision(
     body =
       p(`Hi ${first},`) +
       p(`Thanks for submitting <strong>“${escapeHtml(idea.title)}”</strong>. It overlaps with ${what}: <strong>“${escapeHtml(decision.ofTitle)}”</strong>, so the team will track it there.`) +
-      p("Great minds think alike — keep the ideas coming.") +
+      p("Great minds think alike. Keep the ideas coming.") +
       link;
     text = `Your idea "${idea.title}" overlaps with ${what}: "${decision.ofTitle}". The team will track it there.`;
   }

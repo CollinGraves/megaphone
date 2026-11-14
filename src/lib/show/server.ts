@@ -36,7 +36,8 @@ Rules:
 - Hot takes are defensible opinions the host can argue on air, not insults about people or companies.
 - Explain jargon in a line. Every story needs a "so what" for a mid-market company.
 - Talking points are short spoken lines, not paragraphs.
-- Return exactly one entry per story, using the story_id given, in the same order.`;
+- Return exactly one entry per story, using the story_id given, in the same order.
+- Never use em dashes.`;
 
 let client: Anthropic | null = null;
 const getClient = () => (client ??= new Anthropic());
@@ -64,7 +65,7 @@ async function writeNewsPrep(list: PrepStory[], airDate: string): Promise<{ prep
   const body = list
     .map(
       (s) =>
-        `<story id="${s.id}">\nTitle: ${s.title}\nSummary: ${s.summary}\nWhy it matters: ${s.whyItMatters ?? "—"}\nVendors: ${s.vendors.map(vendorLabel).join(", ") || "—"}\nImportance: ${s.importance}/5 · covered by ${s.articleCount} outlet(s)\n</story>`,
+        `<story id="${s.id}">\nTitle: ${s.title}\nSummary: ${s.summary}\nWhy it matters: ${s.whyItMatters ?? "–"}\nVendors: ${s.vendors.map(vendorLabel).join(", ") || "–"}\nImportance: ${s.importance}/5 · covered by ${s.articleCount} outlet(s)\n</story>`,
     )
     .join("\n");
   const response = await getClient().beta.messages.parse({

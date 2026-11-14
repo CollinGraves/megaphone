@@ -11,7 +11,7 @@ export function timeAgo(date: Date | string) {
 }
 
 export function formatDate(date: Date | string | null | undefined, opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", year: "numeric" }) {
-  if (!date) return "—";
+  if (!date) return "–";
   const d = typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date) ? new Date(`${date}T00:00:00`) : new Date(date);
   return d.toLocaleDateString("en-US", opts);
 }
@@ -22,12 +22,12 @@ const numCompact = new Intl.NumberFormat("en-US", { notation: "compact", maximum
 const numFull = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
 
 export function formatUsd(n: number | null | undefined, compact = false) {
-  if (n == null || Number.isNaN(n)) return "—";
+  if (n == null || Number.isNaN(n)) return "–";
   return compact && Math.abs(n) >= 10_000 ? usdCompact.format(n) : usdFull.format(n);
 }
 
 export function formatNumber(n: number | null | undefined, compact = false) {
-  if (n == null || Number.isNaN(n)) return "—";
+  if (n == null || Number.isNaN(n)) return "–";
   return compact && Math.abs(n) >= 10_000 ? numCompact.format(n) : numFull.format(n);
 }
 

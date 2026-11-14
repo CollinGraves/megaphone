@@ -75,7 +75,7 @@ export function briefToMarkdown(b: BuildBrief, meta: { title: string; workspace:
     bullets(b.evaluation.acceptance_criteria),
     "",
     "## Risks",
-    b.risks.map((r) => `- **${r.risk}** — ${r.mitigation}`).join("\n") || "- _None_",
+    b.risks.map((r) => `- **${r.risk}.** ${r.mitigation}`).join("\n") || "- _None_",
     "",
     "## Rollout",
     b.rollout.map((r) => `- **${r.phase}** (${r.duration}): ${r.goal}`).join("\n"),
@@ -84,7 +84,7 @@ export function briefToMarkdown(b: BuildBrief, meta: { title: string; workspace:
     bullets(b.open_questions),
     "",
     "## Work items",
-    ...b.tickets.map((t, i) => `${i + 1}. **${t.title}** (${t.estimate}) — ${t.description}\n   - Done when: ${t.acceptance.join("; ")}`),
+    ...b.tickets.map((t, i) => `${i + 1}. **${t.title}** (${t.estimate}): ${t.description}\n   - Done when: ${t.acceptance.join("; ")}`),
     "",
   ].join("\n");
 }

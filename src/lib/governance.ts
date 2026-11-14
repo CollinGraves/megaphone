@@ -157,7 +157,7 @@ export function stageChangeBlocked(input: {
   if (approvalInForce(input, input.today)) return null;
   switch (input.approvalStatus) {
     case "pending":
-      return `${required} Its review is still pending — an owner or admin needs to approve it first.`;
+      return `${required} Its review is still pending. An owner or admin needs to approve it first.`;
     case "rejected":
       return `${required} Its last review was not approved. Update the classification and request a new review.`;
     case "approved":

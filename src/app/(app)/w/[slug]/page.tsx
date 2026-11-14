@@ -56,7 +56,7 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
         <EmptyState
           icon={<Rocket className="size-8" />}
           title="No initiatives yet"
-          description="Track every AI initiative in one place — what problem it solves, where it is, what data it needs and the value it delivers."
+          description="Track every AI initiative in one place: the problem it solves, its stage, the data it needs and what it's worth."
           action={
             ctx.can("initiative:write") ? (
               <div className="flex flex-wrap justify-center gap-2">
@@ -122,7 +122,7 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
       <PageHeader
         eyebrow="AI portfolio"
         title="Dashboard"
-        description={`Every AI initiative across ${ctx.org.name}, regardless of platform — status, value and data readiness at a glance.`}
+        description={`Every AI initiative at ${ctx.org.name}, on any platform. Status, value and data readiness at a glance.`}
         actions={actions}
       />
 
@@ -158,7 +158,7 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
         />
         <Stat
           label="First-year ROI"
-          value={roiActual.roi != null ? formatPct(roiActual.roi) : roiEstimated.roi != null ? formatPct(roiEstimated.roi) : "—"}
+          value={roiActual.roi != null ? formatPct(roiActual.roi) : roiEstimated.roi != null ? formatPct(roiEstimated.roi) : "–"}
           hint={
             roiActual.roi != null
               ? `On actuals across ${roiActual.count} initiative${roiActual.count === 1 ? "" : "s"} with cost data${roiEstimated.roi != null ? ` · ${formatPct(roiEstimated.roi)} projected portfolio-wide` : ""}`
@@ -285,7 +285,7 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
                         {i.title}
                       </Link>
                       <span className="shrink-0 tabular-nums text-slate-500">
-                        <span className="font-semibold text-slate-900">{i.impact.hasActuals ? formatUsd(i.impact.actualRunRateUsd, true) : "—"}</span> / {formatUsd(i.impact.estimatedAnnualUsd, true)}
+                        <span className="font-semibold text-slate-900">{i.impact.hasActuals ? formatUsd(i.impact.actualRunRateUsd, true) : "–"}</span> / {formatUsd(i.impact.estimatedAnnualUsd, true)}
                       </span>
                     </div>
                     <div className="mt-1.5 space-y-1" aria-hidden>

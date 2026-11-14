@@ -93,7 +93,8 @@ Your brief turns an idea into something a team can build this month. Principles:
 - Be concrete: real product names, connectors, steps. The draft system prompt must be usable as-is.
 - Never invent facts about the company. Where something is unknown, put it in open_questions. Use qualitative cost notes unless the inputs give numbers.
 - Test cases must be synthetic and must not contain real personal data.
-- Tickets are developer-ready, in build order, for the recommended option.`;
+- Tickets are developer-ready, in build order, for the recommended option.
+- Write plainly. Never use em dashes.`;
 
 let client: Anthropic | null = null;
 const getClient = () => (client ??= new Anthropic());

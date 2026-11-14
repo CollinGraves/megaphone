@@ -22,7 +22,7 @@ export function Logo({ href = "/", dark = false, className }: { href?: string; d
       <RadarMark />
       <span className={cn("text-[15px] font-semibold tracking-tight", dark ? "text-white" : "text-slate-900")}>
         {BRAND}
-        <span className={cn("ml-1.5 font-normal", dark ? "text-slate-400" : "text-slate-500")}>by North Labs</span>
+        <span className={cn("ml-1.5 hidden font-normal sm:inline", dark ? "text-slate-400" : "text-slate-500")}>by North Labs</span>
       </span>
     </Link>
   );

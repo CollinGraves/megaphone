@@ -6,7 +6,7 @@ import { categoryCounts, listStories } from "@/lib/stories";
 
 export const metadata: Metadata = {
   title: "Top AI stories this week",
-  description: "The most important AI announcements of the week — model releases, pricing changes, regulation, enterprise adoption and research — curated from hundreds of sources.",
+  description: "This week's most important AI news: model releases, price changes, regulation, enterprise adoption and research.",
   alternates: { canonical: "/radar" },
 };
 
@@ -20,7 +20,7 @@ export default async function RadarPage({ searchParams }: PageProps<"/radar">) {
   return (
     <RadarIndex
       title="Top AI stories this week"
-      description="What actually mattered in AI over the last seven days, ranked by significance and how widely it was covered. Updated every hour from hundreds of sources."
+      description="The last seven days, ranked by how much each story matters and how widely it was covered. Updated hourly."
       stories={stories.slice(0, PAGE_SIZE)}
       hasMore={stories.length > PAGE_SIZE}
       page={page}

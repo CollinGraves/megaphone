@@ -59,16 +59,16 @@ export function EmailCapture({ source, dark = false, className }: { source: stri
       <p className={cn("mt-2 min-h-5 text-sm", dark ? "text-slate-400" : "text-slate-500")} aria-live="polite">
         {kind === "work" ? (
           <span className={dark ? "text-radar-300" : "text-radar-700"}>
-            Great, we&apos;ll tailor it for {guessCompanyName(emailDomain(email))}.
+            We&apos;ll tailor it to {guessCompanyName(emailDomain(email))}.
           </span>
         ) : kind === "personal" && nudged ? (
           <span className={dark ? "text-amber-300" : "text-amber-700"}>
-            Tip: with your company email we tailor your radar to your company&apos;s tools and their deadlines.
+            A company email lets us track your company&apos;s tools and their deadlines.
           </span>
         ) : kind === "disposable" ? (
           <span className={dark ? "text-red-300" : "text-red-700"}>Please use a permanent work email.</span>
         ) : (
-          "Free. Use your company email for news tailored to your stack."
+          "Free. Use your work email to get news about your company's tools."
         )}
       </p>
     </form>
