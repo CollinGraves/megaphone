@@ -21,7 +21,7 @@ export async function SiteHeader({ dark = false }: { dark?: boolean }) {
           <Link href="/show" className={link}>
             Show
           </Link>
-          <Link href="/#workspace" className={link}>
+          <Link href="/workspace" className={link}>
             For companies
           </Link>
           <Link href="/pricing" className={link}>
@@ -65,6 +65,9 @@ export function SiteFooter() {
           </Link>
           <Link href="/assessment?src=footer" className="hover:text-slate-900">
             Readiness score
+          </Link>
+          <Link href="/workspace" className="hover:text-slate-900">
+            For companies
           </Link>
           <Link href="/show" className="hover:text-slate-900">
             The show
