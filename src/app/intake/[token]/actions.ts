@@ -15,6 +15,7 @@ import {
 import { db } from "@/db";
 import { ideas, organizations } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth/session";
+import { hasFeature } from "@/lib/plans";
 import { validateIntakeEmail } from "@/lib/ideas";
 import type { ActionState } from "@/lib/utils";
 import { TOKEN_RE } from "./token";
@@ -40,11 +41,11 @@ export async function submitIntakeIdea(_prev: ActionState, form: FormData): Prom
   const token = form.get("token");
   if (typeof token !== "string" || !TOKEN_RE.test(token)) return { error: "This intake link is no longer active." };
   const [org] = await db
-    .select({ id: organizations.id, name: organizations.name, slug: organizations.slug, intakeAllowedDomains: organizations.intakeAllowedDomains })
+    .select({ id: organizations.id, name: organizations.name, slug: organizations.slug, plan: organizations.plan, intakeAllowedDomains: organizations.intakeAllowedDomains })
     .from(organizations)
     .where(and(eq(organizations.intakeToken, token), eq(organizations.status, "active")))
     .limit(1);
-  if (!org) return { error: "This intake link is no longer active. Ask your AI team for the current link." };
+  if (!org || !hasFeature(org.plan, "intake_link")) return { error: "This intake link is no longer active. Ask your AI team for the current link." };
 
   let fields;
   let submitter;

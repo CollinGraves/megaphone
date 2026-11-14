@@ -9,6 +9,7 @@ import { APPROVAL_STATUSES, HUMAN_OVERSIGHT_LEVELS, RISK_TIERS, SENSITIVITIES, l
 import { formatDate } from "@/lib/utils";
 import type { WorkspaceContext } from "@/lib/workspace";
 import { loadApprovers } from "./data";
+import { BRAND } from "@/lib/brand";
 
 const button = (href: string, label: string) =>
   `<p style="margin:20px 0 0"><a href="${escapeHtml(href)}" style="display:inline-block;background:#0b1220;color:#ffffff;text-decoration:none;padding:10px 16px;border-radius:8px;font-size:14px;font-weight:600">${escapeHtml(label)}</a></p>`;
@@ -37,7 +38,7 @@ ${row("Most sensitive data", opts.maxSensitivity ? labelFrom(SENSITIVITIES, opts
 ${opts.note ? `<p style="margin:16px 0 0;font-size:14px;line-height:1.5;border-left:3px solid #e2e8f0;padding-left:12px;color:#334155">${escapeHtml(opts.note)}</p>` : ""}
 ${button(url, "Review the initiative")}`;
   const text = `${ctx.user.name} asked for an AI governance review of "${i.title}" (${ctx.org.name}). Risk tier: ${labelFrom(RISK_TIERS, i.riskTier)}.${opts.note ? `\nNote: ${opts.note}` : ""}\nReview it: ${url}`;
-  const footer = `You're receiving this because you can approve AI governance reviews in ${escapeHtml(ctx.org.name)} on AI Radar.`;
+  const footer = `You're receiving this because you can approve AI governance reviews in ${escapeHtml(ctx.org.name)} on ${BRAND}.`;
   await Promise.allSettled(
     approvers.map(async (a) => {
       const res = await sendEmail({ to: a.email, subject, html: emailLayout({ preheader: subject, body, footer }), text });

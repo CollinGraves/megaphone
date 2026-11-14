@@ -11,6 +11,7 @@ import { INDUSTRY_SLUGS, ORG_ROLES, labelFrom } from "@/lib/taxonomy";
 import type { ActionState } from "@/lib/utils";
 import { logActivity, type WorkspaceContext } from "@/lib/workspace";
 import { ActionError, authorize, revalidateWorkspace, runAction, zId, zOptNumber } from "../_lib/action-utils";
+import { BRAND } from "@/lib/brand";
 
 /* ───────────────────────────── Workspace profile & scoring ───────────────────────────── */
 
@@ -53,6 +54,27 @@ export async function updateWeights(_prev: ActionState, form: FormData): Promise
     await logActivity(ctx, "weights.updated", normalized);
     revalidateWorkspace(ctx.org.slug);
     return { ok: true, message: total === 100 ? "Weights saved." : `Weights saved (normalized from a total of ${total} to 100%).` };
+  });
+}
+
+/**
+ * Opt in/out of anonymized aggregate research (the show's by-the-numbers segment, reports). Only the client's
+ * own owners decide this: North Labs staff benefit from the data, so their platform access doesn't count.
+ */
+export async function updateInsightsSharing(_prev: ActionState, form: FormData): Promise<ActionState> {
+  return runAction(async () => {
+    const ctx = await authorize(form, "settings:manage");
+    const [own] = await db
+      .select({ role: memberships.role })
+      .from(memberships)
+      .where(and(eq(memberships.orgId, ctx.org.id), eq(memberships.userId, ctx.user.id), eq(memberships.role, "owner")))
+      .limit(1);
+    if (!own) throw new ActionError("Only an owner who is a member of this workspace can change data sharing.");
+    const share = form.get("share") === "1";
+    await db.update(organizations).set({ shareAggregateInsights: share }).where(eq(organizations.id, ctx.org.id));
+    await logActivity(ctx, "settings.insights_sharing", { share });
+    revalidateWorkspace(ctx.org.slug);
+    return { ok: true, message: share ? "Thanks! Anonymized aggregates from this workspace can now be included." : "Data sharing turned off." };
   });
 }
 
@@ -99,7 +121,7 @@ export async function inviteMember(_prev: ActionState, form: FormData): Promise<
       ok: true,
       message:
         result.status === "added"
-          ? `${email} already has an AI Radar account and was added as ${labelFrom(ORG_ROLES, role).toLowerCase()}.`
+          ? `${email} already has an ${BRAND} account and was added as ${labelFrom(ORG_ROLES, role).toLowerCase()}.`
           : `Invitation emailed to ${email}. You can also copy the link from the pending invitations list.`,
     };
   });

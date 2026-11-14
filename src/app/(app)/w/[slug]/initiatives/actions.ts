@@ -20,8 +20,10 @@ import {
   systemCategory,
   systems,
 } from "@/db/schema";
-import { isApproved, isRegulatedData, isoDate, maxSensitivity, normalizePolicy, sensitivityRank, stageChangeBlocked } from "@/lib/governance";
-import { ACCESS_STATUSES, HEALTH, SENSITIVITIES, STAGES, TRIAL_INITIATIVE_LIMIT, labelFrom } from "@/lib/taxonomy";
+import { isApproved, isRegulatedData, isoDate, maxSensitivity, sensitivityRank, stageChangeBlocked } from "@/lib/governance";
+import { ACCESS_STATUSES, HEALTH, SENSITIVITIES, STAGES, labelFrom } from "@/lib/taxonomy";
+import { initiativeCapMessage, initiativeLimit } from "@/lib/plans";
+import { enforcedGovernancePolicy } from "@/lib/billing/entitlements";
 import { strs, type ActionState } from "@/lib/utils";
 import { logActivity } from "@/lib/workspace";
 import { PLATFORM_OPTIONS } from "../_components/badges";
@@ -150,7 +152,7 @@ export async function saveInitiative(_prev: ActionState, form: FormData): Promis
       const existing = await getOwnedInitiative(ctx, id);
       // Governance gate: entering a stage the policy gates needs an approval in force.
       const blocked = stageChangeBlocked({
-        policy: normalizePolicy(ctx.org.governancePolicy),
+        policy: enforcedGovernancePolicy(ctx.org),
         fromStage: existing.stage,
         toStage: values.stage,
         approvalStatus: existing.approvalStatus,
@@ -164,7 +166,7 @@ export async function saveInitiative(_prev: ActionState, form: FormData): Promis
       initiativeId = existing.id;
     } else {
       const blocked = stageChangeBlocked({
-        policy: normalizePolicy(ctx.org.governancePolicy),
+        policy: enforcedGovernancePolicy(ctx.org),
         fromStage: null,
         toStage: values.stage,
         approvalStatus: "not_submitted",
@@ -172,16 +174,13 @@ export async function saveInitiative(_prev: ActionState, form: FormData): Promis
         today: isoDate(new Date()),
       });
       if (blocked) throw new ActionError(blocked);
-      if (ctx.org.plan === "trial") {
+      if (initiativeLimit(ctx.org.plan) != null) {
         const [{ n }] = await db
           .select({ n: sql<number>`count(*)::int` })
           .from(initiatives)
           .where(and(eq(initiatives.orgId, ctx.org.id), isNull(initiatives.archivedAt)));
-        if (n >= TRIAL_INITIATIVE_LIMIT) {
-          return {
-            error: `Free workspaces can track up to ${TRIAL_INITIATIVE_LIMIT} initiatives. Talk to North Labs to unlock your full AI portfolio.`,
-          };
-        }
+        const capped = initiativeCapMessage(ctx.org.plan, n);
+        if (capped) return { error: capped };
       }
       const [created] = await db
         .insert(initiatives)

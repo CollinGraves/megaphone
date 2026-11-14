@@ -23,6 +23,7 @@ import {
   updateMemberRole,
   updateWorkspaceSettings,
 } from "../actions";
+import { BillingCard } from "./billing-card";
 import { InviteForm } from "./invite-form";
 
 export async function generateMetadata({ params }: PageProps<"/admin/workspaces/[orgId]">): Promise<Metadata> {
@@ -343,11 +344,10 @@ export default async function WorkspaceDetailPage({ params }: PageProps<"/admin/
                   <dd className="text-slate-900">{formatUsd(org.defaultHourlyRate)}</dd>
                 </dl>
               )}
-              <p className="mt-4 text-xs text-slate-500">
-                Billing: {org.stripeSubscriptionId ? "Stripe subscription linked" : "invoiced by North Labs (self-serve billing coming later)"}.
-              </p>
             </CardBody>
           </Card>
+
+          <BillingCard org={org} />
 
           <Card>
             <CardHeader

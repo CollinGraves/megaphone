@@ -5,8 +5,9 @@ import { db } from "@/db";
 import { contactRequests } from "@/db/schema";
 import { requireStaff } from "@/lib/auth/session";
 import { AdminNav } from "./_components/admin-nav";
+import { BRAND } from "@/lib/brand";
 
-export const metadata: Metadata = { title: { template: "%s · Admin · AI Radar", default: "Admin · AI Radar" } };
+export const metadata: Metadata = { title: { template: `%s · Admin · ${BRAND}`, default: `Admin · ${BRAND}` } };
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const me = await requireStaff();

@@ -14,6 +14,7 @@ import { formatDate, timeAgo } from "@/lib/utils";
 import { LeadStatusBadge, ScoreBadge } from "../../_components/badges";
 import { requestCompanyEnrichment, updateCompany } from "../actions";
 import { EnrichmentBadge } from "../enrichment-badge";
+import { BRAND } from "@/lib/brand";
 
 export async function generateMetadata({ params }: PageProps<"/admin/accounts/[domain]">): Promise<Metadata> {
   return { title: decodeURIComponent((await params).domain) };
@@ -58,7 +59,7 @@ export default async function AccountPage({ params }: PageProps<"/admin/accounts
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
           <Card>
-            <CardHeader title={`People on AI Radar (${leads.length})`} description="Signed-up users with this email domain." />
+            <CardHeader title={`People on ${BRAND} (${leads.length})`} description="Signed-up users with this email domain." />
             {leads.length === 0 ? (
               <CardBody>
                 <p className="text-sm text-slate-500">No one from this domain has signed up yet.</p>
@@ -99,7 +100,7 @@ export default async function AccountPage({ params }: PageProps<"/admin/accounts
           <Card>
             <CardHeader
               title={`Other contacts (${contacts.length})`}
-              description="Found by enrichment. Use for North Labs outreach; AI Radar never emails them automatically."
+              description={`Found by enrichment. Use for North Labs outreach; ${BRAND} never emails them automatically.`}
               action={
                 contacts.length ? (
                   <a href={`/admin/accounts/${encodeURIComponent(company.domain)}/contacts`} className={buttonClass("secondary", "sm")}>
@@ -132,7 +133,7 @@ export default async function AccountPage({ params }: PageProps<"/admin/accounts
                       <Td>{c.title ?? "—"}</Td>
                       <Td>
                         {c.email ?? "—"}{" "}
-                        {c.email && knownEmails.has(c.email) ? <Badge tone="radar">On AI Radar</Badge> : null}
+                        {c.email && knownEmails.has(c.email) ? <Badge tone="radar">On {BRAND}</Badge> : null}
                       </Td>
                       <Td>
                         {c.linkedinUrl ? (

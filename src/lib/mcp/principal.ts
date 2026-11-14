@@ -3,6 +3,9 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { apiKeys, consultantAssignments, memberships, organizations, user } from "@/db/schema";
 import { can, resolveWorkspaceAccess, type Capability, type WorkspaceAccess } from "@/lib/permissions";
+import { BRAND } from "@/lib/brand";
+import { appUrl } from "@/lib/env";
+import { hasFeature, planFor, planForFeature } from "@/lib/plans";
 
 export type Principal = {
   user: typeof user.$inferSelect;
@@ -47,9 +50,21 @@ export async function loadPrincipal(keyId: string): Promise<Principal | null> {
 
 /** Workspace tools: require a workspace-scoped key, a live role with the capability, and write scope for writes. */
 export function requireWorkspace(p: Principal, capability: Capability, write = false) {
-  if (!p.key.orgId) throw new McpAccessError("This API key isn't connected to a workspace. Create a workspace-scoped key in AI Radar settings.");
+  if (!p.key.orgId) throw new McpAccessError(`This API key isn't connected to a workspace. Create a workspace-scoped key in ${BRAND} settings.`);
   if (!p.workspace) throw new McpAccessError("You no longer have access to the workspace this key is connected to.");
   if (write && !p.canWrite) throw new McpAccessError("This API key is read-only. Create a read-write key to make changes.");
   if (!can(p.workspace.access, capability)) throw new McpAccessError("Your workspace role doesn't allow this action.");
+  const { org } = p.workspace;
+  const billing = `${appUrl()}/w/${org.slug}/billing`;
+  if (!hasFeature(org.plan, "mcp_workspace")) {
+    throw new McpAccessError(
+      `Workspace tools over MCP need the ${planForFeature("mcp_workspace").name} plan or above. ${org.name} is on ${planFor(org.plan).name}; a workspace owner or admin can upgrade at ${billing}`,
+    );
+  }
+  if (write && !hasFeature(org.plan, "mcp_write")) {
+    throw new McpAccessError(
+      `Making changes over MCP needs the ${planForFeature("mcp_write").name} plan. ${org.name} is on ${planFor(org.plan).name}, which allows read-only MCP tools; a workspace owner or admin can upgrade at ${billing}`,
+    );
+  }
   return p.workspace;
 }

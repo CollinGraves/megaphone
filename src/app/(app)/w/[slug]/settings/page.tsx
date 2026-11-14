@@ -13,7 +13,8 @@ import { INDUSTRIES, ORG_ROLES, industryLabel, labelFrom } from "@/lib/taxonomy"
 import { formatDate, formatUsd, timeAgo } from "@/lib/utils";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { CopyButton, InlineForm } from "../_components/client";
-import { changeRole, inviteMember, removeMember, revokeInvitation, updateProfile, updateWeights } from "./actions";
+import { changeRole, inviteMember, removeMember, revokeInvitation, updateInsightsSharing, updateProfile, updateWeights } from "./actions";
+import { BRAND, BRAND_COMPANY } from "@/lib/brand";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -56,6 +57,7 @@ export default async function SettingsPage({ params }: PageProps<"/w/[slug]/sett
   ]);
 
   const ownerCount = members.filter((m) => m.role === "owner").length;
+  const isMemberOwner = members.some((m) => m.userId === ctx.user.id && m.role === "owner");
   const assignableRoles = ORG_ROLES.filter((r) => canAssignRole(actorRole, r.slug));
   const weights = normalizeWeights(org.scoringWeights);
 
@@ -135,6 +137,34 @@ export default async function SettingsPage({ params }: PageProps<"/w/[slug]/sett
           </CardBody>
         </Card>
       </div>
+
+      <Card className="mt-6">
+        <CardHeader
+          title="Anonymous benchmarks"
+          description={`Help other mid-market teams by letting ${BRAND_COMPANY} include this workspace in aggregate stats (on the show and in reports).`}
+        />
+        <CardBody className="space-y-3 text-sm text-slate-600">
+          <p>
+            Only rounded totals across at least 5 companies are ever shown, such as &ldquo;35% of initiatives are in pilot&rdquo; or
+            &ldquo;Microsoft is used by 60% of companies.&rdquo; Your company name, initiative titles, notes and individual figures are never
+            shared. You can turn this off at any time.
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Badge tone={org.shareAggregateInsights ? "radar" : "neutral"}>{org.shareAggregateInsights ? "Sharing on" : "Sharing off"}</Badge>
+            {isMemberOwner ? (
+              <ActionForm action={updateInsightsSharing} className="space-y-2">
+                <input type="hidden" name="slug" value={org.slug} />
+                <input type="hidden" name="share" value={org.shareAggregateInsights ? "0" : "1"} />
+                <SubmitButton size="sm" variant={org.shareAggregateInsights ? "secondary" : "primary"}>
+                  {org.shareAggregateInsights ? "Stop sharing" : "Include this workspace"}
+                </SubmitButton>
+              </ActionForm>
+            ) : (
+              <span className="text-xs text-slate-500">Only a workspace owner can change this.</span>
+            )}
+          </div>
+        </CardBody>
+      </Card>
 
       <Card className="mt-6 overflow-hidden">
         <CardHeader title="Members" description={`${members.length} member${members.length === 1 ? "" : "s"} from ${org.name}`} />
@@ -224,7 +254,7 @@ export default async function SettingsPage({ params }: PageProps<"/w/[slug]/sett
       {canMembers ? (
         <div className="mt-6 grid gap-6 xl:grid-cols-5">
           <Card className="xl:col-span-2">
-            <CardHeader title="Invite someone" description="People without an account get an email link; existing AI Radar users are added right away." />
+            <CardHeader title="Invite someone" description={`People without an account get an email link; existing ${BRAND} users are added right away.`} />
             <CardBody>
               <ActionForm action={inviteMember} className="space-y-4" resetOnSuccess>
                 <input type="hidden" name="slug" value={org.slug} />

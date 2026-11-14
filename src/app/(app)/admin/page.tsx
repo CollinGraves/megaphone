@@ -11,6 +11,7 @@ import { formatNumber, timeAgo } from "@/lib/utils";
 import { isAdmin, visibleOrgIds } from "./_lib/access";
 import { daysAgo } from "./_lib/time";
 import { LeadStatusBadge, ScoreBadge } from "./_components/badges";
+import { SelfServeMetrics } from "./_components/self-serve-metrics";
 
 export const metadata: Metadata = { title: "Overview" };
 
@@ -108,6 +109,8 @@ export default async function AdminOverviewPage() {
           hint={`${formatNumber(assessmentStats.last30)} in 30 days · ${claimedPct}% saved to an account`}
         />
       </section>
+
+      {admin ? <SelfServeMetrics /> : null}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <Card className="min-w-0 lg:col-span-2">

@@ -8,6 +8,7 @@ import { daysUntil, deadlineLabel, getStackContext, stackReasons, stackRelevance
 import { listStories } from "./stories";
 import { categoryLabel, vendorLabel } from "./taxonomy";
 import { signUserToken } from "./tracking";
+import { BRAND } from "@/lib/brand";
 
 const MAX_PERSONAL = 8;
 const MAX_PER_VENDOR_OR_SOURCE = 2;
@@ -123,7 +124,7 @@ export function renderDigest(opts: {
     ? `Heads up: ${urgent.entityName} ${deadlineLabel(urgent.predicate)} in ${daysUntil(urgent.date)} days`
     : opts.personal[0] != null
       ? `${opts.personal[0].title}${opts.personal.length + opts.also.length > 1 ? ` + ${opts.personal.length + opts.also.length - 1} more` : ""}`
-      : `Your AI Radar for ${period}`;
+      : `Your ${BRAND} for ${period}`;
   const body = `<p style="margin:0 0 4px;font-size:15px">Hi ${escapeHtml(first)},</p>
 <p style="margin:0 0 12px;font-size:15px;color:#334155">Here's what mattered in AI ${period}, filtered to your interests.</p>
 ${deadlinesBlock(opts.deadlines ?? [], opts.companyName)}
@@ -136,7 +137,7 @@ ${opts.also.length ? `<h3 style="margin:24px 0 0;font-size:13px;text-transform:u
   const html = emailLayout({
     preheader: opts.personal[0]?.summary ?? "",
     body,
-    footer: `You're receiving the ${opts.frequency} AI Radar digest. <a href="${appUrl()}/settings" style="color:#64748b">Change preferences</a> · <a href="${appUrl()}/unsubscribe?u=${encodeURIComponent(token)}" style="color:#64748b">Unsubscribe</a>`,
+    footer: `You're receiving the ${opts.frequency} ${BRAND} digest. <a href="${appUrl()}/settings" style="color:#64748b">Change preferences</a> · <a href="${appUrl()}/unsubscribe?u=${encodeURIComponent(token)}" style="color:#64748b">Unsubscribe</a>`,
   });
   const text = [
     `Hi ${first}, here's what mattered in AI ${period}:`,

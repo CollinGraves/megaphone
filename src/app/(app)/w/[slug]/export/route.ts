@@ -3,6 +3,8 @@ import { db } from "@/db";
 import { dataDependencies, initiatives, systems } from "@/db/schema";
 import { firstYearCost } from "@/lib/impact";
 import { ACCESS_STATUSES, BUILD_APPROACHES, HEALTH, STAGES, labelFrom } from "@/lib/taxonomy";
+import { upgradeRequiredResponse } from "@/lib/billing/responses";
+import { hasFeature } from "@/lib/plans";
 import { ForbiddenError, logActivity, requireWorkspaceCapability } from "@/lib/workspace";
 import { platformLabel } from "../_components/badges";
 import { loadPortfolio } from "../_lib/portfolio";
@@ -17,7 +19,7 @@ function cell(v: unknown): string {
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-export async function GET(_req: Request, { params }: RouteContext<"/w/[slug]/export">) {
+export async function GET(req: Request, { params }: RouteContext<"/w/[slug]/export">) {
   const { slug } = await params;
   let ctx;
   try {
@@ -26,6 +28,7 @@ export async function GET(_req: Request, { params }: RouteContext<"/w/[slug]/exp
     if (err instanceof ForbiddenError) return new Response("Not found", { status: 404 });
     throw err;
   }
+  if (!hasFeature(ctx.org.plan, "export_csv")) return upgradeRequiredResponse(req, ctx, "export_csv");
 
   const [{ items }, deps] = await Promise.all([
     loadPortfolio(ctx.org),

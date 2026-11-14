@@ -5,6 +5,7 @@ import { activityLog, initiatives, user } from "@/db/schema";
 import { ACCESS_STATUSES, ORG_ROLES, labelFrom } from "@/lib/taxonomy";
 import { formatDate, formatNumber } from "@/lib/utils";
 import { describeGovernanceEvent } from "../governance/governance-ui";
+import { describeBillingEvent } from "@/lib/billing/activity";
 
 export type ActivityRow = {
   id: string;
@@ -42,7 +43,7 @@ export function describeActivity(action: string, detail: Record<string, unknown>
   const d = detail ?? {};
   switch (action) {
     case "initiative.created":
-      return "created the initiative";
+      return d.template ? "created the initiative from a template" : "created the initiative";
     case "initiative.updated": {
       const changes = Array.isArray(d.changes) ? (d.changes as unknown[]).map(s).filter(Boolean) : [];
       return changes.length ? `updated ${changes.join(", ")}` : "updated the initiative";
@@ -121,10 +122,21 @@ export function describeActivity(action: string, detail: Record<string, unknown>
       return "updated who can submit ideas";
     case "impact.recorded":
       return `recorded ${formatNumber(Number(d.value))} for “${s(d.metric)}” (${s(d.period)})${d.via === "mcp" ? " via MCP" : ""}`;
+    case "build.brief_generated":
+      return `generated build brief v${s(d.version)}${d.generator === "template" ? " (template)" : ""}`;
+    case "build.progress":
+      return `posted a build update (${s(d.status).replace(/_/g, " ")}): “${s(d.message)}”${d.via === "mcp" ? " via MCP" : ""}`;
+    case "settings.insights_sharing":
+      return d.share ? "opted in to anonymous benchmarks" : "turned off anonymous benchmarks";
+    case "onboarding.dismissed":
+      return d.complete ? "hid the setup checklist" : `dismissed the setup checklist${typeof d.percent === "number" ? ` at ${d.percent}%` : ""}`;
     case "workspace.created_from_assessment":
       return "created this workspace from an AI readiness assessment";
+    case "workspace.created":
+      return "created this workspace";
     default:
       if (action.startsWith("governance.")) return describeGovernanceEvent(action, d);
+      if (action.startsWith("billing.")) return describeBillingEvent(action, d);
       return action.replace(/[._]/g, " ");
   }
 }

@@ -5,6 +5,8 @@ import { Card, CardBody, CardHeader, Checkbox, Field, Select } from "@/component
 import { db } from "@/db";
 import { initiatives } from "@/db/schema";
 import { GATEABLE_STAGES, REVIEW_INTERVAL_OPTIONS, approvalInForce, isoDate, normalizePolicy } from "@/lib/governance";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
+import { hasFeature } from "@/lib/plans";
 import { STAGES, labelFrom } from "@/lib/taxonomy";
 import type { WorkspaceContext } from "@/lib/workspace";
 import { GovernanceDisclaimer } from "../governance/governance-ui";
@@ -18,6 +20,29 @@ const STAGE_HINTS: Record<string, string> = {
 /** Governance policy settings (approval-gated stages, review interval). */
 export async function GovernanceSettings({ ctx }: { ctx: WorkspaceContext }) {
   const policy = normalizePolicy(ctx.org.governancePolicy);
+  if (!hasFeature(ctx.org.plan, "governance_workflow")) {
+    const saved = policy.approvalRequiredStages.map((s) => labelFrom(STAGES, s));
+    return (
+      <Card>
+        <CardHeader
+          title="AI governance policy"
+          description="Require an approved governance review before initiatives move to pilot or production, and set how often approvals are re-reviewed."
+        />
+        <CardBody className="space-y-3">
+          <UpgradePrompt
+            feature="governance_workflow"
+            slug={ctx.org.slug}
+            canManageBilling={ctx.can("billing:manage")}
+            description="Review requests, owner/admin approvals, an approval gate before pilot or production, and weekly reminders when reviews are due. Risk classification and the use-case register stay available on every plan."
+          >
+            {saved.length ? (
+              <p className="mt-1.5 text-sm text-slate-600">Your saved policy (approval before {saved.join(" and ")}) is kept and applies again when you upgrade.</p>
+            ) : null}
+          </UpgradePrompt>
+        </CardBody>
+      </Card>
+    );
+  }
   const canSettings = ctx.can("settings:manage");
   const today = isoDate(new Date());
   const live = await db

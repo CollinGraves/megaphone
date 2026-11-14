@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { invitations, memberships, organizations, user, type OrgRole } from "@/db/schema";
 import { emailLayout, escapeHtml, sendEmail } from "./email";
 import { appUrl } from "./env";
+import { BRAND } from "@/lib/brand";
 
 const INVITE_TTL_DAYS = 14;
 
@@ -36,7 +37,7 @@ export async function createInvitation(opts: {
       .onConflictDoUpdate({ target: [memberships.orgId, memberships.userId], set: { role: opts.role } });
     await sendEmail({
       to: email,
-      subject: `You've been added to ${org.name} on AI Radar`,
+      subject: `You've been added to ${org.name} on ${BRAND}`,
       html: emailLayout({
         body: `<p style="font-size:15px">${escapeHtml(opts.invitedByName)} added you to the <strong>${escapeHtml(org.name)}</strong> AI workspace.</p>
 <p><a href="${appUrl()}/w/${org.slug}" style="display:inline-block;background:#12b393;color:#070b14;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">Open workspace</a></p>`,
@@ -63,13 +64,13 @@ export async function createInvitation(opts: {
   const url = inviteUrl(token);
   await sendEmail({
     to: email,
-    subject: `Join ${org.name} on AI Radar`,
+    subject: `Join ${org.name} on ${BRAND}`,
     html: emailLayout({
-      body: `<p style="font-size:15px">${escapeHtml(opts.invitedByName)} invited you to the <strong>${escapeHtml(org.name)}</strong> AI workspace on AI Radar — the single source of truth for your company's AI initiatives.</p>
+      body: `<p style="font-size:15px">${escapeHtml(opts.invitedByName)} invited you to the <strong>${escapeHtml(org.name)}</strong> AI workspace on ${BRAND} — the single source of truth for your company's AI initiatives.</p>
 <p><a href="${url}" style="display:inline-block;background:#12b393;color:#070b14;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">Accept invitation</a></p>
 <p style="font-size:12px;color:#64748b">This link expires in ${INVITE_TTL_DAYS} days.</p>`,
     }),
-    text: `${opts.invitedByName} invited you to ${org.name} on AI Radar: ${url}`,
+    text: `${opts.invitedByName} invited you to ${org.name} on ${BRAND}: ${url}`,
   });
   return { status: "invited", url };
 }

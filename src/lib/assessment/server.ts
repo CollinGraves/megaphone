@@ -12,6 +12,7 @@ import { functionLabel, roleLabel, toolLabel, DIMENSIONS } from "./questions";
 import { recommendationsFor } from "./recommendations";
 import { levelById, readContext, type AssessmentContext } from "./scoring";
 import { selectStarterTemplates } from "./templates";
+import { BRAND } from "@/lib/brand";
 
 export type Assessment = typeof assessments.$inferSelect;
 
@@ -188,7 +189,7 @@ ${starters ? `<h2 style="margin:0 0 8px;font-size:16px;color:#0f172a">Suggested 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px">${scoreRowsHtml(a)}</table>
 <p style="margin:0 0 8px;font-size:14px">Weakest areas: ${escapeHtml(recs.priorities.map((p) => p.label).join(", ") || "none")}</p>
 <p style="margin:0"><a href="${leadUrl}" style="color:#0b7363">Open lead</a> · <a href="${reportUrl}" style="color:#0b7363">Open report</a></p>`,
-          footer: "Internal notification from AI Radar.",
+          footer: `Internal notification from ${BRAND}.`,
         }),
       }),
     );

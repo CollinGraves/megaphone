@@ -18,6 +18,7 @@ import { Alert, ButtonLink } from "@/components/ui";
 import { DIMENSIONS, LEVELS, QUESTIONS, type DimensionId } from "@/lib/assessment";
 import { TRIAL_INITIATIVE_LIMIT } from "@/lib/taxonomy";
 import { DimensionBars, LevelScale, ScoreRing } from "./_components/visuals";
+import { BRAND } from "@/lib/brand";
 
 export const metadata: Metadata = {
   title: "Free AI readiness assessment",
@@ -203,7 +204,7 @@ const FAQ = [
   },
   {
     q: "Is it really free?",
-    a: "Yes. Your overall score and dimension scores appear as soon as you finish. To see the full report with recommendations and starter initiatives, create a free AI Radar account with your work email.",
+    a: `Yes. Your overall score and dimension scores appear as soon as you finish. To see the full report with recommendations and starter initiatives, create a free ${BRAND} account with your work email.`,
   },
   {
     q: "How is my score calculated?",

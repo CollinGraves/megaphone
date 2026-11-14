@@ -2,6 +2,7 @@ import { Users } from "lucide-react";
 import { inviteColleagues } from "@/app/(app)/feed/actions";
 import { ActionForm, SubmitButton } from "./forms";
 import { Card, Textarea } from "./ui";
+import { BRAND } from "@/lib/brand";
 
 export function InviteColleaguesCard({ domain, company, colleagues }: { domain: string; company: string; colleagues: number }) {
   return (
@@ -11,8 +12,8 @@ export function InviteColleaguesCard({ domain, company, colleagues }: { domain: 
       </h2>
       <p className="mt-1 text-sm text-slate-600">
         {colleagues > 0
-          ? `${colleagues} colleague${colleagues === 1 ? "" : "s"} from ${company} already use${colleagues === 1 ? "s" : ""} AI Radar.`
-          : `Be the first to bring AI Radar to ${company}.`}{" "}
+          ? `${colleagues} colleague${colleagues === 1 ? "" : "s"} from ${company} already use${colleagues === 1 ? "s" : ""} ${BRAND}.`
+          : `Be the first to bring ${BRAND} to ${company}.`}{" "}
         Invite teammates who should be keeping up too.
       </p>
       <ActionForm action={inviteColleagues} className="mt-3 space-y-2" resetOnSuccess>

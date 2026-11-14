@@ -16,6 +16,7 @@ import {
   suggestRiskTier,
   yesNo,
 } from "@/lib/governance";
+import { featureGateMessage, hasFeature } from "@/lib/plans";
 import { HUMAN_OVERSIGHT_LEVELS, RISK_TIERS, labelFrom } from "@/lib/taxonomy";
 import { formatDate, type ActionState } from "@/lib/utils";
 import { logActivity, type WorkspaceContext } from "@/lib/workspace";
@@ -23,6 +24,11 @@ import { ActionError, authorize, revalidateWorkspace, runAction, zId, zOptText }
 import { getOwnedInitiative } from "../_lib/guards";
 import { loadDependencySensitivities } from "./data";
 import { notifyDecision, notifyReviewRequested } from "./notify";
+
+/** Review requests and approvals are a Business feature; classification stays available on every plan. */
+function requireGovernanceWorkflow(ctx: WorkspaceContext) {
+  if (!hasFeature(ctx.org.plan, "governance_workflow")) throw new ActionError(featureGateMessage(ctx.org.plan, "governance_workflow"));
+}
 
 const field = (form: FormData, key: string) => {
   const v = form.get(key);
@@ -124,6 +130,7 @@ export async function applySuggestedTier(_prev: ActionState, form: FormData): Pr
 export async function requestReview(_prev: ActionState, form: FormData): Promise<ActionState> {
   return runAction(async () => {
     const ctx = await authorize(form, "initiative:write");
+    requireGovernanceWorkflow(ctx);
     const initiative = await getOwnedInitiative(ctx, zId().parse(field(form, "initiativeId")));
     const note = zOptText(2000).parse(field(form, "note"));
     const today = isoDate(new Date());
@@ -181,6 +188,7 @@ const decisionSchema = z.object({
 export async function decideReview(_prev: ActionState, form: FormData): Promise<ActionState> {
   return runAction(async () => {
     const ctx = await authorize(form, "governance:approve");
+    requireGovernanceWorkflow(ctx);
     const initiative = await getOwnedInitiative(ctx, zId().parse(field(form, "initiativeId")));
     const { decision, note } = decisionSchema.parse({ decision: field(form, "decision"), note: field(form, "note") });
 

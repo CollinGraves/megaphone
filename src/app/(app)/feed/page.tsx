@@ -18,6 +18,7 @@ import { listSavedStories, listStories, savedStoryIds } from "@/lib/stories";
 import { categoryLabel, industryLabel, vendorLabel } from "@/lib/taxonomy";
 import { cn } from "@/lib/utils";
 import { listAccessibleWorkspaces } from "@/lib/workspace";
+import { PLANS } from "@/lib/plans";
 
 export const metadata: Metadata = { title: "Your feed" };
 
@@ -190,9 +191,15 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
                 Bring every AI project, from Claude and ChatGPT to Copilot and in-house builds, into one prioritized portfolio,
                 with measured impact and the data each one depends on.
               </p>
-              <ButtonLink href="/contact?from=feed_workspace_cta" variant="accent" className="mt-4 w-full">
-                Talk to North Labs
+              <ButtonLink href="/workspaces/new" variant="accent" className="mt-4 w-full">
+                Create a free AI workspace
               </ButtonLink>
+              <p className="mt-2.5 text-center text-xs text-slate-400">
+                Free for up to {PLANS.free.initiativeLimit} initiatives ·{" "}
+                <Link href="/contact?from=feed_workspace_cta" className="font-medium text-slate-200 underline-offset-2 hover:underline">
+                  or have North Labs set it up
+                </Link>
+              </p>
             </div>
           ) : (
             <Card className="p-5">

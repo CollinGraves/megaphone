@@ -203,5 +203,5 @@ export const IDEA_URGENCY = [
   { slug: "high", label: "Urgent" },
 ] as const;
 
-/** Free "trial" workspaces (e.g. created from the readiness assessment) are capped. */
+/** Free workspaces (plan "trial") are capped; see src/lib/plans.ts for all plan limits. */
 export const TRIAL_INITIATIVE_LIMIT = 5;

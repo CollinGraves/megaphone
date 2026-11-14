@@ -1,5 +1,5 @@
 import { and, count, eq, inArray, isNull } from "drizzle-orm";
-import { BellRing, Database, Lightbulb, LayoutDashboard, ListChecks, Settings, ShieldCheck } from "lucide-react";
+import { BellRing, CreditCard, Database, Lightbulb, LayoutDashboard, ListChecks, Settings, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui";
 import { db } from "@/db";
@@ -8,13 +8,21 @@ import { ORG_ROLES, labelFrom } from "@/lib/taxonomy";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { WorkspaceNav, type NavItem } from "./_components/client";
 import { countOpenAlerts } from "./_lib/alerts";
+import { BRAND } from "@/lib/brand";
 
-const PLAN_LABELS: Record<string, string> = { engagement: "Engagement", trial: "Trial", pro: "Pro", enterprise: "Enterprise" };
+const PLAN_LABELS: Record<string, string> = {
+  engagement: "Managed",
+  enterprise: "Enterprise",
+  trial: "Free",
+  team: "Team",
+  business: "Business",
+  pro: "Business",
+};
 
 export async function generateMetadata({ params }: LayoutProps<"/w/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const ctx = await getWorkspaceOrNotFound(slug);
-  return { title: { template: `%s · ${ctx.org.name} · AI Radar`, default: `${ctx.org.name} · AI Radar` } };
+  return { title: { template: `%s · ${ctx.org.name} · ${BRAND}`, default: `${ctx.org.name} · ${BRAND}` } };
 }
 
 export default async function WorkspaceLayout({ children, params }: LayoutProps<"/w/[slug]">) {
@@ -38,6 +46,7 @@ export default async function WorkspaceLayout({ children, params }: LayoutProps<
     { href: `${base}/systems`, label: "Systems & data", icon: <Database /> },
     { href: `${base}/alerts`, label: "Radar alerts", icon: <BellRing />, count: alertCount },
     { href: `${base}/settings`, label: "Settings", icon: <Settings /> },
+    ...(ctx.can("billing:manage") ? [{ href: `${base}/billing`, label: "Plan & billing", icon: <CreditCard /> }] : []),
   ];
 
   const roleLabel = labelFrom(ORG_ROLES, ctx.access.role);

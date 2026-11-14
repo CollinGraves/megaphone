@@ -4,7 +4,7 @@
  * dollar figures. Suggested 1–5 scores are starting points the customer is expected to adjust.
  */
 import type { IndustrySlug, VendorSlug } from "@/lib/taxonomy";
-import { AI_TOOL_SLUGS, type FunctionSlug } from "./questions";
+import { AI_TOOL_SLUGS, functionLabel, type FunctionSlug } from "./questions";
 
 export type Effort = "Low" | "Medium" | "High";
 
@@ -572,3 +572,36 @@ export function suggestedPlatforms(tpl: StarterTemplate, tools: readonly string[
 }
 
 export const templateById = (id: string) => STARTER_TEMPLATES.find((x) => x.id === id);
+
+/* ───────────────────────────── Template library (workspace) ───────────────────────────── */
+
+/** Industry filter for the library: general templates fit everyone; industry-specific ones only their industries. */
+export const templateFitsIndustry = (tpl: StarterTemplate, industry: string | null | undefined) =>
+  !tpl.industries || (industry != null && tpl.industries.includes(industry as IndustrySlug));
+
+/** Case-insensitive text search across what a template card shows. */
+export function templateMatches(tpl: StarterTemplate, query: string | null | undefined): boolean {
+  const q = query?.trim().toLowerCase();
+  if (!q) return true;
+  const fn = tpl.function === "cross_functional" ? "company-wide cross-functional" : functionLabel(tpl.function);
+  return [tpl.title, tpl.problem, tpl.solution, fn, ...tpl.valueDrivers].some((s) => s.toLowerCase().includes(q));
+}
+
+/** Initiative fields for a template (stage "idea"); the same shape the assessment's starter workspace uses. */
+export function templateInitiativeValues(tpl: StarterTemplate, tools: readonly string[] = []) {
+  return {
+    title: tpl.title,
+    problemStatement: tpl.problem,
+    proposedSolution: `${tpl.solution}\n\nTypical value drivers: ${tpl.valueDrivers.join("; ")}.`,
+    businessUnit: tpl.function === "cross_functional" ? "Company-wide" : functionLabel(tpl.function),
+    stage: "idea" as const,
+    platforms: suggestedPlatforms(tpl, tools),
+    buildApproach: tpl.buildApproach,
+    valueScore: tpl.scores.value,
+    feasibilityScore: tpl.scores.feasibility,
+    alignmentScore: tpl.scores.alignment,
+    riskScore: tpl.scores.risk,
+    customerFacing: tpl.customerFacing,
+    tags: ["template", `effort-${tpl.effort.toLowerCase()}`],
+  };
+}

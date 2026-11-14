@@ -24,7 +24,7 @@ ingestion pipeline.
 | Auth | Better Auth (email + password), sessions stored in Postgres |
 | AI | Claude (Anthropic SDK, structured outputs) for story deduplication, classification and summaries. Falls back to a keyword classifier when no API key is set |
 | Email | Resend (falls back to logging emails to the server console) |
-| Jobs | Vercel Cron → `/api/cron/ingest` (hourly) and `/api/cron/digest` (daily) |
+| Jobs | Vercel Cron → `/api/cron/ingest` (hourly), `/api/cron/digest` (daily), `/api/cron/governance` (weekly review reminders) |
 | Hosting | Vercel |
 
 ## Getting started (local)
@@ -55,6 +55,14 @@ Acme), `owner@acme.example`, `editor@acme.example`, `viewer@acme.example`. The d
 | `npm run typecheck` | Regenerate Next route types and run `tsc` |
 
 ## Deploying (Vercel + Supabase)
+
+**Fresh database in one step:** `npm run db:bootstrap-sql -- bootstrap.sql` writes a single SQL file that creates a
+dedicated `radar_app` login role (owner of all app objects), applies every migration and records it for Drizzle,
+enables row-level security on every table, revokes Supabase `anon`/`authenticated` access, and seeds the sources. Run
+it once as the database admin (Supabase SQL editor). Then use the pooled connection string as `radar_app`:
+`postgres://radar_app.<project-ref>:<password>@<pooler-host>:6543/postgres`. The file contains the role password,
+so don't commit it.
+
 
 1. Create a Supabase project and copy the **transaction pooler** connection string (port 6543) into `DATABASE_URL`.
 2. Run `npm run db:migrate` and `npm run db:seed` against it once (locally, with `DATABASE_URL` pointed at Supabase).
@@ -103,6 +111,13 @@ src/
 
 The model defaults to `claude-opus-5-5` at low effort, with server-side refusal fallbacks enabled. Override it with
 `AI_RADAR_MODEL`; for high-volume ingestion, Claude Haiku 5.5 (`claude-haiku-5-5`) is much cheaper.
+
+**Build briefs** (`/w/<slug>/initiatives/<id>/build`) turn an initiative into a build plan: options compared against the
+company's existing stack, a recommended path, data plan, a draft system prompt, test cases, risks, rollout and
+developer tickets (Markdown and Jira CSV downloads). Generation runs after the request returns (`after()`) at medium
+effort, and uses `AI_RADAR_BRIEF_MODEL` if set. Without an API key a deterministic template brief is produced
+instead. Monthly allowances: Free 3, Team 15, Business 60, managed unlimited. Coding agents fetch the brief with
+`workspace_get_build_spec` and report back with `workspace_report_progress` over MCP.
 
 Source health (last success, errors, consecutive failures) is visible in **Admin → Sources**. Some publishers
 (e.g. Reddit, The Verge, Wired) block some cloud IP ranges. Those sources show up as failing rather than being silently
@@ -227,15 +242,103 @@ Tools:
 | `workspace_list_ideas`, `workspace_radar_alerts`, `workspace_governance_register` | workspace key |
 | `workspace_submit_idea` | workspace key, read-write, `ideas:submit` |
 | `workspace_record_impact` | workspace key, read-write, `impact:write` |
+| `workspace_get_build_spec` (latest build brief as Markdown or JSON) | workspace key |
+| `workspace_report_progress` (post a build update, optionally change stage under the governance policy) | workspace key, read-write, `initiative:write` |
 
 Connect from Claude Code with
 `claude mcp add --transport http ai-radar https://<app>/api/mcp --header "Authorization: Bearer radar_…"`, or from
 stdio clients via `npx mcp-remote <url> --header "Authorization: Bearer radar_…"` (the settings page generates both).
 claude.ai and ChatGPT "custom connectors" need OAuth rather than a static key; that's a follow-up (see roadmap).
 
+### The show
+
+North Labs staff prep episodes at **Admin → Show**. Creating an episode picks the strongest stories from the last
+N days (varied across vendors and sources) and writes a rundown: cold open, one news segment per story with talking
+points, a hot take, the mid-market angle and an audience question, a deadline-watch segment from the knowledge graph,
+and a closer. Without an Anthropic key the prep is a template built from the stories' own summaries.
+
+Extra segments:
+- **Build it live**: enter a viewer's idea and get a segment built on a full build brief (draft prompt and test cases included).
+- **By the numbers**: rounded aggregates (nearest 5%) across workspaces whose *owners* opted in under Settings →
+  Anonymous benchmarks. Nothing is shown until 5 opted-in workspaces have initiatives, and a platform is only named if
+  3+ companies use it.
+- **Custom** (mailbag, interviews…), plus reorder/remove.
+
+Copy or download the run sheet as Markdown. Publishing creates `/show/<episode-n>` with the YouTube embed
+(privacy-enhanced), show notes drafted from the rundown, the stories covered, and `Episode`/`VideoObject` JSON-LD; covered
+stories link back to the episode, and published episodes are in the sitemap. Set the host's name in `SHOW_HOST`
+(`src/lib/brand.ts`).
+
+### Billing (Stripe)
+
+Anyone can create a **Free** workspace at `/workspaces/new` and upgrade to **Team** or **Business** with a card;
+North Labs services (Guided Launch, Managed AI office) stay an optional "easy button" sold through Talk to North Labs.
+Plans, limits, prices and features live in one place: `src/lib/plans.ts`.
+
+| | Free (`trial`) | Team (`team`) | Business (`business`, legacy `pro`) | Managed (`engagement` / `enterprise`) |
+|---|---|---|---|---|
+| Price | $0 | $399/mo or $3,990/yr | $999/mo or $9,990/yr | North Labs agreement |
+| Active initiatives | 5 | 25 | Unlimited | Unlimited |
+| Teammates, impact, data deps, alerts, in-app ideas, risk register | ✓ | ✓ | ✓ | ✓ |
+| `intake_link` company-wide idea intake link | | ✓ | ✓ | ✓ |
+| `export_csv` portfolio CSV export | | ✓ | ✓ | ✓ |
+| `mcp_workspace` workspace tools over MCP (read) | | ✓ | ✓ | ✓ |
+| `mcp_write` MCP write tools | | | ✓ | ✓ |
+| `governance_workflow` review requests, approvals, stage gate, reminders | | | ✓ | ✓ |
+| `governance_export` AI use-case inventory CSV | | | ✓ | ✓ |
+
+**Setup**
+
+1. Create a Stripe account and copy a **test-mode** secret key into `STRIPE_SECRET_KEY` (`.env.local`).
+2. `npm run stripe:setup` (add `--webhook-url https://<app>/api/stripe/webhook` for a deployed app). It idempotently
+   creates the Team/Business products, the four recurring prices (lookup keys `team_monthly`, `team_annual`,
+   `business_monthly`, `business_annual`), a Billing Portal configuration that allows switching between them, and the
+   webhook endpoint, then prints the env vars to set. It refuses live keys unless you pass `--live`.
+3. Set the printed `STRIPE_PRICE_*`, `STRIPE_PORTAL_CONFIGURATION_ID` and `STRIPE_WEBHOOK_SECRET`; optionally
+   `STRIPE_TRIAL_DAYS` (default 14, only for workspaces that never had a subscription).
+4. Locally, forward webhooks with the Stripe CLI: `stripe listen --forward-to localhost:3000/api/stripe/webhook`
+   and use the `whsec_…` it prints. Test cards: `4242 4242 4242 4242` (success), `4000 0000 0000 0341` (fails later →
+   `invoice.payment_failed`).
+
+Webhook events to subscribe: `checkout.session.completed`, `customer.subscription.created|updated|deleted`,
+`invoice.payment_failed`. Without Stripe configured, the billing and pricing pages still show the plans and upgrades fall
+back to "Contact us to upgrade".
+
+**How it works** (`src/lib/billing/`)
+
+- `prices.ts` maps env price ids (falling back to lookup keys) to plan + interval; `sync.ts` holds the pure
+  subscription → workspace rules: `active`/`trialing` → the subscribed plan, `past_due` → keep the plan and show a
+  banner, `canceled`/`unpaid`/`incomplete_expired` → back to Free. Managed workspaces are never touched, and late events
+  for an older subscription are ignored. Both are unit-tested.
+- `server.ts` creates Checkout (subscription mode, `client_reference_id` = org id, org metadata on the customer and
+  subscription, promotion codes allowed) and Billing Portal sessions, and applies subscriptions to the org row under a
+  row lock, logging `billing.*` activity.
+- `/api/stripe/webhook` verifies the signature, records the event id in `stripe_events` first (duplicates are
+  acknowledged and skipped; the id is released if handling fails so Stripe's retry runs it), and refreshes the
+  subscription from the API when it can, since events may arrive out of order. Payment failures email the workspace's
+  owners and admins.
+- Gating is enforced server-side (actions, route handlers, the public intake link, MCP `requireWorkspace`, the governance
+  stage gate and reminders) with `hasFeature`; the UI shows `<UpgradePrompt>` (`src/components/upgrade-prompt.tsx`).
+  Downgrading keeps data: saved governance policies and intake links pause until the workspace upgrades again.
+- `/w/<slug>/billing` needs `billing:manage` (owners, admins, assigned consultants, platform admins). Platform admins can
+  also set Team/Business on a workspace in the admin console without Stripe (a complimentary plan); the admin overview
+  shows MRR/ARR at list price, plans, self-serve sign-ups and Free → paid conversions.
+- Self-serve creation guardrails (`src/lib/workspace-creation.ts`): at most 3 workspaces created per person and one Free
+  workspace per company email domain (North Labs staff are exempt); personal-email sign-ups get a nudge.
+
+### Operational guardrails
+
+- **Naming**: the product name lives in `src/lib/brand.ts` (`BRAND`) and is used across the UI, titles, emails, MCP
+  descriptions and the news-editor prompt, so renaming the product means changing that one constant.
+- **Rate limits** (`src/lib/rate-limit.ts`, Postgres-backed so it works on serverless): contact form 5/hour per IP,
+  assessment submissions 10/hour per IP, MCP 120 calls/minute per key. The idea intake link has its own per-email and
+  per-workspace limits.
+- **CI** (`.github/workflows/ci.yml`): typecheck, lint, unit tests, a check that the schema has no unmigrated changes, and
+  a production build on every PR and push to `master`.
+
 ## Roadmap / next steps
 
-- Self-serve Workspace sign-up with Stripe billing (`organizations.plan`, `stripe*` columns are already reserved).
+- Stripe Tax and invoice/PO billing for larger self-serve customers; seat- or usage-based add-ons if needed.
 - CRM sync (webhook or API) for leads and engagement.
 - SAML SSO for enterprise workspaces (Google/Microsoft OAuth is in place; Better Auth has an SSO plugin for SAML).
 - OAuth for the MCP server (so it can be added as a claude.ai / ChatGPT connector without pasting a key) and per-key

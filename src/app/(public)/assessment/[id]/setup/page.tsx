@@ -12,6 +12,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { industryLabel } from "@/lib/taxonomy";
 import { completeAssessmentSetup } from "../../actions";
 import { ScoreRing } from "../../_components/visuals";
+import { BRAND } from "@/lib/brand";
 
 export const metadata: Metadata = {
   title: "One last step",
@@ -53,7 +54,7 @@ export default async function AssessmentSetupPage({ params }: PageProps<"/assess
           <div className="text-xs font-semibold uppercase tracking-wide text-radar-700">One last step</div>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Tell us a little about you</h1>
           <p className="mt-2 text-slate-600">
-            So we can tailor your report and set up your free AI Radar briefing
+            So we can tailor your report and set up your free {BRAND} briefing
             {feedFor ? ` for ${feedFor}` : ""}. You can change this anytime in Settings.
           </p>
           <ActionForm action={completeAssessmentSetup.bind(null, assessment.id)} className="mt-8 space-y-6">
@@ -62,7 +63,7 @@ export default async function AssessmentSetupPage({ params }: PageProps<"/assess
             </Card>
             <Card className="p-6">
               <fieldset>
-                <legend className="font-semibold text-slate-900">AI Radar briefing</legend>
+                <legend className="font-semibold text-slate-900">{BRAND} briefing</legend>
                 <p className="mt-0.5 text-sm text-slate-500">The AI news that matters to your industry and tools, in one short email.</p>
                 <div className="mt-4 grid gap-2 sm:grid-cols-3">
                   {DIGEST_OPTIONS.map((o) => (

@@ -22,7 +22,15 @@ import { getStackContext, storyContext, upcomingDeadlines } from "@/lib/graph/pe
 import { estimateAnnualHours } from "@/lib/ideas";
 import { getStoryBySlug, listStories } from "@/lib/stories";
 import { CATEGORY_SLUGS, STAGES, VENDOR_SLUGS, categoryLabel, labelFrom, vendorLabel } from "@/lib/taxonomy";
+import { rateLimit } from "@/lib/rate-limit";
 import { loadPrincipal, McpAccessError, requireWorkspace, type Principal } from "./principal";
+import { BRAND } from "@/lib/brand";
+import { enforcedGovernancePolicy } from "@/lib/billing/entitlements";
+import { briefToMarkdown } from "@/lib/build/export";
+import { latestReadyBrief, listBuildUpdates, recordBuildUpdate } from "@/lib/build/server";
+import { isoDate, stageChangeBlocked } from "@/lib/governance";
+
+const MCP_CALLS_PER_MINUTE = 120;
 
 type ToolCtx = { http?: { authInfo?: { extra?: Record<string, unknown> } } };
 type ToolResult = { content: { type: "text"; text: string }[]; isError?: boolean };
@@ -37,6 +45,8 @@ function withPrincipal<A>(fn: (args: A, p: Principal) => Promise<ToolResult>) {
     if (typeof keyId !== "string") return fail("Not authenticated.");
     const p = await loadPrincipal(keyId);
     if (!p) return fail("This API key has been revoked.");
+    const limited = await rateLimit(`mcp:key:${keyId}`, MCP_CALLS_PER_MINUTE, 60);
+    if (!limited.allowed) return fail(`Rate limit reached (${MCP_CALLS_PER_MINUTE} calls per minute). Retry in ${limited.retryAfterSeconds}s.`);
     try {
       return await fn(args, p);
     } catch (err) {
@@ -71,7 +81,7 @@ export function registerRadarTools(server: McpServer) {
     {
       title: "Search AI news",
       description:
-        "Search AI Radar's deduplicated, ranked AI news. Filter by text, category, vendor and recency. Importance is 1 (trivia) to 5 (major).",
+        `Search ${BRAND}'s deduplicated, ranked AI news. Filter by text, category, vendor and recency. Importance is 1 (trivia) to 5 (major).`,
       inputSchema: z.object({
         query: z.string().max(100).optional().describe("Words to match in titles and summaries"),
         category: z.enum(CATEGORY_SLUGS as [string, ...string[]]).optional(),
@@ -143,7 +153,7 @@ export function registerRadarTools(server: McpServer) {
     {
       title: "My company's stack and deadlines",
       description:
-        "The tools AI Radar believes your company runs on (confirmed or inferred) and upcoming retirements, deprecations and regulatory dates that affect them or vendors you follow.",
+        `The tools ${BRAND} believes your company runs on (confirmed or inferred) and upcoming retirements, deprecations and regulatory dates that affect them or vendors you follow.`,
       inputSchema: z.object({ days: z.number().int().min(7).max(365).default(180) }),
       annotations: READ,
     },
@@ -501,6 +511,95 @@ export function registerRadarTools(server: McpServer) {
       });
     }),
   );
+
+  /* ─────────────────────────────── Build bridge ─────────────────────────────── */
+
+  server.registerTool(
+    "workspace_get_build_spec",
+    {
+      title: "Get an initiative's build spec",
+      description:
+        "The latest build brief for an initiative: recommended approach, requirements, data plan, draft system prompt, test cases and developer tickets. Use it as the spec when building the initiative, then report back with workspace_report_progress.",
+      inputSchema: z.object({
+        initiative_id: z.string().min(1).max(64),
+        format: z.enum(["markdown", "json"]).default("markdown").describe("markdown is easiest to follow; json has the structured brief"),
+      }),
+      annotations: READ,
+    },
+    withPrincipal(async (a: { initiative_id: string; format: "markdown" | "json" }, p) => {
+      const ws = requireWorkspace(p, "workspace:view");
+      const [initiative] = await db
+        .select()
+        .from(initiatives)
+        .where(and(eq(initiatives.id, a.initiative_id), eq(initiatives.orgId, ws.org.id)))
+        .limit(1);
+      if (!initiative) return fail("Initiative not found in this workspace.");
+      const url = `${appUrl()}/w/${ws.org.slug}/initiatives/${initiative.id}/build`;
+      const latest = await latestReadyBrief(initiative.id);
+      if (!latest) return fail(`No build brief yet for "${initiative.title}". An editor can generate one at ${url}`);
+      const updates = await listBuildUpdates(initiative.id, 5);
+      const progress = updates.map(({ update: u, author }) => ({ status: u.status, message: u.message, link: u.link, by: author, at: u.createdAt.toISOString() }));
+      if (a.format === "json") {
+        return ok({ initiative: { id: initiative.id, title: initiative.title, stage: labelFrom(STAGES, initiative.stage) }, version: latest.row.version, url, brief: latest.brief, recent_progress: progress });
+      }
+      const md = briefToMarkdown(latest.brief, { title: initiative.title, workspace: ws.org.name, version: latest.row.version, url });
+      const tail = progress.length ? `\n## Recent progress\n${progress.map((u) => `- ${u.at.slice(0, 10)} [${u.status}] ${u.message}${u.link ? ` (${u.link})` : ""}`).join("\n")}\n` : "";
+      return { content: [{ type: "text", text: md + tail }] };
+    }),
+  );
+
+  server.registerTool(
+    "workspace_report_progress",
+    {
+      title: "Report build progress",
+      description:
+        "Post a progress update on an initiative you're building (shown on its build plan), optionally moving it to a new stage. Stage changes follow the workspace's governance policy, so moving to pilot or production may need an approval first.",
+      inputSchema: z.object({
+        initiative_id: z.string().min(1).max(64),
+        status: z.enum(["planned", "in_progress", "blocked", "done"]),
+        message: z.string().min(3).max(2000).describe("What changed, in a sentence or two"),
+        link: z.string().url().max(500).optional().describe("PR, ticket, demo or doc"),
+        stage: z.enum(STAGES.map((s) => s.slug) as [string, ...string[]]).optional().describe("Optionally move the initiative to this stage"),
+      }),
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+    },
+    withPrincipal(async (a: { initiative_id: string; status: "planned" | "in_progress" | "blocked" | "done"; message: string; link?: string; stage?: string }, p) => {
+      const ws = requireWorkspace(p, "initiative:write", true);
+      const [initiative] = await db
+        .select()
+        .from(initiatives)
+        .where(and(eq(initiatives.id, a.initiative_id), eq(initiatives.orgId, ws.org.id), isNull(initiatives.archivedAt)))
+        .limit(1);
+      if (!initiative) return fail("Initiative not found in this workspace.");
+      if (a.link && !/^https?:\/\//i.test(a.link)) return fail("Links must start with http:// or https://");
+      const stage = a.stage as typeof initiative.stage | undefined;
+      if (stage && stage !== initiative.stage) {
+        const blocked = stageChangeBlocked({
+          policy: enforcedGovernancePolicy(ws.org),
+          fromStage: initiative.stage,
+          toStage: stage,
+          approvalStatus: initiative.approvalStatus,
+          reviewDueOn: initiative.reviewDueOn,
+          today: isoDate(new Date()),
+        });
+        if (blocked) return fail(`Progress not posted: ${blocked}`);
+      }
+      await recordBuildUpdate({ orgId: ws.org.id, initiativeId: initiative.id, userId: p.user.id, status: a.status, message: a.message, link: a.link ?? null, source: "mcp" });
+      let movedTo: string | null = null;
+      if (stage && stage !== initiative.stage) {
+        await db.update(initiatives).set({ stage }).where(and(eq(initiatives.id, initiative.id), eq(initiatives.orgId, ws.org.id)));
+        await db.insert(activityLog).values({
+          orgId: ws.org.id,
+          userId: p.user.id,
+          initiativeId: initiative.id,
+          action: "initiative.updated",
+          detail: { title: initiative.title, changes: [`stage to ${labelFrom(STAGES, stage)}`], via: "mcp" },
+        });
+        movedTo = labelFrom(STAGES, stage);
+      }
+      return ok({ posted: true, initiative: initiative.title, status: a.status, stage: movedTo ?? labelFrom(STAGES, initiative.stage), url: `${appUrl()}/w/${ws.org.slug}/initiatives/${initiative.id}/build` });
+    }),
+  );
 }
 
 /** Used in tests and docs: every tool and whether it writes. */
@@ -517,4 +616,6 @@ export const TOOL_CATALOG = [
   { name: "workspace_record_impact", scope: "workspace", write: true },
   { name: "workspace_radar_alerts", scope: "workspace", write: false },
   { name: "workspace_governance_register", scope: "workspace", write: false },
+  { name: "workspace_get_build_spec", scope: "workspace", write: false },
+  { name: "workspace_report_progress", scope: "workspace", write: true },
 ] as const;

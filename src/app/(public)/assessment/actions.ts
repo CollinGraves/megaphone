@@ -20,11 +20,13 @@ import { slugify } from "@/lib/ingest/heuristics";
 import { COMPANY_SIZES, INDUSTRY_SLUGS, TRIAL_INITIATIVE_LIMIT } from "@/lib/taxonomy";
 import { track } from "@/lib/tracking";
 import type { ActionState } from "@/lib/utils";
+import { clientIpKey, rateLimit } from "@/lib/rate-limit";
 
 const cleanSource = (s: unknown) => (typeof s === "string" ? s.replace(/[^\w:.\-]/g, "").slice(0, 80) : "") || null;
 
 /** Fired once when a visitor finishes the first (context) step. */
 export async function trackAssessmentStarted(source?: string) {
+  if (!(await rateLimit(`assessment_start:ip:${await clientIpKey()}`, 30, 3600)).allowed) return;
   const current = await getCurrentUser();
   await track("assessment_started", { userId: current?.id ?? null, metadata: { source: cleanSource(source) } });
 }
@@ -39,6 +41,8 @@ const landingFor = (assessmentId: string, onboarded: boolean) =>
  * sign-up); signed-in users claim it straight away and go to the full report.
  */
 export async function submitAssessment(input: unknown): Promise<{ error: string }> {
+  const limited = await rateLimit(`assessment_submit:ip:${await clientIpKey()}`, 10, 3600);
+  if (!limited.allowed) return { error: "Too many assessments from your network in the last hour. Please try again a little later." };
   const parsed = SubmissionSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please answer every question." };
   const { context, answers, source } = parsed.data;
@@ -200,7 +204,7 @@ export async function createStarterWorkspace(_prev: ActionState, form: FormData)
     for (const candidate of slugCandidates(name)) {
       [org] = await tx
         .insert(organizations)
-        .values({ name, slug: candidate, industry, plan: "trial", provisionedById: null })
+        .values({ name, slug: candidate, industry, plan: "trial", provisionedById: null, createdById: current.id })
         .onConflictDoNothing({ target: organizations.slug })
         .returning({ id: organizations.id, slug: organizations.slug });
       if (org) break;

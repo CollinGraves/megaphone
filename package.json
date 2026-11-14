@@ -17,7 +17,9 @@
     "digest": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/send-digests.ts",
     "db:backfill-companies": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/backfill-companies.ts",
     "db:backfill-graph": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/backfill-graph.ts",
-    "db:seed-graph-demo": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/seed-graph-demo.ts"
+    "db:seed-graph-demo": "NODE_OPTIONS=--conditions=react-server tsx --tsconfig tsconfig.json scripts/seed-graph-demo.ts",
+    "db:bootstrap-sql": "tsx --tsconfig tsconfig.json scripts/export-bootstrap-sql.ts",
+    "stripe:setup": "tsx --tsconfig tsconfig.json scripts/stripe-setup.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
@@ -34,6 +36,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "^0.0.1",
+    "stripe": "^23.1.0",
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.7"
   },

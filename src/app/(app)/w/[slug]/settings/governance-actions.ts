@@ -5,10 +5,11 @@ import { z } from "zod";
 import { db } from "@/db";
 import { organizations, type GovernancePolicy } from "@/db/schema";
 import { GATEABLE_STAGES, REVIEW_INTERVAL_OPTIONS, normalizePolicy } from "@/lib/governance";
+import { featureGateMessage, hasFeature } from "@/lib/plans";
 import { STAGES, labelFrom } from "@/lib/taxonomy";
 import { strs, type ActionState } from "@/lib/utils";
 import { logActivity } from "@/lib/workspace";
-import { authorize, revalidateWorkspace, runAction } from "../_lib/action-utils";
+import { ActionError, authorize, revalidateWorkspace, runAction } from "../_lib/action-utils";
 
 const policySchema = z.object({
   approvalRequiredStages: z.array(z.enum(GATEABLE_STAGES, { error: "pick pilot and/or production" })).max(2),
@@ -20,6 +21,7 @@ const policySchema = z.object({
 export async function updateGovernancePolicy(_prev: ActionState, form: FormData): Promise<ActionState> {
   return runAction(async () => {
     const ctx = await authorize(form, "settings:manage");
+    if (!hasFeature(ctx.org.plan, "governance_workflow")) throw new ActionError(featureGateMessage(ctx.org.plan, "governance_workflow"));
     const parsed = policySchema.parse({
       approvalRequiredStages: [...new Set(strs(form, "approvalRequiredStages"))],
       reviewIntervalMonths: form.get("reviewIntervalMonths"),

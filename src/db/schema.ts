@@ -294,6 +294,20 @@ export const apiKeys = pgTable(
   (t) => [index("api_keys_user_idx").on(t.userId)],
 );
 
+/** Processed Stripe webhook events (idempotency). */
+export const stripeEvents = pgTable("stripe_events", {
+  id: text("id").primaryKey(),
+  type: text("type").notNull(),
+  processedAt: createdAt(),
+});
+
+/** Fixed-window rate-limit counters (serverless-safe; old windows are pruned by the ingest cron). */
+export const rateLimits = pgTable("rate_limits", {
+  key: text("key").primaryKey(),
+  windowStart: timestamp("window_start", { withTimezone: true }).notNull().defaultNow(),
+  count: integer("count").notNull().default(0),
+});
+
 /** Free AI readiness assessment (public lead magnet). Anonymous until claimed by a signed-in user. */
 export const assessments = pgTable(
   "assessments",
@@ -485,7 +499,7 @@ export const companyStack = pgTable(
 
 /* ─────────────────────────────── Workspaces ─────────────────────────────── */
 
-export const orgPlan = pgEnum("org_plan", ["engagement", "trial", "pro", "enterprise"]);
+export const orgPlan = pgEnum("org_plan", ["engagement", "trial", "pro", "enterprise", "team", "business"]);
 export const orgStatus = pgEnum("org_status", ["active", "suspended"]);
 export const orgRole = pgEnum("org_role", ["owner", "admin", "editor", "viewer"]);
 
@@ -525,9 +539,20 @@ export const organizations = pgTable("organizations", {
   intakeToken: text("intake_token").unique(),
   /** Email domains allowed to submit ideas through the intake link (e.g. ["acme.com"]). Empty = any work email. */
   intakeAllowedDomains: text("intake_allowed_domains").array().notNull().default(sql`'{}'::text[]`),
-  // Reserved for self-service billing
+  // ── Self-service billing (Stripe) ──
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  /** Stripe subscription status: active, trialing, past_due, unpaid, canceled, incomplete… */
+  subscriptionStatus: text("subscription_status"),
+  billingInterval: text("billing_interval"), // month | year
+  currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
+  /** Who created the workspace through self-serve sign-up (null for North Labs provisioning). */
+  createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
+  /** Onboarding checklist hidden by an admin. */
+  onboardingDismissedAt: timestamp("onboarding_dismissed_at", { withTimezone: true }),
+  /** Opt-in: anonymized, aggregate stats from this workspace may feed North Labs research (the show, reports). */
+  shareAggregateInsights: boolean("share_aggregate_insights").notNull().default(false),
   provisionedById: text("provisioned_by_id").references(() => user.id, { onDelete: "set null" }),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
@@ -843,6 +868,90 @@ export const ideas = pgTable(
   ],
 );
 
+export const briefStatus = pgEnum("brief_status", ["generating", "ready", "failed"]);
+
+/** AI-generated build briefs for an initiative (versioned; latest = highest version). */
+export const buildBriefs = pgTable(
+  "build_briefs",
+  {
+    id: id(),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    initiativeId: text("initiative_id")
+      .notNull()
+      .references(() => initiatives.id, { onDelete: "cascade" }),
+    version: integer("version").notNull(),
+    status: briefStatus("status").notNull().default("generating"),
+    /** Structured brief (see src/lib/build/schema.ts). Null while generating or on failure. */
+    content: jsonb("content").$type<Record<string, unknown>>(),
+    /** "claude-…" or "template" (no API key configured). */
+    generator: text("generator"),
+    error: text("error"),
+    /** Optional extra guidance from the requester (e.g. "must run inside Teams"). */
+    guidance: text("guidance"),
+    createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (t) => [uniqueIndex("build_briefs_version_idx").on(t.initiativeId, t.version), index("build_briefs_org_idx").on(t.orgId, t.createdAt)],
+);
+
+export const buildUpdateStatus = pgEnum("build_update_status", ["planned", "in_progress", "blocked", "done"]);
+
+/** Build progress reported by people or by coding agents over MCP. */
+export const buildUpdates = pgTable(
+  "build_updates",
+  {
+    id: id(),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    initiativeId: text("initiative_id")
+      .notNull()
+      .references(() => initiatives.id, { onDelete: "cascade" }),
+    status: buildUpdateStatus("status").notNull(),
+    message: text("message").notNull(),
+    link: text("link"),
+    /** "mcp" or "app". */
+    source: text("source").notNull().default("app"),
+    createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("build_updates_initiative_idx").on(t.initiativeId, t.createdAt)],
+);
+
+/* ─────────────────────────────── The show ─────────────────────────────── */
+
+export const episodeStatus = pgEnum("episode_status", ["draft", "published"]);
+
+/** An episode of the show: a prep rundown (staff only) that becomes a public episode page once published. */
+export const episodes = pgTable(
+  "episodes",
+  {
+    id: id(),
+    number: integer("number").notNull().unique(),
+    /** Stable public URL segment, e.g. "episode-12". */
+    slug: text("slug").notNull().unique(),
+    title: text("title").notNull(),
+    airDate: date("air_date", { mode: "string" }).notNull(),
+    status: episodeStatus("status").notNull().default("draft"),
+    /** Rundown generation: generating | ready | failed. */
+    prepStatus: text("prep_status").notNull().default("ready"),
+    prepError: text("prep_error"),
+    rundown: jsonb("rundown").$type<Record<string, unknown>>(),
+    showNotes: text("show_notes"),
+    videoUrl: text("video_url"),
+    /** Stories covered, in rundown order (drives "covered on the show" links). */
+    storyIds: text("story_ids").array().notNull().default(sql`'{}'::text[]`),
+    createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+  },
+  (t) => [index("episodes_status_air_idx").on(t.status, t.airDate), index("episodes_story_ids_idx").using("gin", t.storyIds)],
+);
+
 /** Radar stories that affect a specific initiative (vendor overlap on high-signal categories). */
 export const initiativeAlerts = pgTable(
   "initiative_alerts",
@@ -914,6 +1023,7 @@ export type Company = typeof companies.$inferSelect;
 export type Entity = typeof entities.$inferSelect;
 export type EntityFact = typeof entityFacts.$inferSelect;
 export type Story = typeof stories.$inferSelect;
+export type Episode = typeof episodes.$inferSelect;
 export type Source = typeof sources.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;
 export type Initiative = typeof initiatives.$inferSelect;

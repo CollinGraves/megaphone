@@ -4,6 +4,7 @@ import { Card, EmptyState, PageHeader } from "@/components/ui";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { AlertList } from "../_components/alert-list";
 import { loadOpenAlerts } from "../_lib/alerts";
+import { BRAND } from "@/lib/brand";
 
 export const metadata: Metadata = { title: "Radar alerts" };
 
@@ -16,7 +17,7 @@ export default async function AlertsPage({ params }: PageProps<"/w/[slug]/alerts
   return (
     <>
       <PageHeader
-        eyebrow="AI Radar"
+        eyebrow={`${BRAND}`}
         title="Radar alerts"
         description="When a pricing change, deprecation, security issue, model release or regulation hits a platform one of your initiatives is built on, it shows up here."
       />

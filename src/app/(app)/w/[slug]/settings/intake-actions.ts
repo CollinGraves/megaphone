@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { memberships, organizations, user } from "@/db/schema";
 import { parseAllowedDomains, workDomainsFrom } from "@/lib/ideas";
+import { featureGateMessage, hasFeature } from "@/lib/plans";
 import type { ActionState } from "@/lib/utils";
 import { logActivity, type WorkspaceContext } from "@/lib/workspace";
 import { ActionError, authorize, revalidateWorkspace, runAction } from "../_lib/action-utils";
@@ -24,6 +25,7 @@ async function memberWorkDomains(ctx: WorkspaceContext) {
 export async function enableIntakeLink(_prev: ActionState, form: FormData): Promise<ActionState> {
   return runAction(async () => {
     const ctx = await authorize(form, "settings:manage");
+    if (!hasFeature(ctx.org.plan, "intake_link")) throw new ActionError(featureGateMessage(ctx.org.plan, "intake_link"));
     if (ctx.org.intakeToken) return { ok: true, message: "The intake link is already on." };
     // Default the allow-list to the members' company domains rather than "any work email".
     const domains = ctx.org.intakeAllowedDomains.length ? ctx.org.intakeAllowedDomains : await memberWorkDomains(ctx);
@@ -47,6 +49,7 @@ export async function disableIntakeLink(_prev: ActionState, form: FormData): Pro
 export async function rotateIntakeLink(_prev: ActionState, form: FormData): Promise<ActionState> {
   return runAction(async () => {
     const ctx = await authorize(form, "settings:manage");
+    if (!hasFeature(ctx.org.plan, "intake_link")) throw new ActionError(featureGateMessage(ctx.org.plan, "intake_link"));
     if (!ctx.org.intakeToken) throw new ActionError("Turn the intake link on first.");
     await db.update(organizations).set({ intakeToken: newToken() }).where(eq(organizations.id, ctx.org.id));
     await logActivity(ctx, "intake.rotated");

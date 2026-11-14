@@ -10,14 +10,17 @@ import { INDUSTRIES } from "@/lib/taxonomy";
 import { CopyField } from "../../_components/copy-button";
 import { PLAN_LABELS } from "../../_components/badges";
 import { provisionWorkspace, type ProvisionState } from "../actions";
+import { BRAND } from "@/lib/brand";
 
 type Consultant = { id: string; name: string; email: string };
 
 const PLAN_HINTS: Record<keyof typeof PLAN_LABELS, string> = {
-  engagement: "Included with a North Labs consulting engagement",
-  trial: "Time-boxed evaluation",
-  pro: "Paid self-serve tier (billing coming soon)",
-  enterprise: "Custom contract",
+  engagement: "Managed: included with a North Labs engagement (all features)",
+  enterprise: "Custom contract (all features)",
+  trial: "Free plan (5 initiatives); the customer can upgrade themselves",
+  team: "Team plan without Stripe billing (comped)",
+  business: "Business plan without Stripe billing (comped)",
+  pro: "Legacy; prefer Business",
 };
 
 const toSlug = (name: string) => (name.trim() ? slugify(name, 48) : "");
@@ -58,7 +61,7 @@ function ProvisionFormInner({ consultants, onReset }: { consultants: Consultant[
             </div>
           ) : invite?.status === "added" ? (
             <Alert tone="success">
-              {invite.email} already had an AI Radar account and was added as the workspace owner.
+              {invite.email} already had an {BRAND} account and was added as the workspace owner.
             </Alert>
           ) : null}
           {inviteError ? (

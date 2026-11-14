@@ -52,12 +52,15 @@ export function OrgStatusBadge({ status }: { status: "active" | "suspended" }) {
 }
 
 export const PLAN_LABELS = {
-  engagement: "Engagement",
-  trial: "Trial",
-  pro: "Pro",
+  engagement: "Managed (engagement)",
   enterprise: "Enterprise",
+  trial: "Free",
+  team: "Team",
+  business: "Business",
+  pro: "Business (legacy)",
 } as const;
 
 export function PlanBadge({ plan }: { plan: keyof typeof PLAN_LABELS }) {
-  return <Badge tone={plan === "enterprise" ? "dark" : plan === "trial" ? "amber" : "neutral"}>{PLAN_LABELS[plan]}</Badge>;
+  const tone = plan === "enterprise" || plan === "engagement" ? "dark" : plan === "trial" ? "amber" : plan === "business" || plan === "pro" ? "violet" : "blue";
+  return <Badge tone={tone}>{PLAN_LABELS[plan]}</Badge>;
 }
