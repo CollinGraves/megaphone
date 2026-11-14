@@ -99,7 +99,8 @@ END $$;`);
   writeFileSync(out, parts.join("\n\n") + "\n");
   console.log(`Wrote ${out}`);
   console.log(`Role: ${ROLE}`);
-  console.log(`Supabase pooled DATABASE_URL: postgres://${ROLE}.<project-ref>:${password}@<pooler-host>:6543/postgres`);
+  console.log(`Supabase pooled DATABASE_URL: postgres://${ROLE}.<project-ref>:<password>@<pooler-host>:6543/postgres`);
+  if (!process.argv[3]) console.log(`Generated password is in ${out} (CREATE ROLE line). Keep it out of the repo.`);
 }
 
 main();
