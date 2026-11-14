@@ -34,7 +34,7 @@ export function InitiativeForm({
       {i ? <input type="hidden" name="id" value={i.id} /> : null}
 
       <Card>
-        <CardHeader title="What and why" description="The business problem comes first — it's what executives read." />
+        <CardHeader title="What and why" description="Lead with the business problem. It's what executives read." />
         <CardBody className="space-y-4">
           <Field label="Title" htmlFor="title">
             <Input id="title" name="title" required minLength={3} maxLength={160} defaultValue={i?.title} placeholder="e.g. Customer service email triage" />

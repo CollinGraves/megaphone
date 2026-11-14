@@ -114,7 +114,7 @@ export default async function IdeasPage({ params, searchParams }: PageProps<"/w/
           title={canTriage ? "No ideas yet" : "You haven’t submitted any ideas yet"}
           description={
             canTriage
-              ? "Ideas submitted by colleagues — in the workspace or through the intake link — land here for triage."
+              ? "Ideas from colleagues, in the workspace or through the intake link, land here for triage."
               : "Spotted a repetitive task, a slow process or a question AI could answer? Share it with the AI team."
           }
           action={
@@ -212,7 +212,7 @@ export default async function IdeasPage({ params, searchParams }: PageProps<"/w/
                             <span className="ml-0.5 text-xs font-normal text-slate-500 md:hidden"> h/yr</span>
                           </span>
                         ) : (
-                          <span className="text-slate-400">—</span>
+                          <span className="text-slate-400">–</span>
                         )}
                       </div>
                       <div className="md:pt-0.5">
@@ -250,7 +250,7 @@ function IntakeCallout({ token, orgName, settingsHref }: { token: string | null;
           <div className="font-medium text-slate-900">{token ? "Intake link is on" : "Collect ideas from everyone"}</div>
           <p className="text-slate-500">
             {token
-              ? `Anyone at ${orgName} can submit an idea with their work email — no account needed.`
+              ? `Anyone at ${orgName} can submit an idea with their work email. No account needed.`
               : `Turn on the shareable intake link so anyone at ${orgName} can submit ideas without an account.`}
           </p>
         </div>

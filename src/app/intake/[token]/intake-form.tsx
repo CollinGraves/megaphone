@@ -21,7 +21,7 @@ function IntakeFormInner({ token, orgName, domains, defaultName, defaultEmail, o
     return (
       <div className="py-6 text-center" role="status">
         <CheckCircle2 className="mx-auto size-10 text-radar-600" />
-        <h2 className="mt-3 text-lg font-semibold text-slate-900">Thanks — your idea is in!</h2>
+        <h2 className="mt-3 text-lg font-semibold text-slate-900">Thanks, your idea is in!</h2>
         <p className="mx-auto mt-1 max-w-md text-sm text-slate-600">
           {orgName}’s AI team reviews every idea. {state.message ? <>We’ve sent a confirmation to <strong className="text-slate-900">{state.message}</strong> and will</> : "We’ll"}{" "}
           email you when they’ve made a decision.

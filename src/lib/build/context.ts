@@ -44,10 +44,10 @@ Loaded hourly cost for time savings: $${c.org.defaultHourlyRate}
 
 <initiative>
 Title: ${i.title}
-Business unit: ${i.businessUnit ?? "—"}
+Business unit: ${i.businessUnit ?? "–"}
 Stage: ${i.stage}
-Problem: ${i.problem || "—"}
-Proposed solution: ${i.solution || "—"}
+Problem: ${i.problem || "–"}
+Proposed solution: ${i.solution || "–"}
 Platforms chosen so far: ${list(i.platforms)}
 Models/products mentioned: ${list(i.models)}
 Build approach preference: ${i.buildApproach ?? "none"}
@@ -62,7 +62,7 @@ Human oversight: ${i.humanOversight ?? "not decided"}
 </governance>
 
 <impact_estimates>
-${c.metrics.length ? c.metrics.map((m) => `- ${m.name} (${m.type}): ${m.estimatedValue ?? "?"} ${m.unit} ${m.period}${m.assumptions ? ` — assumptions: ${m.assumptions}` : ""}`).join("\n") : "none recorded"}
+${c.metrics.length ? c.metrics.map((m) => `- ${m.name} (${m.type}): ${m.estimatedValue ?? "?"} ${m.unit} ${m.period}${m.assumptions ? ` (assumptions: ${m.assumptions})` : ""}`).join("\n") : "none recorded"}
 </impact_estimates>
 
 <data_dependencies>

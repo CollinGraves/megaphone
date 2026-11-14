@@ -211,7 +211,7 @@ function FilterTab({ href, active, label, count, highlight }: { href: string; ac
 }
 
 function ActivationCell({ activation: a }: { activation?: Activation }) {
-  if (!a) return <span className="text-slate-400">—</span>;
+  if (!a) return <span className="text-slate-400">–</span>;
   const missing = a.steps.filter((s) => !s.optional && !s.done).map((s) => s.title);
   const title = missing.length ? `To do: ${missing.join(", ")}` : "All setup steps done";
   return (

@@ -70,7 +70,7 @@ export function AuthForm({
       <h1 className="text-lg font-semibold text-slate-900">{isSignUp ? `Create your free ${BRAND}` : "Welcome back"}</h1>
       <p className="mt-1 text-sm text-slate-500">
         {isSignUp
-          ? "Use your company email and we'll tailor your radar to your company's stack, deadlines and industry."
+          ? "Use your work email and we'll filter the news to your company's tools and industry."
           : "Sign in to your feed and workspaces."}
       </p>
       <div className="mt-6">
@@ -108,8 +108,8 @@ export function AuthForm({
                   <>{BRAND} is for business teams. Please use your work email.</>
                 ) : (
                   <>
-                    <strong>Looks like a personal address.</strong> With your company email we tailor your radar to the
-                    tools your company runs on, warn you about their deadlines, and let colleagues share it.
+                    <strong>That looks like a personal address.</strong> A work email lets us filter news to your company&apos;s
+                    tools and warn you before they change.
                   </>
                 )}
               </div>
@@ -146,7 +146,7 @@ export function AuthForm({
           {pending ? "Please wait…" : isSignUp ? "Create my free radar" : "Sign in"}
         </Button>
         {isSignUp ? (
-          <p className="text-center text-xs text-slate-500">Free. No credit card. Unsubscribe from emails anytime.</p>
+          <p className="text-center text-xs text-slate-500">Free. No card. Unsubscribe any time.</p>
         ) : null}
       </form>
       <p className="mt-6 text-center text-sm text-slate-500">

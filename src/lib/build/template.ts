@@ -75,7 +75,7 @@ export function templateBrief(c: BriefContext): BuildBrief {
   const recommended = highRisk || sensitive ? (integrationHeavy ? 2 : 1) : integrationHeavy ? 1 : 0;
 
   return {
-    summary: `Build "${i.title}" for ${i.businessUnit ?? "the team"}: ${i.problem ? i.problem.split(/(?<=\.)\s/)[0] : "solve the problem described in the initiative."} Recommended path: ${options[recommended].name}. (Template brief — add an Anthropic API key for a brief tailored by AI.)`,
+    summary: `Build "${i.title}" for ${i.businessUnit ?? "the team"}: ${i.problem ? i.problem.split(/(?<=\.)\s/)[0] : "solve the problem described in the initiative."} Recommended path: ${options[recommended].name}. (Template brief. Add an Anthropic API key for one tailored by AI.)`,
     recommended_option: recommended,
     options,
     requirements: {

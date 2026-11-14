@@ -119,7 +119,7 @@ export function DependenciesSection({
               </div>
               {canCreateSystem ? (
                 <div className="grid gap-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/60 p-3 sm:grid-cols-2">
-                  <p className="text-xs text-slate-500 sm:col-span-2">New system — only used when “+ New system…” is selected.</p>
+                  <p className="text-xs text-slate-500 sm:col-span-2">Only used when “+ New system…” is selected.</p>
                   <Field label="New system name" htmlFor="dep-new-name">
                     <Input id="dep-new-name" name="newSystemName" maxLength={120} placeholder="e.g. Oracle NetSuite" />
                   </Field>

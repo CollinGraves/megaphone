@@ -74,7 +74,7 @@ export default async function ShowAdminPage() {
                           </div>
                         </Td>
                         <Td>{formatDate(ep.airDate)}</Td>
-                        <Td className="tabular-nums">{r ? `~${runtimeMinutes(r)} min` : "—"}</Td>
+                        <Td className="tabular-nums">{r ? `~${runtimeMinutes(r)} min` : "–"}</Td>
                         <Td>
                           {ep.prepStatus === "failed" ? (
                             <Badge tone="red">Prep failed</Badge>

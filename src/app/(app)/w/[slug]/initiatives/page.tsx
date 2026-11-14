@@ -127,7 +127,7 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
         <EmptyState
           icon={<ListChecks className="size-8" />}
           title="No initiatives yet"
-          description="Add each AI initiative — from early ideas to production systems — to build a single source of truth. Not sure where to start? Pick from common use cases."
+          description="Add each AI initiative, from early idea to production. Not sure where to start? Pick from common use cases."
           action={
             ctx.can("initiative:write") ? (
               <div className="flex flex-wrap justify-center gap-2">
@@ -162,7 +162,7 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
               {rows.map((i) => (
                 <tr key={i.id} className={cn("hover:bg-slate-50/70", i.stage === "retired" && "opacity-70")}>
                   <Td className="text-center font-semibold whitespace-nowrap tabular-nums text-slate-500">
-                    {i.rank ?? "—"}
+                    {i.rank ?? "–"}
                     {i.overridden ? (
                       <span className="ml-0.5 inline-block text-radar-600" title={`Rank pinned to #${i.rankOverride}`}>
                         <Pin className="inline size-3" aria-label="pinned" />
@@ -189,12 +189,12 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
                   <Td>
                     <ScorePill score={i.score} />
                   </Td>
-                  <Td className="text-right tabular-nums whitespace-nowrap">{i.impact.hasEstimate ? formatUsd(i.impact.estimatedAnnualUsd, true) : <span className="text-slate-400">—</span>}</Td>
+                  <Td className="text-right tabular-nums whitespace-nowrap">{i.impact.hasEstimate ? formatUsd(i.impact.estimatedAnnualUsd, true) : <span className="text-slate-400">–</span>}</Td>
                   <Td className="text-right tabular-nums whitespace-nowrap">
                     {i.impact.hasActuals ? (
                       <span className="font-medium text-slate-900">{formatUsd(i.impact.actualRunRateUsd, true)}</span>
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <span className="text-slate-400">–</span>
                     )}
                   </Td>
                 </tr>

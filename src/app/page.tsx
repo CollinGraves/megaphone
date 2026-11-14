@@ -1,278 +1,98 @@
 import Link from "next/link";
-import { and, count, countDistinct, desc, eq, gte, isNotNull } from "drizzle-orm";
-import {
-  ArrowRight,
-  Bell,
-  BriefcaseBusiness,
-  Building2,
-  ChevronDown,
-  Cpu,
-  Database,
-  Gauge,
-  Landmark,
-  Layers,
-  ListOrdered,
-  Radar,
-  ShieldCheck,
-  Sparkles,
-  TrendingUp,
-} from "lucide-react";
+import { and, count, eq, gte } from "drizzle-orm";
+import { ArrowRight, Bell, ChevronDown, ClipboardList, Gauge, Hammer, Mic, ShieldCheck, TrendingUp } from "lucide-react";
 import { EmailCapture } from "@/components/email-capture";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
-import { StoryCard } from "@/components/stories/story-card";
 import { ButtonLink } from "@/components/ui";
 import { db } from "@/db";
-import { sources, stories, user, type Story } from "@/db/schema";
+import { sources, stories, type Story } from "@/db/schema";
+import { PLANS } from "@/lib/plans";
 import { listStories } from "@/lib/stories";
-import { CATEGORIES, categoryLabel, vendorLabel } from "@/lib/taxonomy";
-import { formatNumber } from "@/lib/utils";
-import { DimensionBars, LevelScale, ScoreRing } from "./(public)/assessment/_components/visuals";
-import { BRAND } from "@/lib/brand";
+import { vendorLabel } from "@/lib/taxonomy";
+import { formatNumber, timeAgo } from "@/lib/utils";
+import { BRAND, SHOW_NAME } from "@/lib/brand";
+import { ScoreRing } from "./(public)/assessment/_components/visuals";
 
 export const dynamic = "force-dynamic";
 
-/** Only show reader counts once they're large enough to be persuasive. */
-const SOCIAL_PROOF_MIN_READERS = 250;
-
 async function getStats() {
   const weekAgo = new Date(Date.now() - 7 * 864e5);
-  const [[s], [st], [readers], firstParty] = await Promise.all([
+  const [[s], [st], named] = await Promise.all([
     db.select({ n: count() }).from(sources).where(eq(sources.active, true)),
     db.select({ n: count() }).from(stories).where(and(eq(stories.status, "published"), gte(stories.publishedAt, weekAgo))),
     db
-      .select({ n: count(), companies: countDistinct(user.companyDomain) })
-      .from(user)
-      .where(and(isNotNull(user.onboardedAt), eq(user.platformRole, "user"))),
-    db
       .select({ name: sources.name })
       .from(sources)
-      .where(and(eq(sources.active, true), gte(sources.authority, 4)))
-      .orderBy(desc(sources.authority), sources.name)
-      .limit(18),
+      .where(and(eq(sources.active, true), gte(sources.authority, 5)))
+      .orderBy(sources.name)
+      .limit(8),
   ]);
-  return {
-    sources: s?.n ?? 0,
-    storiesThisWeek: st?.n ?? 0,
-    readers: readers?.n ?? 0,
-    companies: readers?.companies ?? 0,
-    sourceNames: firstParty.map((f) => f.name),
-  };
+  return { sources: s?.n ?? 0, storiesThisWeek: st?.n ?? 0, sourceNames: named.map((n) => n.name) };
 }
 
 export default async function HomePage() {
-  const [top, stats] = await Promise.all([listStories({ sinceDays: 7, order: "top", limit: 6 }), getStats()]);
-  const showReaders = stats.readers >= SOCIAL_PROOF_MIN_READERS;
+  const [top, stats] = await Promise.all([listStories({ sinceDays: 7, order: "top", limit: 4 }), getStats()]);
 
   return (
     <>
       <SiteHeader dark />
       <main className="flex-1">
-        {/* Hero */}
+        {/* 1. Promise, sign-up and live proof */}
         <section className="relative overflow-hidden bg-ink-950 text-white">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(18,179,147,0.18),transparent_55%)]" />
-          <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:py-24">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-radar-300">
-                <span className="size-1.5 rounded-full bg-radar-400" />
-                {showReaders
-                  ? `Read by ${formatNumber(stats.readers)} professionals at ${formatNumber(stats.companies)} companies`
-                  : `Tracking ${formatNumber(stats.sources)} sources · ${formatNumber(stats.storiesThisWeek)} stories this week`}
-              </div>
-              <h1 className="mt-6 text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-                The AI briefing for people who run the business.
-              </h1>
-              <p className="mt-6 max-w-xl text-lg text-slate-300">
-                Model launches, price changes, deprecations and regulation, filtered to your industry and the platforms your
-                company runs on, with a heads-up before deadlines hit the tools you use. One short digest.
+          <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_1fr] lg:py-20">
+            <div className="min-w-0">
+              <h1 className="text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">AI news that affects your company. Nothing else.</h1>
+              <p className="mt-5 max-w-lg text-lg text-slate-300">
+                We read {stats.sources > 0 ? formatNumber(stats.sources) : "dozens of"} sources every hour and send you the few stories that touch
+                your industry and the tools you run.
               </p>
               <EmailCapture source="hero" dark className="mt-8" />
-              <Link
-                href="/assessment?src=home_hero"
-                className="mt-5 inline-flex max-w-full items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 transition-colors hover:border-radar-400/40 hover:bg-white/10"
-              >
-                <Gauge className="size-4 shrink-0 text-radar-300" aria-hidden />
-                <span>
-                  How ready is your company for AI? <span className="font-medium text-radar-300">Take the free 5-minute assessment →</span>
-                </span>
-              </Link>
-              <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-400">
-                <Link href="/radar" className="underline-offset-4 hover:text-white hover:underline">
-                  Browse this week&apos;s top stories →
+              <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-400">
+                <Link href="/assessment?src=home_hero" className="inline-flex items-center gap-1.5 hover:text-white">
+                  <Gauge className="size-4 text-radar-300" aria-hidden /> Free AI readiness score
                 </Link>
-
-                <span className="hidden sm:inline" aria-hidden>
-                  ·
-                </span>
-                <span>Built by North Labs, AI consultants to operating teams</span>
+                <Link href="/show" className="inline-flex items-center gap-1.5 hover:text-white">
+                  <Mic className="size-4 text-radar-300" aria-hidden /> Watch the show
+                </Link>
               </div>
             </div>
-            <RadarVisual />
+            {top.length ? <ThisWeek stories={top} total={stats.storiesThisWeek} /> : <RadarVisual />}
           </div>
         </section>
 
-        {/* Sources strip */}
-        <section className="border-b border-slate-200 bg-white">
-          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-            <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Watching first-party and top-tier sources, including</div>
-            <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-slate-600">
+        {/* 2. Where it comes from */}
+        {stats.sourceNames.length ? (
+          <section className="border-b border-slate-200 bg-white">
+            <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-5 gap-y-2 px-4 py-5 text-sm text-slate-500 sm:px-6">
+              <span className="font-medium text-slate-700">Sources include</span>
               {stats.sourceNames.map((n) => (
                 <span key={n}>{n}</span>
               ))}
-              <span className="text-slate-400">+ {Math.max(0, stats.sources - stats.sourceNames.length)} more</span>
+              {stats.sources > stats.sourceNames.length ? <span className="text-slate-400">and {stats.sources - stats.sourceNames.length} more</span> : null}
             </div>
-          </div>
-        </section>
+          </section>
+        ) : null}
 
-        {/* Digest preview */}
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-          <div className="grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
-            <div>
-              <h2 className="text-3xl font-semibold tracking-tight text-slate-900">Five minutes a week. Nothing important missed.</h2>
-              <p className="mt-3 text-slate-600">
-                Forty articles about the same launch become one story, with a plain-English summary and a note on what it means
-                for companies adopting AI. You choose the topics, vendors and industries; we send what matters, daily or weekly.
-              </p>
-              <ul className="mt-6 space-y-3 text-sm text-slate-700">
-                {[
-                  "Ranked by significance, not by who published first",
-                  "Every story links to the original sources",
-                  "Deadline alerts for the tools your company uses",
-                  "Vendor-neutral: no pay-to-play rankings",
-                ].map((t) => (
-                  <li key={t} className="flex gap-2">
-                    <ShieldCheck className="mt-0.5 size-4 shrink-0 text-radar-600" /> {t}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <DigestPreview stories={top.slice(0, 3)} />
-          </div>
-        </section>
-
-        {/* Readiness assessment */}
-        <section aria-labelledby="assessment-cta" className="relative overflow-hidden bg-ink-900 text-white">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(18,179,147,0.16),transparent_55%)]" />
-          <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <div>
-              <div className="text-sm font-semibold uppercase tracking-wide text-radar-300">Free AI readiness assessment</div>
-              <h2 id="assessment-cta" className="mt-2 text-3xl font-semibold tracking-tight">
-                How ready is your company for AI?
-              </h2>
-              <p className="mt-3 max-w-xl text-slate-300">
-                Sixteen questions, about five minutes. Get a scored report across strategy, use cases, data, technology,
-                people and governance, with your biggest gaps, concrete next steps and starter initiatives for the functions
-                you care about.
-              </p>
-              <ul className="mt-6 grid gap-3 text-sm text-slate-200 sm:grid-cols-2">
-                {[
-                  "Overall score and maturity level",
-                  "Six dimension scores, instantly",
-                  "Gaps with practical next steps",
-                  "A free starter AI portfolio",
-                ].map((t) => (
-                  <li key={t} className="flex gap-2">
-                    <ShieldCheck className="mt-0.5 size-4 shrink-0 text-radar-400" aria-hidden /> {t}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-8 flex flex-wrap items-center gap-4">
-                <ButtonLink href="/assessment?src=home_section" variant="accent" size="lg">
-                  Take the 5-minute assessment <ArrowRight className="size-4" aria-hidden />
-                </ButtonLink>
-                <span className="text-sm text-slate-400">No sign-up needed to see your scores.</span>
-              </div>
-            </div>
-            <AssessmentPreview />
-          </div>
-        </section>
-
-        {/* Roles */}
-        <section className="border-y border-slate-200 bg-white">
-          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Built for the leaders accountable for AI results</h2>
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                { icon: Cpu, role: "CIOs & CTOs", body: "Vendor roadmaps, deprecations and security issues for the platforms you've standardized on." },
-                { icon: BriefcaseBusiness, role: "COOs & operations", body: "Where AI is actually saving time in operations like yours, and what it took to get there." },
-                { icon: Sparkles, role: "Heads of AI & data", body: "Model releases, agent tooling and price/performance shifts that change what's worth building." },
-                { icon: Landmark, role: "Finance, legal & risk", body: "Regulation, pricing changes and governance frameworks, before they hit your budget or audit." },
-              ].map(({ icon: Icon, role, body }) => (
-                <div key={role} className="rounded-xl border border-slate-200 p-5">
-                  <Icon className="size-5 text-radar-600" />
-                  <h3 className="mt-3 font-semibold text-slate-900">{role}</h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{body}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* This week */}
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-slate-900">This week on the radar</h2>
-              <p className="mt-1 text-slate-600">The most significant stories of the last seven days.</p>
-            </div>
-            <Link href="/radar" className="hidden text-sm font-medium text-radar-700 hover:underline sm:block">
-              All top stories →
-            </Link>
-          </div>
-          <div className="mt-6 grid gap-4 lg:grid-cols-3">
-            {top.slice(0, 3).map((s) => (
-              <StoryCard key={s.id} story={s} />
-            ))}
-          </div>
-        </section>
-
-        {/* How it works */}
-        <section className="border-y border-slate-200 bg-white">
-          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">How {BRAND} works</h2>
-            <div className="mt-8 grid gap-8 md:grid-cols-3">
-              {[
-                { icon: Radar, title: "We watch everything", body: "First-party vendor blogs and newsrooms, research feeds, regulators, trade press and community signals, checked every hour." },
-                { icon: Layers, title: "We separate signal from noise", body: "Duplicate coverage is merged into one story. Each story is summarized, tagged and scored for significance." },
-                { icon: Bell, title: "You get what matters to you", body: "Choose topics, companies and industries. Read your feed anytime, or get a daily or weekly digest." },
-              ].map(({ icon: Icon, title, body }) => (
-                <div key={title}>
-                  <div className="flex size-10 items-center justify-center rounded-lg bg-radar-50 text-radar-700">
-                    <Icon className="size-5" />
-                  </div>
-                  <h3 className="mt-4 font-semibold text-slate-900">{title}</h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{body}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-10 flex flex-wrap gap-2">
-              {CATEGORIES.map((c) => (
-                <Link key={c.slug} href={`/radar/topics/${c.slug}`} className="rounded-full border border-slate-200 px-3 py-1 text-sm text-slate-600 hover:border-radar-400 hover:text-radar-800">
-                  {c.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Workspace */}
-        <section id="workspace" className="mx-auto max-w-7xl scroll-mt-16 px-4 py-20 sm:px-6">
+        {/* 3. The paid product */}
+        <section id="workspace" className="mx-auto max-w-7xl scroll-mt-16 px-4 py-16 sm:px-6 lg:py-20">
           <div className="grid items-center gap-12 lg:grid-cols-2">
-            <div>
-              <div className="text-sm font-semibold uppercase tracking-wide text-radar-700">{BRAND} Workspace · for companies</div>
-              <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">Your company&apos;s AI portfolio, in one place</h2>
-              <p className="mt-3 text-slate-600">
-                Most companies have AI work spread across Claude, ChatGPT, Copilot, Gemini and in-house builds, with no
-                shared view of what&apos;s being solved or whether it&apos;s paying off. The Workspace is that shared view.
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-radar-700">For companies</div>
+              <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">Track every AI project in one place</h2>
+              <p className="mt-3 max-w-lg text-slate-600">
+                Your AI work is spread across ChatGPT, Copilot, Claude and a few custom builds. The workspace shows what each one
+                solves, what it&apos;s worth and what&apos;s blocking it.
               </p>
               <ul className="mt-8 grid gap-5 sm:grid-cols-2">
                 {[
-                  { icon: ListOrdered, title: "Prioritized initiative list", body: "Every initiative scored on value, feasibility, alignment and risk." },
-                  { icon: TrendingUp, title: "Measured impact", body: "Hours saved, cost reduced and revenue generated, estimated and actual." },
-                  { icon: Database, title: "Data dependencies", body: "Which systems and datasets each initiative needs, and what's blocked." },
-                  { icon: Sparkles, title: "Alerts tied to your stack", body: "A price change or deprecation from a vendor you use is flagged on the initiatives it affects." },
+                  { icon: ClipboardList, title: "One ranked list", body: "Score ideas on value, effort and risk. Decide what's next." },
+                  { icon: TrendingUp, title: "Impact in dollars", body: "Hours saved and money made, estimated then measured." },
+                  { icon: Hammer, title: "Build plans", body: "Options, data, prompt, tests and tickets for each idea." },
+                  { icon: ShieldCheck, title: "Governance built in", body: "Risk tiers, approvals and review dates on every project." },
                 ].map(({ icon: Icon, title, body }) => (
                   <li key={title} className="flex gap-3">
-                    <Icon className="mt-0.5 size-5 shrink-0 text-radar-600" />
+                    <Icon className="mt-0.5 size-5 shrink-0 text-radar-600" aria-hidden />
                     <div>
                       <div className="font-medium text-slate-900">{title}</div>
                       <div className="text-sm text-slate-600">{body}</div>
@@ -285,10 +105,7 @@ export default async function HomePage() {
                   Start free
                 </ButtonLink>
                 <ButtonLink href="/pricing" variant="secondary" size="lg">
-                  See pricing
-                </ButtonLink>
-                <ButtonLink href="/contact?from=workspace" variant="ghost" size="lg">
-                  Talk to North Labs
+                  Pricing
                 </ButtonLink>
               </div>
             </div>
@@ -296,16 +113,69 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* FAQ */}
+        {/* 4. Two free ways in */}
+        <section className="border-y border-slate-200 bg-white">
+          <div className="mx-auto grid max-w-7xl gap-6 px-4 py-14 sm:px-6 md:grid-cols-2">
+            <Link href="/assessment?src=home_section" className="group flex min-w-0 items-center gap-5 rounded-2xl border border-slate-200 p-6 transition-colors hover:border-radar-400">
+              <ScoreRing score={61} size={88} />
+              <div className="min-w-0">
+                <h2 className="text-lg font-semibold text-slate-900">How ready is your company for AI?</h2>
+                <p className="mt-1 text-sm text-slate-600">Sixteen questions. A score, your weakest areas and where to start. No sign-up to see it.</p>
+                <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-radar-700 group-hover:underline">
+                  Take the assessment <ArrowRight className="size-4" aria-hidden />
+                </span>
+              </div>
+            </Link>
+            <Link href="/show" className="group flex min-w-0 items-center gap-5 rounded-2xl border border-slate-200 p-6 transition-colors hover:border-radar-400">
+              <div className="flex size-[88px] shrink-0 items-center justify-center rounded-full bg-ink-950 text-radar-300">
+                <Mic className="size-9" aria-hidden />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-lg font-semibold text-slate-900">{SHOW_NAME}</h2>
+                <p className="mt-1 text-sm text-slate-600">The week&apos;s AI news for operators, plus a viewer&apos;s idea built live on air.</p>
+                <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-radar-700 group-hover:underline">
+                  Watch episodes <ArrowRight className="size-4" aria-hidden />
+                </span>
+              </div>
+            </Link>
+          </div>
+        </section>
+
+        {/* 5. Pricing teaser */}
+        <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">The radar is free. Workspaces start free too.</h2>
+            <Link href="/pricing" className="text-sm font-medium text-radar-700 hover:underline">
+              Compare plans →
+            </Link>
+          </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            {[PLANS.free, PLANS.team, PLANS.business].map((p) => (
+              <div key={p.name} className="rounded-xl border border-slate-200 bg-white p-5">
+                <div className="font-semibold text-slate-900">{p.name}</div>
+                <div className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">
+                  {p.monthlyPrice ? `$${formatNumber(p.monthlyPrice)}` : "$0"}
+                  <span className="text-sm font-normal text-slate-500">{p.monthlyPrice ? " / month" : ""}</span>
+                </div>
+                <p className="mt-2 text-sm text-slate-600">{p.tagline}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-sm text-slate-500">
+            Want it done for you? North Labs can run it with your team. <Link href="/contact?from=home_pricing" className="text-radar-700 hover:underline">Talk to us</Link>.
+          </p>
+        </section>
+
+        {/* 6. Questions */}
         <section className="border-t border-slate-200 bg-white">
-          <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+          <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
             <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Questions</h2>
             <div className="mt-6 divide-y divide-slate-200 border-y border-slate-200">
               {FAQ.map((f) => (
                 <details key={f.q} className="group py-4">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium text-slate-900">
                     {f.q}
-                    <ChevronDown className="size-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180" />
+                    <ChevronDown className="size-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180" aria-hidden />
                   </summary>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">{f.a}</p>
                 </details>
@@ -314,12 +184,12 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Final CTA */}
+        {/* 7. Last call */}
         <section className="bg-ink-900">
           <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-14 sm:px-6 md:grid-cols-2">
-            <div>
-              <h2 className="text-2xl font-semibold text-white">Stop scrolling ten feeds to keep up with AI.</h2>
-              <p className="mt-1 text-slate-300">Set up your radar in 30 seconds. Free.</p>
+            <div className="min-w-0">
+              <h2 className="text-2xl font-semibold text-white">Get the radar.</h2>
+              <p className="mt-1 text-slate-300">Takes 30 seconds. Free.</p>
             </div>
             <EmailCapture source="footer_cta" dark />
           </div>
@@ -332,85 +202,46 @@ export default async function HomePage() {
 
 const FAQ = [
   {
-    q: `Is ${BRAND} really free?`,
-    a: "Yes. The feed and digest are free. North Labs funds it because it's how we stay close to what our clients need, and some readers eventually ask us for help with their own AI initiatives.",
+    q: `Is ${BRAND} free?`,
+    a: "The radar and the email digest are free. Workspaces have a free plan and paid plans for bigger teams. North Labs, an AI consultancy, pays for the free part because it keeps us close to what companies need.",
   },
   {
-    q: "Why do you ask for my work email?",
-    a: "Your company email lets us build a profile of the tools your company runs on, which you can confirm or correct. We use it to flag news that affects those tools (\"Because Acme uses Salesforce\") and to warn you before retirements, deprecations and regulatory deadlines. It also lets colleagues share your radar. We never sell your information. North Labs may occasionally reach out if it looks like we could help, and you can opt out anytime.",
+    q: "Why a work email?",
+    a: "Your company domain tells us which tools you likely run, so we can flag news that affects them and warn you before a model or product is retired. You can correct the list. We don't sell your data.",
   },
   {
-    q: "How is this different from other AI newsletters?",
-    a: `It's personalized and business-focused. Instead of one editor's picks for everyone, ${BRAND} ranks every story by significance and filters it to your topics, vendors and industry, with a note on why it matters for companies adopting AI.`,
-  },
-  {
-    q: "How often will I hear from you?",
-    a: "You choose: a daily briefing on weekday mornings, a weekly digest on Mondays, or no email at all, just the feed. You can change it anytime.",
+    q: "How often will you email me?",
+    a: "Daily on weekday mornings, weekly on Mondays, or never. Change it any time.",
   },
   {
     q: "Who is North Labs?",
-    a: `North Labs is an AI consultancy that helps companies decide where AI should go first, build it on the right platform, and measure the impact. Our clients run their AI portfolios in the ${BRAND} Workspace.`,
-  },
-  {
-    q: "What is the AI readiness assessment?",
-    a: `A free, five-minute questionnaire that scores your company across six dimensions of AI readiness and suggests where to start. Your scores appear instantly; the full report with next steps and starter initiatives is free with an ${BRAND} account.`,
+    a: `An AI consultancy for mid-market companies. We help decide what to build first, build it and measure the results. Our clients run their AI work in ${BRAND}.`,
   },
 ];
 
-function DigestPreview({ stories }: { stories: Story[] }) {
+function ThisWeek({ stories, total }: { stories: Story[]; total: number }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60" aria-label="Example digest">
-      <div className="flex items-center justify-between rounded-t-2xl bg-ink-900 px-5 py-3 text-sm">
-        <span className="font-semibold text-white">
-          {BRAND} <span className="font-normal text-slate-400">· Weekly digest</span>
-        </span>
-        <span className="text-xs text-slate-400">Monday, 8:00 AM</span>
+    <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-2 backdrop-blur">
+      <div className="flex items-center justify-between px-3 pt-2 pb-1 text-xs text-slate-400">
+        <span className="font-medium uppercase tracking-wide text-radar-300">This week on the radar</span>
+        {total ? <span>{formatNumber(total)} stories</span> : null}
       </div>
-      <div className="divide-y divide-slate-100 px-5">
+      <ul>
         {stories.map((s) => (
-          <div key={s.id} className="py-4">
-            <div className="text-xs text-slate-500">
-              {[s.primarySourceName, ...s.vendors.slice(0, 1).map(vendorLabel), ...s.categories.slice(0, 1).map(categoryLabel)].filter(Boolean).join(" · ")}
-            </div>
-            <div className="mt-1 font-semibold leading-snug text-slate-900">{s.title}</div>
-            {s.summary.trim() !== s.title.trim() ? <p className="mt-1 line-clamp-2 text-sm text-slate-600">{s.summary}</p> : null}
-            {s.whyItMatters ? (
-              <p className="mt-2 border-l-2 border-radar-400 pl-2.5 text-xs text-slate-700">
-                <strong>Why it matters:</strong> {s.whyItMatters}
-              </p>
-            ) : null}
-          </div>
+          <li key={s.id}>
+            <Link href={`/radar/${s.slug}`} className="block rounded-xl px-3 py-3 transition-colors hover:bg-white/[0.06]">
+              <div className="text-xs text-slate-400">
+                {[s.primarySourceName, s.vendors[0] ? vendorLabel(s.vendors[0]) : null, timeAgo(s.publishedAt)].filter(Boolean).join(" · ")}
+              </div>
+              <div className="mt-0.5 font-medium leading-snug text-white">{s.title}</div>
+              {s.whyItMatters ? <p className="mt-1 line-clamp-2 text-sm text-slate-400">{s.whyItMatters}</p> : null}
+            </Link>
+          </li>
         ))}
-      </div>
-      <div className="flex items-center gap-2 rounded-b-2xl border-t border-slate-100 bg-slate-50 px-5 py-3 text-xs text-slate-500">
-        <Building2 className="size-3.5" /> Filtered for: Manufacturing · Microsoft · Pricing changes · Regulation
-      </div>
-    </div>
-  );
-}
-
-function AssessmentPreview() {
-  return (
-    <div className="rounded-2xl bg-white p-5 text-slate-900 shadow-2xl shadow-black/30 sm:p-6" aria-hidden>
-      <div className="flex items-center justify-between text-xs text-slate-500">
-        <span className="font-medium uppercase tracking-wide">AI readiness report</span>
-        <span>Example · illustrative scores</span>
-      </div>
-      <div className="mt-4 flex items-center gap-5">
-        <ScoreRing score={61} size={104} />
-        <div className="min-w-0 flex-1">
-          <div className="text-xs text-slate-500">Maturity level</div>
-          <div className="text-xl font-semibold text-slate-900">Scaling</div>
-          <div className="mt-3">
-            <LevelScale levelId="scaling" />
-          </div>
-        </div>
-      </div>
-      <DimensionBars
-        scores={{ strategy: 72, value: 63, data: 38, technology: 75, people: 56, governance: 62 }}
-        showBand={false}
-        className="mt-6 space-y-3"
-      />
+      </ul>
+      <Link href="/radar" className="block px-3 pt-1 pb-2 text-sm font-medium text-radar-300 hover:text-radar-200">
+        All top stories →
+      </Link>
     </div>
   );
 }
@@ -459,23 +290,23 @@ function RadarVisual() {
 function WorkspacePreview() {
   const rows = [
     { name: "Invoice exception triage", stage: "Production", platform: "Claude", value: "$412K / yr", w: "92%" },
-    { name: "Sales call summarization", stage: "Pilot", platform: "Copilot", value: "$186K / yr", w: "71%" },
+    { name: "Sales call summaries", stage: "Pilot", platform: "Copilot", value: "$186K / yr", w: "71%" },
     { name: "Supplier risk monitoring", stage: "Building", platform: "OpenAI", value: "$240K / yr", w: "64%" },
-    { name: "Maintenance knowledge assistant", stage: "Evaluating", platform: "Gemini", value: "$95K / yr", w: "48%" },
+    { name: "Maintenance assistant", stage: "Evaluating", platform: "Gemini", value: "$95K / yr", w: "48%" },
   ];
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/60" aria-hidden>
+    <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/60" aria-hidden>
       <div className="flex items-center gap-2 text-xs text-slate-500">
-        <Gauge className="size-4 text-radar-600" /> Example company · AI portfolio
+        <Gauge className="size-4 text-radar-600" /> Example company
       </div>
-      <div className="mt-4 grid grid-cols-3 gap-3">
+      <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
         {[
-          ["Active initiatives", "14"],
-          ["Value delivered", "$1.2M"],
-          ["Hours saved / yr", "18,400"],
+          ["Projects", "14"],
+          ["Value / yr", "$1.2M"],
+          ["Hours / yr", "18,400"],
         ].map(([label, value]) => (
-          <div key={label} className="rounded-lg bg-slate-50 p-3">
-            <div className="text-[10px] font-medium uppercase tracking-wide text-slate-500">{label}</div>
+          <div key={label} className="min-w-0 rounded-lg bg-slate-50 p-3">
+            <div className="truncate text-[10px] font-medium uppercase tracking-wide text-slate-500">{label}</div>
             <div className="mt-0.5 text-lg font-semibold text-slate-900 tabular-nums">{value}</div>
           </div>
         ))}
@@ -492,13 +323,13 @@ function WorkspacePreview() {
             </div>
             <span className="hidden rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600 sm:inline">{r.stage}</span>
             <span className="hidden rounded-md bg-radar-50 px-1.5 py-0.5 text-[11px] text-radar-800 sm:inline">{r.platform}</span>
-            <span className="w-20 text-right text-xs font-medium text-slate-700 tabular-nums">{r.value}</span>
+            <span className="w-20 shrink-0 text-right text-xs font-medium text-slate-700 tabular-nums">{r.value}</span>
           </div>
         ))}
       </div>
       <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
         <Bell className="mt-0.5 size-3.5 shrink-0" />
-        Radar alert: a pricing change from a vendor you use affects 2 initiatives.
+        A vendor you use changed its pricing. 2 projects affected.
       </div>
     </div>
   );

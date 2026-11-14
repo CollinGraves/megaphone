@@ -65,7 +65,7 @@ export async function submitIntakeIdea(_prev: ActionState, form: FormData): Prom
     countRecentIdeas(org.id, { channel: "intake_link" }),
   ]);
   if (mine >= INTAKE_DAILY_LIMIT_PER_EMAIL)
-    return { error: `You’ve already submitted ${INTAKE_DAILY_LIMIT_PER_EMAIL} ideas today — thank you! Please come back tomorrow to share more.` };
+    return { error: `You’ve already sent ${INTAKE_DAILY_LIMIT_PER_EMAIL} ideas today. Thank you! Please come back tomorrow for more.` };
   if (everyone >= INTAKE_DAILY_LIMIT_PER_ORG) return { error: "The AI team has received a lot of ideas today. Please try again tomorrow." };
 
   // Signed in with the same address? Link the idea to the account so it shows up under "My ideas".

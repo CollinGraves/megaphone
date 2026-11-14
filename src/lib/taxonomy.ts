@@ -160,7 +160,7 @@ export const ORG_ROLES = [
 ] as const;
 
 export const labelFrom = (list: readonly { slug: string; label: string }[], slug: string | null | undefined) =>
-  list.find((o) => o.slug === slug)?.label ?? slug ?? "—";
+  list.find((o) => o.slug === slug)?.label ?? slug ?? "–";
 
 /* ───────────────────────────── Governance ───────────────────────────── */
 

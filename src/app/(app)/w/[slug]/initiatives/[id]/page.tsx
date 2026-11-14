@@ -360,7 +360,7 @@ function Detail({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="grid grid-cols-[8.5rem_1fr] gap-3">
       <dt className="text-slate-500">{label}</dt>
-      <dd className={cn("min-w-0", empty ? "text-slate-400" : "text-slate-900")}>{empty ? "—" : children}</dd>
+      <dd className={cn("min-w-0", empty ? "text-slate-400" : "text-slate-900")}>{empty ? "–" : children}</dd>
     </div>
   );
 }

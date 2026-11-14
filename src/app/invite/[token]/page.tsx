@@ -67,7 +67,7 @@ export default async function InvitePage({ params }: PageProps<"/invite/[token]"
   const intro = (
     <p>
       You’ve been invited to join <strong className="text-slate-900">{org.name}</strong> on {BRAND} as{" "}
-      <strong className="text-slate-900">{role.toLowerCase()}</strong> — the single source of truth for the company’s AI initiatives.
+      <strong className="text-slate-900">{role.toLowerCase()}</strong>. It’s where the company tracks its AI initiatives.
     </p>
   );
 

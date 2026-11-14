@@ -137,8 +137,8 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
                       </Link>
                       <div className="text-xs text-slate-500">{c.domain}</div>
                     </Td>
-                    <Td>{c.sizeRange ?? "—"}</Td>
-                    <Td className="max-w-48 truncate">{c.industry ?? "—"}</Td>
+                    <Td>{c.sizeRange ?? "–"}</Td>
+                    <Td className="max-w-48 truncate">{c.industry ?? "–"}</Td>
                     <Td className="text-right tabular-nums">{users}</Td>
                     <Td>
                       {lead ? (
@@ -147,14 +147,14 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
                           <span className="truncate text-sm">{lead.name}</span>
                         </Link>
                       ) : (
-                        "—"
+                        "–"
                       )}
                     </Td>
                     <Td className="text-right tabular-nums">{contacts}</Td>
                     <Td>
                       <EnrichmentBadge status={c.enrichmentStatus} />
                     </Td>
-                    <Td className="whitespace-nowrap text-slate-500">{lastSignup ? timeAgo(lastSignup) : "—"}</Td>
+                    <Td className="whitespace-nowrap text-slate-500">{lastSignup ? timeAgo(lastSignup) : "–"}</Td>
                   </tr>
                 );
               })}

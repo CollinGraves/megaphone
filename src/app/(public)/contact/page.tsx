@@ -26,17 +26,17 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
   return (
     <div className="mx-auto grid max-w-6xl gap-12 px-4 py-14 sm:px-6 lg:grid-cols-2">
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Turn AI news into business results</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Talk to North Labs</h1>
         <p className="mt-3 text-slate-600">
-          North Labs works with leadership teams to decide where AI should go first, build it on the right platform, and
-          prove the impact. Our clients run their entire AI portfolio in an {BRAND} Workspace.
+          We help mid-market companies pick the right AI projects, build them and measure what they return. Our clients run
+          their AI work in {BRAND}.
         </p>
         <ul className="mt-8 space-y-4">
           {[
-            ["AI opportunity assessment", "A prioritized list of initiatives scored on value, feasibility and risk."],
-            ["Platform-neutral delivery", "Claude, OpenAI, Copilot, Gemini or open-source models — whatever fits the problem."],
-            ["Measured impact", "Hours saved, cost reduced and revenue generated, tracked month by month."],
-            ["Data readiness", "A map of every system and dataset your initiatives depend on, and what's blocking access."],
+            ["Where to start", "A ranked list of projects, scored on value, effort and risk."],
+            ["Any platform", "Claude, OpenAI, Copilot, Gemini or open source. Whatever fits."],
+            ["Measured results", "Hours saved, costs cut and revenue added, tracked monthly."],
+            ["Data access", "Which systems each project needs, and what's blocking access."],
           ].map(([title, body]) => (
             <li key={title} className="flex gap-3">
               <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-radar-600" />

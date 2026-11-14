@@ -10,11 +10,11 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl()),
   title: {
-    default: `${BRAND} — the AI news that matters to your business`,
+    default: `${BRAND}: AI news that affects your company`,
     template: `%s · ${BRAND}`,
   },
   description:
-    `${BRAND} tracks hundreds of sources across the AI ecosystem and delivers the announcements that matter to you — model releases, pricing changes, regulation and more. By North Labs.`,
+    `AI news filtered to your industry and the tools your company runs. Model releases, price changes, retirements and regulation. Free, from North Labs.`,
   openGraph: { siteName: `${BRAND} by North Labs`, type: "website" },
 };
 

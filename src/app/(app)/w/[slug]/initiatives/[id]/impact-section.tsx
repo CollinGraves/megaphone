@@ -38,12 +38,12 @@ export function ImpactSection({
         description={`Estimated vs. actual, annualized. Hours are valued at each metric's rate or the workspace default (${formatUsd(org.defaultHourlyRate)}/h).`}
       />
       <div className="grid grid-cols-2 gap-px border-b border-slate-100 bg-slate-100 sm:grid-cols-4">
-        <Kpi label="Estimated / yr" value={rollup.hasEstimate ? formatUsd(rollup.estimatedAnnualUsd, true) : "—"} />
-        <Kpi label="Actual run-rate / yr" value={rollup.hasActuals ? formatUsd(rollup.actualRunRateUsd, true) : "—"} accent />
-        <Kpi label="Realized, last 12 mo" value={rollup.hasActuals ? formatUsd(rollup.actualTrailing12Usd, true) : "—"} />
+        <Kpi label="Estimated / yr" value={rollup.hasEstimate ? formatUsd(rollup.estimatedAnnualUsd, true) : "–"} />
+        <Kpi label="Actual run-rate / yr" value={rollup.hasActuals ? formatUsd(rollup.actualRunRateUsd, true) : "–"} accent />
+        <Kpi label="Realized, last 12 mo" value={rollup.hasActuals ? formatUsd(rollup.actualTrailing12Usd, true) : "–"} />
         <Kpi
           label="First-year ROI"
-          value={roiActual != null ? formatPct(roiActual) : roiEstimated != null ? formatPct(roiEstimated) : "—"}
+          value={roiActual != null ? formatPct(roiActual) : roiEstimated != null ? formatPct(roiEstimated) : "–"}
           hint={cost == null ? "add costs" : roiActual != null ? "on actuals" : roiEstimated != null ? "projected" : undefined}
         />
       </div>
@@ -51,7 +51,7 @@ export function ImpactSection({
       {metrics.length === 0 ? (
         <CardBody>
           <p className="text-sm text-slate-500">
-            No impact metrics yet.{canEdit ? " Add the value you expect — hours saved, cost avoided, revenue — then record actuals monthly." : ""}
+            No impact metrics yet.{canEdit ? " Add the value you expect (hours saved, cost avoided, revenue), then record actuals each month." : ""}
           </p>
         </CardBody>
       ) : (
@@ -80,7 +80,7 @@ export function ImpactSection({
                       {mi.estimatedAnnualUsd != null ? formatUsd(mi.estimatedAnnualUsd, true) : formatMetricValue(mi.estimatedAnnual, m.unit)}
                     </dd>
                     <dd className="text-sm font-semibold tabular-nums text-slate-900">
-                      {mi.actuals ? (mi.actualRunRateUsd != null ? formatUsd(mi.actualRunRateUsd, true) : formatMetricValue(mi.actuals.runRate, m.unit)) : "—"}
+                      {mi.actuals ? (mi.actualRunRateUsd != null ? formatUsd(mi.actualRunRateUsd, true) : formatMetricValue(mi.actuals.runRate, m.unit)) : "–"}
                     </dd>
                   </dl>
                 </div>

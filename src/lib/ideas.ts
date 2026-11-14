@@ -225,7 +225,7 @@ export function ideaToInitiativeDefaults(idea: IdeaForConversion) {
           assumptions:
             `From the idea submission: ${fmt(Math.min(idea.hoursPerWeek!, MAX_HOURS_PER_WEEK))} h/week × ${fmt(positive(idea.peopleAffected) ?? 1)} ` +
             `${positive(idea.peopleAffected) ? "people" : "person (not specified)"} × ${WEEKS_PER_YEAR} weeks ≈ ${fmt(annualHours)} h/yr spent today; ` +
-            `assumes AI saves ${Math.round(DEFAULT_TIME_SAVED_SHARE * 100)}% of that. Submitter's estimate — validate during evaluation.`,
+            `assumes AI saves ${Math.round(DEFAULT_TIME_SAVED_SHARE * 100)}% of that. Submitter's estimate, so check it during evaluation.`,
         }
       : null;
 

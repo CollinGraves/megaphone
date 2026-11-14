@@ -184,11 +184,11 @@ export default async function LeadsPage({ searchParams }: PageProps<"/admin/lead
                       <LeadStatusBadge status={lead.status} />
                     </Td>
                     <Td className="max-w-56">
-                      <div className="truncate">{lead.company ?? <span className="text-slate-400">—</span>}</div>
+                      <div className="truncate">{lead.company ?? <span className="text-slate-400">–</span>}</div>
                       {lead.companySize ? <div className="text-xs text-slate-500">{lead.companySize} employees</div> : null}
                     </Td>
                     <Td className="hidden lg:table-cell">
-                      {lead.industry ? industryLabel(lead.industry) : <span className="text-slate-400">—</span>}
+                      {lead.industry ? industryLabel(lead.industry) : <span className="text-slate-400">–</span>}
                     </Td>
                     <Td className="hidden max-w-64 xl:table-cell">
                       {interests.length ? (
@@ -199,11 +199,11 @@ export default async function LeadsPage({ searchParams }: PageProps<"/admin/lead
                           {interests.length > 3 ? <Badge>+{interests.length - 3}</Badge> : null}
                         </div>
                       ) : (
-                        <span className="text-slate-400">—</span>
+                        <span className="text-slate-400">–</span>
                       )}
                     </Td>
                     <Td className="whitespace-nowrap text-slate-500">
-                      {lead.lastActivityAt ? timeAgo(lead.lastActivityAt) : "—"}
+                      {lead.lastActivityAt ? timeAgo(lead.lastActivityAt) : "–"}
                     </Td>
                     <Td className="hidden whitespace-nowrap md:table-cell">
                       {lead.ownerName ?? <span className="text-slate-400">Unassigned</span>}

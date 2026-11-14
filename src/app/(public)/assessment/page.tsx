@@ -23,7 +23,7 @@ import { BRAND } from "@/lib/brand";
 export const metadata: Metadata = {
   title: "Free AI readiness assessment",
   description:
-    "A 5-minute assessment for business leaders. Score your company's AI readiness across strategy, use cases, data, technology, people and governance, and get a prioritized plan.",
+    "A free 5-minute AI readiness score for your company: strategy, use cases, data, technology, people and governance, plus where to start.",
   alternates: { canonical: "/assessment" },
 };
 
@@ -67,8 +67,7 @@ export default async function AssessmentLandingPage({ searchParams }: PageProps<
             </div>
             <h1 className="mt-6 text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">How ready is your company for AI?</h1>
             <p className="mt-6 max-w-xl text-lg text-slate-300">
-              Answer {QUESTIONS.length} questions across six dimensions and get a scored readiness report: where you stand,
-              what&apos;s holding you back, and the first initiatives worth pursuing.
+              {QUESTIONS.length} questions. You get a score in six areas, your biggest gaps and the first projects worth doing.
             </p>
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
               <ButtonLink href={startHref} variant="accent" size="lg">
@@ -83,7 +82,6 @@ export default async function AssessmentLandingPage({ searchParams }: PageProps<
                 </span>
               </div>
             </div>
-            <p className="mt-6 text-sm text-slate-400">Built by North Labs, AI consultants to operating teams.</p>
           </div>
           <ExampleReport />
         </div>
@@ -92,11 +90,8 @@ export default async function AssessmentLandingPage({ searchParams }: PageProps<
       {/* What we assess */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
         <div className="max-w-2xl">
-          <h2 className="text-3xl font-semibold tracking-tight text-slate-900">Six dimensions of AI readiness</h2>
-          <p className="mt-3 text-slate-600">
-            Companies rarely stall on the technology alone. The assessment looks at everything an AI initiative needs to reach
-            production and pay off.
-          </p>
+          <h2 className="text-3xl font-semibold tracking-tight text-slate-900">What it scores</h2>
+          <p className="mt-3 text-slate-600">AI projects rarely stall on the technology. These six areas decide whether they pay off.</p>
         </div>
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {DIMENSIONS.map((d) => {
@@ -122,18 +117,18 @@ export default async function AssessmentLandingPage({ searchParams }: PageProps<
             {[
               {
                 icon: BarChart3,
-                title: "A scored readiness report",
-                body: "An overall score, your maturity level and a 0–100 score for each dimension, shown instantly.",
+                title: "A score",
+                body: "Overall and for each area, 0 to 100, on screen as soon as you finish.",
               },
               {
                 icon: Lightbulb,
-                title: "Gaps and next steps",
-                body: "Your weakest areas, explained in plain language, with concrete next steps for each one.",
+                title: "Your gaps",
+                body: "Your weakest areas in plain language, each with a next step.",
               },
               {
                 icon: FolderKanban,
-                title: "A free starter AI portfolio",
-                body: `Suggested initiatives for the functions you care about, ready to load into a free workspace (up to ${TRIAL_INITIATIVE_LIMIT} initiatives).`,
+                title: "A starter list",
+                body: `Projects for the teams you pick, ready to load into a free workspace (up to ${TRIAL_INITIATIVE_LIMIT}).`,
               },
             ].map(({ icon: Icon, title, body }) => (
               <div key={title}>
@@ -149,7 +144,7 @@ export default async function AssessmentLandingPage({ searchParams }: PageProps<
       {/* Maturity levels */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
         <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Four levels of AI maturity</h2>
-        <p className="mt-2 max-w-2xl text-slate-600">Your overall score places you on one of four levels, each with a different focus.</p>
+        <p className="mt-2 max-w-2xl text-slate-600">Your score puts you at one of four levels.</p>
         <ol className="mt-8 grid gap-4 md:grid-cols-4">
           {LEVELS.map((l, i) => (
             <li key={l.id} className="rounded-xl border border-slate-200 bg-white p-5">
@@ -200,23 +195,23 @@ export default async function AssessmentLandingPage({ searchParams }: PageProps<
 const FAQ = [
   {
     q: "Who is this for?",
-    a: "Business and technology leaders who want an honest view of how prepared their company is to get value from AI, whether you're just starting or already running AI in production.",
+    a: "Leaders who want an honest read on their company's AI readiness, whether you're just starting or already running AI in production.",
   },
   {
     q: "Is it really free?",
-    a: `Yes. Your overall score and dimension scores appear as soon as you finish. To see the full report with recommendations and starter initiatives, create a free ${BRAND} account with your work email.`,
+    a: `Yes. Your scores show as soon as you finish. The full report with next steps and a starter list needs a free ${BRAND} account.`,
   },
   {
     q: "How is my score calculated?",
-    a: "Each answer scores 0 to 4. Each dimension's score is the average of its answers on a 0–100 scale, and your overall score is the average of the six dimensions. Recommendations are based on which dimensions score lowest.",
+    a: "Each answer scores 0 to 4. An area's score is the average of its answers, scaled to 100. Your overall score is the average of the six areas. Advice targets your lowest areas.",
   },
   {
     q: "What happens to my answers?",
-    a: "Your answers are stored with your report so you can come back to it. North Labs may use them to understand how we can help, and may reach out. We never sell your information.",
+    a: "They're saved with your report so you can come back to it. North Labs may use them to see how we could help, and may get in touch. We don't sell your data.",
   },
   {
     q: "Who is North Labs?",
-    a: "North Labs is an AI consultancy that helps companies decide where AI should go first, build it on the right platform, and measure the impact.",
+    a: "An AI consultancy for mid-market companies. We help decide what to build first, build it and measure the results.",
   },
 ];
 

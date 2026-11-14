@@ -342,7 +342,7 @@ export default async function WorkspaceDetailPage({ params }: PageProps<"/admin/
                   <dt className="text-slate-500">Plan</dt>
                   <dd className="text-slate-900">{PLAN_LABELS[org.plan]}</dd>
                   <dt className="text-slate-500">Industry</dt>
-                  <dd className="text-slate-900">{org.industry ? industryLabel(org.industry) : "—"}</dd>
+                  <dd className="text-slate-900">{org.industry ? industryLabel(org.industry) : "–"}</dd>
                   <dt className="text-slate-500">Hourly rate</dt>
                   <dd className="text-slate-900">{formatUsd(org.defaultHourlyRate)}</dd>
                 </dl>

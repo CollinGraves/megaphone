@@ -49,7 +49,7 @@ export function AlertList({
                   <Link href={`/w/${slug}/initiatives/${a.initiativeId}`} className="font-medium text-slate-800 hover:underline">
                     {a.initiativeTitle}
                   </Link>
-                  {" — "}
+                  {": "}
                 </>
               ) : null}
               {a.reason}

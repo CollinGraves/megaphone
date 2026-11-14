@@ -90,7 +90,7 @@ async function applyClassification(ctx: WorkspaceContext, initiative: Initiative
   revalidateWorkspace(ctx.org.slug);
   return {
     ok: true,
-    message: reopen ? "Classification saved. The previous decision no longer applies — request a new review." : "Classification saved.",
+    message: reopen ? "Classification saved. The previous decision no longer applies, so request a new review." : "Classification saved.",
   };
 }
 
