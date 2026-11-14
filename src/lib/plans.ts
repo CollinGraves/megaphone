@@ -42,70 +42,70 @@ export const PLANS = {
   free: {
     id: "free",
     name: "Free",
-    tagline: "Up to 5 projects. Free for good.",
+    tagline: "Track up to 5 AI projects. Free for good.",
     initiativeLimit: 5,
     briefsPerMonth: 3,
     features: [],
     monthlyPrice: 0,
     annualPrice: 0,
     highlights: [
-      "Up to 5 initiatives",
-      "3 AI build briefs / month",
-      "Impact tracking and prioritization",
-      "Systems & data dependencies",
-      "Radar alerts for your stack",
-      "In-app idea submissions",
-      "Unlimited teammates",
+      "Track up to 5 AI projects",
+      "3 AI build plans a month",
+      "Rank projects and track hours and dollars saved",
+      "List the data each project needs",
+      "News alerts for the AI tools you use",
+      "Your team can send in ideas",
+      "Invite as many people as you like",
     ],
   },
   team: {
     id: "team",
     name: "Team",
-    tagline: "Up to 25 projects, plus company-wide idea intake.",
+    tagline: "Up to 25 AI projects, plus an idea link for your whole company.",
     initiativeLimit: 25,
     briefsPerMonth: 15,
     features: ["intake_link", "export_csv", "mcp_workspace"],
     monthlyPrice: 399,
     annualPrice: 3990,
     highlights: [
-      "Up to 25 initiatives",
-      "15 AI build briefs / month",
-      "Everything in Free",
-      "Company-wide idea intake link",
-      "Portfolio CSV export",
-      "Use from Claude, Cursor & ChatGPT (MCP)",
+      "Track up to 25 AI projects",
+      "15 AI build plans a month",
+      "Everything in the Free plan",
+      "A link anyone at your company can use to send ideas",
+      "Download your project list as a spreadsheet",
+      "Ask Claude or ChatGPT about your projects",
     ],
   },
   business: {
     id: "business",
     name: "Business",
-    tagline: "Unlimited projects, approvals and an audit trail.",
+    tagline: "Unlimited AI projects, plus approvals and a record of every decision.",
     initiativeLimit: null,
     briefsPerMonth: 60,
     features: ALL,
     monthlyPrice: 999,
     annualPrice: 9990,
     highlights: [
-      "Unlimited initiatives",
-      "60 AI build briefs / month",
-      "Everything in Team",
-      "Governance approvals & review reminders",
-      "Approval gate before pilot / production",
-      "AI use-case inventory export for auditors",
+      "Unlimited AI projects",
+      "60 AI build plans a month",
+      "Everything in the Team plan",
+      "Approvals and safety checks, with reminders",
+      "Require approval before a test or launch",
+      "A list of every AI tool, ready for auditors",
       "Departments with their own leads",
-      "MCP write access",
+      "Add ideas and results from Claude or ChatGPT",
     ],
   },
   managed: {
     id: "managed",
     name: "Managed by North Labs",
-    tagline: "We run it with your team.",
+    tagline: "North Labs runs it with your team.",
     initiativeLimit: null,
     briefsPerMonth: null,
     features: ALL,
     monthlyPrice: null,
     annualPrice: null,
-    highlights: ["Everything in Business", "North Labs team in your workspace", "Guided launch, quarterly reviews, delivery help"],
+    highlights: ["Everything in the Business plan", "North Labs experts work in your workspace", "Help to launch, reviews every quarter, help building"],
   },
 } as const satisfies Record<string, PlanDefinition>;
 
@@ -140,7 +140,7 @@ export function initiativeCapMessage(dbPlan: DbPlan | string, activeCount: numbe
   if (limit == null || activeCount < limit) return null;
   const plan = planFor(dbPlan);
   const next = plan.id === "free" ? PLANS.team : PLANS.business;
-  return `The ${plan.name} plan includes up to ${limit} initiatives. Upgrade to ${next.name} to add more, or archive one you no longer need.`;
+  return `The ${plan.name} plan includes up to ${limit} initiatives. Upgrade to the ${next.name} plan to add more, or archive one you no longer need.`;
 }
 
 /** Monthly-equivalent price for display. */
@@ -191,19 +191,19 @@ export function nextPlan(dbPlan: DbPlan | string): PlanDefinition | null {
 }
 
 export const FEATURE_LABELS: Record<Feature, { name: string; description: string }> = {
-  intake_link: { name: "Company-wide idea intake link", description: "A shareable link anyone at your company can use to submit AI ideas, no account needed." },
-  export_csv: { name: "Portfolio CSV export", description: "Download the prioritized portfolio with impact, costs and data dependencies." },
-  mcp_workspace: { name: "Workspace tools over MCP", description: "Query initiatives, ideas and impact from Claude, Cursor or ChatGPT." },
-  mcp_write: { name: "MCP write access", description: "Submit ideas and record impact from your AI assistant." },
-  governance_workflow: { name: "Governance approvals", description: "Review requests, approvals, an approval gate before pilot / production and review reminders." },
-  governance_export: { name: "AI use-case inventory export", description: "An auditor-ready CSV of every AI use case, its risk tier, oversight and approval." },
-  departments: { name: "Departments", description: "Give Finance, Sales and other teams their own members, leads, initiatives, ideas and radar." },
+  intake_link: { name: "Idea link for the whole company", description: "A link anyone at your company can use to send in AI ideas. They don't need an account." },
+  export_csv: { name: "Spreadsheet download", description: "Download every AI project, with its value, costs and data needs, as a CSV file." },
+  mcp_workspace: { name: "Ask your AI tools", description: "Ask Claude, Cursor or ChatGPT about your AI projects, ideas and results. Uses MCP, a standard way to connect AI tools." },
+  mcp_write: { name: "Update from your AI tools", description: "Send in ideas and record results from Claude, Cursor or ChatGPT." },
+  governance_workflow: { name: "Approvals and safety checks", description: "Ask for a review, then approve or reject it. Require approval before a test or launch, and get reminders when reviews are due." },
+  governance_export: { name: "AI tool list for auditors", description: "A spreadsheet of every AI tool you use: how risky it is, who checks it and whether it was approved." },
+  departments: { name: "Departments", description: "Give Finance, Sales and other teams their own people, leads, AI projects, ideas and news." },
 };
 
 /** User-facing error when a server action needs a feature the workspace's plan doesn't include. */
 export function featureGateMessage(dbPlan: DbPlan | string, feature: Feature): string {
   const needed = planForFeature(feature);
-  return `${FEATURE_LABELS[feature].name} is available on the ${needed.name} plan and above. This workspace is on ${planFor(dbPlan).name}; an owner or admin can upgrade in Plan & billing.`;
+  return `${FEATURE_LABELS[feature].name} comes with the ${needed.name} plan and up. This workspace has the ${planFor(dbPlan).name} plan. An owner or admin can upgrade in Plan & billing.`;
 }
 
 /** Briefs allowed per rolling 30 days, or null for unlimited. */

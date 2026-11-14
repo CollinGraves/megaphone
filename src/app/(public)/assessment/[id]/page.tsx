@@ -97,7 +97,7 @@ export default async function AssessmentReportPage({ params, searchParams }: Pag
         <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
           {/* Dimension breakdown */}
           <Card className="min-w-0">
-            <CardHeader title="Scores by dimension" description="Each dimension is scored 0–100 from your answers." />
+            <CardHeader title="Scores for each area" description="Each area gets a score from 0 to 100, based on your answers." />
             <CardBody>
               <DimensionBars
                 scores={assessment.scores}
@@ -155,8 +155,8 @@ export default async function AssessmentReportPage({ params, searchParams }: Pag
           </h2>
           {recs.priorities.length === 0 ? (
             <p className="mt-3 text-slate-600">
-              No dimension scored below 70. Keep compounding: expand to more functions, automate end-to-end workflows and
-              re-prioritize your portfolio as models and prices change.
+              Every area scored 70 or higher. Keep building: bring AI to more teams, automate whole tasks from start to finish, and
+              re-rank your AI projects as tools and prices change.
             </p>
           ) : (
             <>
@@ -215,11 +215,11 @@ export default async function AssessmentReportPage({ params, searchParams }: Pag
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <h2 id="starters" className="text-2xl font-semibold tracking-tight text-slate-900">
-                Suggested starter initiatives
+                AI projects to start with
               </h2>
               <p className="mt-2 text-slate-600">
                 Matched to {context ? context.functions.map(functionLabel).join(", ") : "your focus areas"} and your readiness level.
-                Scores are starting points on a 1–5 scale; adjust them to your situation.
+                Each score is a starting guess on a 1–5 scale. Change it to fit your company.
               </p>
             </div>
           </div>
@@ -232,8 +232,8 @@ export default async function AssessmentReportPage({ params, searchParams }: Pag
                   <div className="font-semibold text-slate-900">{org ? "Your free AI portfolio is ready" : "Turn these into your AI portfolio"}</div>
                   <p className="text-sm text-slate-600">
                     {org
-                      ? `Prioritize, score and track these initiatives in ${org.name}.`
-                      : `Create a free workspace pre-filled with these initiatives, ranked by value, feasibility, alignment and risk. Free workspaces hold up to ${TRIAL_INITIATIVE_LIMIT} initiatives.`}
+                      ? `Add these AI projects to ${org.name}, where you can rank and track them.`
+                      : `Make a free workspace with these AI projects already added and ranked by value, effort, fit and risk. The Free plan holds up to ${TRIAL_INITIATIVE_LIMIT} AI projects.`}
                   </p>
                 </div>
               </div>
@@ -251,7 +251,7 @@ export default async function AssessmentReportPage({ params, searchParams }: Pag
                 ) : isOwner && templates.length ? (
                   <ActionForm action={createStarterWorkspace} className="space-y-2">
                     <input type="hidden" name="assessmentId" value={assessment.id} />
-                    <SubmitButton pendingText="Creating your portfolio…">
+                    <SubmitButton pendingText="Creating your workspace…">
                       <Sparkles className="size-4" aria-hidden /> Create my free AI portfolio
                     </SubmitButton>
                   </ActionForm>
@@ -273,8 +273,8 @@ export default async function AssessmentReportPage({ params, searchParams }: Pag
             <div>
               <h2 className="text-2xl font-semibold">Talk to North Labs about your results</h2>
               <p className="mt-2 max-w-2xl text-slate-300">
-                A 30-minute conversation with an AI consultant: we&apos;ll walk through your scores, pressure-test the starter
-                initiatives and suggest the fastest route to measurable impact. No obligation.
+                Book a 30-minute call with a North Labs AI expert. We&apos;ll go over your scores, check the AI projects to start
+                with, and suggest the fastest way to see results. There&apos;s no cost and no pressure.
               </p>
             </div>
             <ButtonLink href="/contact?from=assessment" variant="accent" size="lg">

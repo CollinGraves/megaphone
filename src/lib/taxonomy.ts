@@ -6,18 +6,18 @@
 export type Option = { slug: string; label: string; description?: string };
 
 export const CATEGORIES = [
-  { slug: "model_release", label: "Model releases", description: "New models, versions and capability jumps" },
-  { slug: "product_launch", label: "Products & features", description: "New AI products, features and integrations" },
-  { slug: "pricing", label: "Pricing changes", description: "Price cuts, new tiers, licensing changes" },
-  { slug: "deprecation", label: "Deprecations & retirements", description: "Models or APIs being retired or changed" },
-  { slug: "agents", label: "Agents & automation", description: "Agentic tooling, workflow automation, computer use" },
-  { slug: "enterprise", label: "Enterprise adoption", description: "Case studies, deployments, partnerships" },
-  { slug: "regulation", label: "Policy & regulation", description: "Laws, executive orders, compliance frameworks" },
-  { slug: "security", label: "Security & safety", description: "Incidents, vulnerabilities, safety research" },
-  { slug: "research", label: "Research", description: "Papers, benchmarks and technical breakthroughs" },
-  { slug: "open_source", label: "Open source", description: "Open-weight models and open-source tooling" },
-  { slug: "funding", label: "Funding & M&A", description: "Raises, acquisitions and market moves" },
-  { slug: "infrastructure", label: "Chips & infrastructure", description: "GPUs, data centers, cloud capacity" },
+  { slug: "model_release", label: "Model releases", description: "New AI models, new versions and big jumps in what AI can do" },
+  { slug: "product_launch", label: "Products & features", description: "New AI products and features, and new ways to connect them" },
+  { slug: "pricing", label: "Pricing changes", description: "Lower prices, new plans and changes to licenses" },
+  { slug: "deprecation", label: "Deprecations & retirements", description: "AI models or tools being shut down or changed" },
+  { slug: "agents", label: "Agents & automation", description: "AI that does tasks on its own, and tools that automate work" },
+  { slug: "enterprise", label: "Enterprise adoption", description: "How companies use AI, new rollouts and partnerships" },
+  { slug: "regulation", label: "Policy & regulation", description: "Laws, government orders and rules companies must follow" },
+  { slug: "security", label: "Security & safety", description: "Security problems, attacks and research on AI safety" },
+  { slug: "research", label: "Research", description: "New studies, test results and big technical advances" },
+  { slug: "open_source", label: "Open source", description: "Free AI models and tools that anyone can download" },
+  { slug: "funding", label: "Funding & M&A", description: "Money raised, companies bought and other market moves" },
+  { slug: "infrastructure", label: "Chips & infrastructure", description: "AI chips, data centers and cloud computing power" },
 ] as const satisfies readonly Option[];
 
 export const VENDORS = [

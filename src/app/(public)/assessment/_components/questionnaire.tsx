@@ -176,13 +176,13 @@ export function Questionnaire({ source }: { source?: string }) {
       <form onSubmit={onNext} noValidate>
         <div className="scroll-mt-24">
           <div className="text-xs font-semibold uppercase tracking-wide text-radar-700">
-            {step === 0 ? "About your company" : `Dimension ${step} of ${DIMENSIONS.length}`}
+            {step === 0 ? "About your company" : `Area ${step} of ${DIMENSIONS.length}`}
           </div>
           <h1 ref={headingRef} tabIndex={-1} className="mt-1 scroll-mt-24 text-2xl font-semibold tracking-tight text-slate-900 outline-none sm:text-3xl">
             {current.label}
           </h1>
           <p className="mt-2 text-slate-600">
-            {dimension?.description ?? "A little context so we can tailor your recommendations and starter initiatives."}
+            {dimension?.description ?? "A few facts about your company, so we can fit our advice and AI project ideas to you."}
           </p>
         </div>
 
@@ -412,7 +412,7 @@ function ContextStep({ context: c, setContext, showErrors }: { context: Context;
       <Group
         id="ctx-functions"
         label="Where would AI help most?"
-        hint={`Choose up to ${MAX_FUNCTIONS} business functions, most important first.`}
+        hint={`Choose up to ${MAX_FUNCTIONS} teams, most important first.`}
         invalid={showErrors && c.functions.length === 0}
       >
         <div className="flex flex-wrap gap-2">
@@ -433,7 +433,7 @@ function ContextStep({ context: c, setContext, showErrors }: { context: Context;
         </div>
       </Group>
 
-      <Group id="ctx-tools" label="AI tools already in use" hint="Optional. Select any your company uses today, officially or not.">
+      <Group id="ctx-tools" label="AI tools already in use" hint="Optional. Pick any your company uses today, even unofficially.">
         <div className="flex flex-wrap gap-2">
           {AI_TOOLS.map((t) => (
             <Chip key={t.slug} name="tools" checked={c.tools.includes(t.slug)} onChange={() => setContext({ tools: toggle(c.tools, t.slug) })}>

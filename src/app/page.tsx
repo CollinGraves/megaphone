@@ -45,8 +45,8 @@ export default async function HomePage() {
             <div className="min-w-0">
               <h1 className="text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">AI news that affects your company. Nothing else.</h1>
               <p className="mt-5 max-w-lg text-lg text-slate-300">
-                We read {stats.sources > 0 ? formatNumber(stats.sources) : "dozens of"} sources every hour and send you the few stories that touch
-                your industry and the tools you run.
+                Every hour, we read {stats.sources > 0 ? formatNumber(stats.sources) : "dozens of"} AI news sources. We send you only the stories
+                that matter to your company and the tools you use.
               </p>
               <EmailCapture source="hero" dark className="mt-8" />
               <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-400">
@@ -82,15 +82,15 @@ export default async function HomePage() {
               <div className="text-sm font-semibold text-radar-700">For companies</div>
               <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">Track every AI project in one place</h2>
               <p className="mt-3 max-w-lg text-slate-600">
-                Your AI work is spread across ChatGPT, Copilot, Claude and a few custom builds. The workspace shows what each one
-                solves, what it&apos;s worth and what&apos;s blocking it.
+                Most companies use AI in many places, like ChatGPT, Copilot, Claude and tools they built. The {BRAND} Workspace puts every AI
+                project in one list. You see what each one does, what it&apos;s worth and what&apos;s holding it up.
               </p>
               <ul className="mt-8 grid gap-5 sm:grid-cols-2">
                 {[
-                  { icon: ClipboardList, title: "One ranked list", body: "Score ideas on value, effort and risk. Decide what's next." },
-                  { icon: TrendingUp, title: "Impact in dollars", body: "Hours saved and money made, estimated then measured." },
-                  { icon: Hammer, title: "Build plans", body: "Options, data, prompt, tests and tickets for each idea." },
-                  { icon: ShieldCheck, title: "Governance built in", body: "Risk tiers, approvals and review dates on every project." },
+                  { icon: ClipboardList, title: "Know what to do next", body: "Score each project on value, effort and risk. The best ones rise to the top." },
+                  { icon: TrendingUp, title: "See what it's worth", body: "Track the hours and money each project saves, month by month." },
+                  { icon: Hammer, title: "Get a plan to build it", body: "For any idea, get the steps, the data it needs and a to-do list." },
+                  { icon: ShieldCheck, title: "Keep AI safe", body: "Mark how risky each project is. Approve it before it goes live." },
                 ].map(({ icon: Icon, title, body }) => (
                   <li key={title} className="flex gap-3">
                     <Icon className="mt-0.5 size-5 shrink-0 text-radar-600" aria-hidden />
@@ -121,7 +121,7 @@ export default async function HomePage() {
               <ScoreRing score={61} size={88} />
               <div className="min-w-0">
                 <h2 className="text-lg font-semibold text-slate-900">How ready is your company for AI?</h2>
-                <p className="mt-1 text-sm text-slate-600">Sixteen questions. A score, your weakest areas and where to start. No sign-up to see it.</p>
+                <p className="mt-1 text-sm text-slate-600">Answer 16 quick questions. Get a score, see where you&apos;re weakest and learn where to start. No sign-up needed.</p>
                 <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-radar-700 group-hover:underline">
                   Take the assessment <ArrowRight className="size-4" aria-hidden />
                 </span>
@@ -133,7 +133,7 @@ export default async function HomePage() {
               </div>
               <div className="min-w-0">
                 <h2 className="text-lg font-semibold text-slate-900">{SHOW_NAME}</h2>
-                <p className="mt-1 text-sm text-slate-600">The week&apos;s AI news for operators, plus a viewer&apos;s idea built live on air.</p>
+                <p className="mt-1 text-sm text-slate-600">A video show about the week&apos;s AI news for people who run companies. In each episode, we build a viewer&apos;s idea live.</p>
                 <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-radar-700 group-hover:underline">
                   Watch episodes <ArrowRight className="size-4" aria-hidden />
                 </span>
@@ -145,7 +145,7 @@ export default async function HomePage() {
         {/* 5. Pricing teaser */}
         <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">The radar is free. Workspaces start free too.</h2>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">The news radar is free. The Workspace starts free too.</h2>
             <Link href="/pricing" className="text-sm font-medium text-radar-700 hover:underline">
               Compare plans →
             </Link>
@@ -153,7 +153,7 @@ export default async function HomePage() {
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             {[PLANS.free, PLANS.team, PLANS.business].map((p) => (
               <div key={p.name} className="rounded-xl border border-slate-200 bg-white p-5">
-                <div className="font-semibold text-slate-900">{p.name}</div>
+                <div className="font-semibold text-slate-900">{p.name} plan</div>
                 <div className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">
                   {p.monthlyPrice ? `$${formatNumber(p.monthlyPrice)}` : "$0"}
                   <span className="text-sm font-normal text-slate-500">{p.monthlyPrice ? " / month" : ""}</span>
@@ -163,7 +163,11 @@ export default async function HomePage() {
             ))}
           </div>
           <p className="mt-4 text-sm text-slate-500">
-            Want it done for you? North Labs can run it with your team. <Link href="/contact?from=home_pricing" className="text-radar-700 hover:underline">Talk to us</Link>.
+            Want help? North Labs, the company behind {BRAND}, can set up and run your workspace with you.{" "}
+            <Link href="/contact?from=home_pricing" className="text-radar-700 hover:underline">
+              Talk to us
+            </Link>
+            .
           </p>
         </section>
 
@@ -189,8 +193,8 @@ export default async function HomePage() {
         <section className="bg-ink-900">
           <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-14 sm:px-6 md:grid-cols-2">
             <div className="min-w-0">
-              <h2 className="text-2xl font-semibold text-white">Get the radar.</h2>
-              <p className="mt-1 text-slate-300">Takes 30 seconds. Free.</p>
+              <h2 className="text-2xl font-semibold text-white">Get AI news that matters to you.</h2>
+              <p className="mt-1 text-slate-300">It takes 30 seconds, and it&apos;s free.</p>
             </div>
             <EmailCapture source="footer_cta" dark />
           </div>
@@ -204,19 +208,19 @@ export default async function HomePage() {
 const FAQ = [
   {
     q: `Is ${BRAND} free?`,
-    a: "The radar and the email digest are free. Workspaces have a free plan and paid plans for bigger teams. North Labs, an AI consultancy, pays for the free part because it keeps us close to what companies need.",
+    a: "The news radar and the email digest are free. The Workspace has a Free plan, plus paid plans for bigger teams. North Labs, an AI consulting company, pays for the free part. It keeps us close to what companies need.",
   },
   {
     q: "Why a work email?",
-    a: "Your company domain tells us which tools you likely run, so we can flag news that affects them and warn you before a model or product is retired. You can correct the list. We don't sell your data.",
+    a: "Your work email tells us where you work. From that, we can guess which AI tools your company uses. Then we warn you about news that affects them, like a tool shutting down. You can fix the list. We don't sell your data.",
   },
   {
     q: "How often will you email me?",
-    a: "Daily on weekday mornings, weekly on Mondays, or never. Change it any time.",
+    a: "Every weekday morning, once a week on Mondays, or never. You can change it any time.",
   },
   {
     q: "Who is North Labs?",
-    a: `An AI consultancy for mid-market companies. We help decide what to build first, build it and measure the results. Our clients run their AI work in ${BRAND}.`,
+    a: `An AI consulting company for mid-size businesses. We help companies pick what to build first, build it and measure the results. Our clients track their AI work in ${BRAND}.`,
   },
 ];
 

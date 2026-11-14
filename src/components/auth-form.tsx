@@ -67,11 +67,11 @@ export function AuthForm({
   const ssoNewUserUrl = next ? safeNextPath(next, "/onboarding") : `/onboarding?${newUserParams.toString()}`;
   return (
     <Card className="p-6">
-      <h1 className="text-lg font-semibold text-slate-900">{isSignUp ? `Create your free ${BRAND}` : "Welcome back"}</h1>
+      <h1 className="text-lg font-semibold text-slate-900">{isSignUp ? `Get ${BRAND} free` : "Welcome back"}</h1>
       <p className="mt-1 text-sm text-slate-500">
         {isSignUp
-          ? "Use your work email and we'll filter the news to your company's tools and industry."
-          : "Sign in to your feed and workspaces."}
+          ? "Use your work email. We'll pick AI news that fits your company's tools and industry."
+          : "Sign in to see your news and your workspaces."}
       </p>
       <div className="mt-6">
         {errorMessage ? <Alert tone="error" className="mb-3">{errorMessage}</Alert> : null}
@@ -96,7 +96,7 @@ export function AuthForm({
         </Field>
         {isSignUp && kind === "work" ? (
           <p className="-mt-2 flex items-center gap-1.5 text-xs text-radar-700">
-            <CheckCircle2 className="size-3.5" /> We&apos;ll tailor your radar for {guessCompanyName(emailDomain(email))}.
+            <CheckCircle2 className="size-3.5" /> We&apos;ll pick news for {guessCompanyName(emailDomain(email))}.
           </p>
         ) : null}
         {isSignUp && kind === "personal" ? (
@@ -105,10 +105,10 @@ export function AuthForm({
               <AlertTriangle className="mt-0.5 size-4 shrink-0" />
               <div>
                 {requireWorkEmail ? (
-                  <>{BRAND} is for business teams. Please use your work email.</>
+                  <>{BRAND} is made for businesses. Please use your work email.</>
                 ) : (
                   <>
-                    <strong>That looks like a personal address.</strong> A work email lets us filter news to your company&apos;s
+                    <strong>That looks like a personal email.</strong> With a work email, we can pick news for your company&apos;s
                     tools and warn you before they change.
                   </>
                 )}
@@ -143,7 +143,7 @@ export function AuthForm({
           />
         </Field>
         <Button type="submit" className="w-full" disabled={pending || blocked}>
-          {pending ? "Please wait…" : isSignUp ? "Create my free radar" : "Sign in"}
+          {pending ? "Please wait…" : isSignUp ? "Get my free AI news" : "Sign in"}
         </Button>
         {isSignUp ? (
           <p className="text-center text-xs text-slate-500">Free. No card. Unsubscribe any time.</p>

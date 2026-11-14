@@ -48,7 +48,7 @@ export function EmailGate({ claimPath }: { claimPath: string }) {
           <span className="text-radar-700">We&apos;ll tailor the report for {guessCompanyName(emailDomain(email))}.</span>
         ) : kind === "personal" && nudged ? (
           <span className="text-amber-700">
-            Use your company email to get recommendations and Radar alerts tailored to your company&apos;s tools.
+            Use your work email. Then we can give advice and news alerts that fit your company&apos;s tools.
           </span>
         ) : kind === "disposable" ? (
           <span className="text-red-700">Please use a permanent work email.</span>

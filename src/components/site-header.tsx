@@ -16,7 +16,7 @@ export async function SiteHeader({ dark = false }: { dark?: boolean }) {
             Top stories
           </Link>
           <Link href="/assessment?src=nav" className={`${link} hidden whitespace-nowrap lg:inline`}>
-            Readiness score
+            AI readiness check
           </Link>
           <Link href="/show" className={link}>
             Show
@@ -42,7 +42,7 @@ export async function SiteHeader({ dark = false }: { dark?: boolean }) {
                 Sign in
               </Link>
               <ButtonLink href="/sign-up?src=header" variant={dark ? "accent" : "primary"} size="sm">
-                Get the radar
+                Get AI news
               </ButtonLink>
             </>
           )}
@@ -64,7 +64,7 @@ export function SiteFooter() {
             Top stories
           </Link>
           <Link href="/assessment?src=footer" className="hover:text-slate-900">
-            Readiness score
+            AI readiness check
           </Link>
           <Link href="/workspace" className="hover:text-slate-900">
             For companies

@@ -13,7 +13,7 @@ import { PLANS, isManaged, planRank, type BillingInterval, type PlanDefinition }
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: `${BRAND} pricing. Free to start, $399 or $999 a month when you need more. Priced per workspace, not per seat.`,
+  description: `${BRAND} pricing. The news radar is free. The Workspace for tracking your AI projects starts free, then $399 or $999 a month. One price for your whole company.`,
   alternates: { canonical: "/pricing" },
 };
 
@@ -21,28 +21,28 @@ const START_FREE = `/sign-up?src=pricing&next=${encodeURIComponent("/workspaces/
 
 const FAQ: { q: string; a: ReactNode }[] = [
   {
-    q: "Is Free actually free?",
-    a: `Yes. Up to ${PLANS.free.initiativeLimit} active projects, unlimited teammates, no card and no time limit.`,
+    q: "Is the Free plan really free?",
+    a: `Yes. Track up to ${PLANS.free.initiativeLimit} AI projects and invite as many people as you like. No card, and it never runs out.`,
   },
   {
-    q: "Is it per seat?",
-    a: "No. One price per workspace, with as many people as you like. Pay yearly and get two months free.",
+    q: "Do I pay for each person?",
+    a: "No. You pay one price for your company's workspace, no matter how many people use it. Pay for a year at once and get two months free.",
   },
   {
-    q: "Is there a trial?",
-    a: "Yes. Paid plans start with a free trial. Cancel before it ends and you pay nothing.",
+    q: "Can I try a paid plan first?",
+    a: "Yes. The Team plan and the Business plan start with a free trial. Cancel before it ends and you pay nothing.",
   },
   {
-    q: "What if I cancel?",
-    a: "Your data stays. Paid features run to the end of the billing period, then the workspace moves to Free. Projects over the limit stay visible, but you can't add more until you archive some.",
+    q: "What happens if I cancel?",
+    a: `You keep your data. Paid features work until the end of what you paid for. Then your workspace moves to the Free plan. You can still see every project, but you can only add new ones once you're under ${PLANS.free.initiativeLimit}.`,
   },
   {
-    q: "Do I need North Labs?",
-    a: "No. Every plan is self-serve. Hire North Labs only if you want help setting it up or running it.",
+    q: "Do I need North Labs to use it?",
+    a: "No. You can set up and run every plan yourself. Hire North Labs only if you want help.",
   },
   {
     q: "How do I pay?",
-    a: "Card, through Stripe. Owners and admins handle invoices, plan changes and cancellation under Plan & billing. Need a purchase order? Contact us.",
+    a: "By card, through Stripe. Workspace owners and admins can see invoices, change plans or cancel under Plan & billing. Need to pay by purchase order? Contact us.",
   },
 ];
 
@@ -85,7 +85,7 @@ export default async function PricingPage({ searchParams }: PageProps<"/pricing"
         const current = planRank(target.plan) === planRank(plan.id);
         return (
           <ButtonLink href={`/w/${target.slug}/billing?interval=${interval}`} variant={primary} className="w-full">
-            {current ? "Manage your plan" : planRank(target.plan) > planRank(plan.id) ? `Switch to ${plan.name}` : `Upgrade ${target.name}`}
+            {current ? "Manage your plan" : planRank(target.plan) > planRank(plan.id) ? `Switch to the ${plan.name} plan` : `Upgrade ${target.name}`}
           </ButtonLink>
         );
       }
@@ -101,7 +101,10 @@ export default async function PricingPage({ searchParams }: PageProps<"/pricing"
       <section className="mx-auto max-w-7xl px-4 pt-14 pb-10 sm:px-6 sm:pt-20">
         <div className="mx-auto max-w-2xl text-center">
           <h1 className="text-3xl font-semibold tracking-tight text-balance text-slate-900 sm:text-4xl">Pricing</h1>
-          <p className="mt-3 text-slate-600">Start free. Pay per workspace, not per seat. Change or cancel any time.</p>
+          <p className="mt-3 text-slate-600">
+            The AI news radar is always free. The Workspace, where your company tracks its AI projects, starts free too. You pay one price for your
+            whole company, not for each person. Change or cancel any time.
+          </p>
         </div>
 
         <PricingGroup className="mt-10">
@@ -121,7 +124,7 @@ export default async function PricingPage({ searchParams }: PageProps<"/pricing"
           </div>
         </PricingGroup>
         <p className="mt-6 text-center text-sm text-slate-500">
-          USD, before tax. Paid plans start with a free trial.{" "}
+          Prices in US dollars, before tax. The Team plan and the Business plan start with a free trial.{" "}
           <Link href="#compare" className="font-medium text-radar-700 hover:underline">
             Compare every feature
           </Link>
@@ -130,7 +133,7 @@ export default async function PricingPage({ searchParams }: PageProps<"/pricing"
 
       <section id="compare" className="mx-auto max-w-5xl scroll-mt-20 px-4 py-12 sm:px-6">
         <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Compare plans</h2>
-        <p className="mt-1 text-sm text-slate-600">Every plan includes unlimited teammates.</p>
+        <p className="mt-1 text-sm text-slate-600">What you get with the Free plan, the Team plan and the Business plan. Every plan lets you invite as many people as you like.</p>
         <div className="mt-6">
           <FeatureComparison />
         </div>
@@ -141,7 +144,10 @@ export default async function PricingPage({ searchParams }: PageProps<"/pricing"
           <div className="grid gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
             <div>
               <h2 className="text-3xl font-semibold tracking-tight">Want it done for you?</h2>
-              <p className="mt-3 text-slate-300">North Labs built {BRAND}. We can set it up, fill it in and help build what&apos;s on the list. Optional, on any plan.</p>
+              <p className="mt-3 text-slate-300">
+                North Labs built {BRAND}. We can set up your workspace, fill in your AI projects and help you build them. You can add this help to any
+                plan, or skip it.
+              </p>
               <ButtonLink href="/contact?from=pricing" variant="accent" size="lg" className="mt-6">
                 <Handshake className="size-5" /> Talk to North Labs
               </ButtonLink>

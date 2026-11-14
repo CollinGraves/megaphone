@@ -7,7 +7,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { safeNextPath } from "@/lib/safe-redirect";
 import { BRAND } from "@/lib/brand";
 
-export const metadata: Metadata = { title: `Create your free ${BRAND}` };
+export const metadata: Metadata = { title: `Get ${BRAND} free` };
 export const dynamic = "force-dynamic";
 
 const SSO_ERROR = "That sign-in didn't work. If you used a personal account, try your company Google or Microsoft account, or sign up with your work email.";

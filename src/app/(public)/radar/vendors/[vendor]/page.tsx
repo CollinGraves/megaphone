@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: PageProps<"/radar/vendors/[ve
   if (!v) return {};
   return {
     title: `${v.label} AI news`,
-    description: `${v.label} AI news: models, products, pricing and partnerships.`,
+    description: `${v.label} AI news: new models and products, prices and deals.`,
     alternates: { canonical: `/radar/vendors/${v.slug}` },
   };
 }
@@ -30,7 +30,7 @@ export default async function VendorPage({ params, searchParams }: PageProps<"/r
   return (
     <RadarIndex
       title={`${v.label} AI news`}
-      description={`Models, products, pricing and partnerships from ${v.label}, newest first.`}
+      description={`New AI models and products, prices and deals from ${v.label}. Newest first.`}
       stories={stories.slice(0, PAGE_SIZE)}
       hasMore={stories.length > PAGE_SIZE}
       page={page}

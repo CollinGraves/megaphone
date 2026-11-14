@@ -67,7 +67,7 @@ function Price({ plan, interval }: { plan: PlanDefinition; interval: BillingInte
             <span className="font-medium text-radar-700">save {formatUsd(annualSavings(plan.id as "team" | "business"))}</span>
           </>
         ) : (
-          "Billed monthly · per workspace"
+          "Billed monthly · one price for your whole company"
         )}
       </p>
     </div>
@@ -123,16 +123,17 @@ export function PlanCard({
 }
 
 const BASE_ROWS: { label: string; free: ReactNode; team: ReactNode; business: ReactNode }[] = [
-  { label: "AI initiatives", free: "Up to 5", team: "Up to 25", business: "Unlimited" },
-  { label: "Teammates", free: "Unlimited", team: "Unlimited", business: "Unlimited" },
-  { label: "Prioritization & impact tracking", free: true, team: true, business: true },
-  { label: "Systems & data dependencies", free: true, team: true, business: true },
-  { label: "Radar alerts tied to your stack", free: true, team: true, business: true },
-  { label: "In-app idea submissions & triage", free: true, team: true, business: true },
-  { label: "AI use-case register & risk classification", free: true, team: true, business: true },
+  { label: "AI projects you can track", free: "Up to 5", team: "Up to 25", business: "Unlimited" },
+  { label: "AI build plans each month", free: "3", team: "15", business: "60" },
+  { label: "People you can invite", free: "Unlimited", team: "Unlimited", business: "Unlimited" },
+  { label: "Rank projects and track hours and dollars saved", free: true, team: true, business: true },
+  { label: "List the data each project needs", free: true, team: true, business: true },
+  { label: "News alerts for the AI tools you use", free: true, team: true, business: true },
+  { label: "Team members send in ideas, and you sort through them", free: true, team: true, business: true },
+  { label: "A list of every AI tool and how risky it is", free: true, team: true, business: true },
 ];
 
-const FEATURE_ROWS: Feature[] = ["intake_link", "export_csv", "mcp_workspace", "mcp_write", "governance_workflow", "governance_export"];
+const FEATURE_ROWS: Feature[] = ["intake_link", "export_csv", "mcp_workspace", "mcp_write", "governance_workflow", "governance_export", "departments"];
 
 function Cell({ value }: { value: ReactNode }) {
   if (value === true) return <Check className="mx-auto size-4 text-radar-600" aria-label="Included" />;
@@ -190,22 +191,22 @@ export function FeatureComparison() {
 export const SERVICES = [
   {
     name: "Guided Launch",
-    summary: "We set up your workspace with you in a few weeks.",
+    summary: "North Labs sets up your workspace with you in a few weeks.",
     points: [
-      "Portfolio workshop with your leadership team",
-      "Your initiatives scored, sized and prioritized",
-      "Systems, data dependencies and governance policy configured",
-      "Idea intake rolled out to the company",
+      "A working session with your leaders to list every AI project",
+      "Each project scored, sized and ranked",
+      "Your systems, data needs and approval rules set up",
+      "An idea link shared with the whole company",
     ],
   },
   {
     name: "Managed AI office",
-    summary: "North Labs runs the portfolio alongside your team.",
+    summary: "North Labs runs your AI project list with your team.",
     points: [
       "A North Labs team working inside your workspace",
-      "Quarterly portfolio and impact reviews",
-      "Governance reviews and vendor guidance",
-      "Delivery help on the initiatives that matter most",
+      "A review of every project and its results each quarter",
+      "Safety reviews and advice on which AI tools to use",
+      "Help building the projects that matter most",
     ],
   },
 ] as const;

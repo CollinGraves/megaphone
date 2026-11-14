@@ -143,17 +143,17 @@ export default async function StoryPage({ params }: PageProps<"/radar/[slug]">) 
             <div className="rounded-xl bg-ink-900 p-5 text-white">
               <h2 className="font-semibold">Get stories like this by email</h2>
               <p className="mt-1.5 text-sm text-slate-300">
-                Filtered to your industry and the tools your company runs.
+                We pick the stories that matter to your industry and the AI tools your company uses.
               </p>
               <ButtonLink href="/sign-up?src=story_sidebar" variant="accent" className="mt-4 w-full">
-                Get the radar
+                Get AI news by email
               </ButtonLink>
             </div>
           ) : null}
           <div className="rounded-xl border border-slate-200 bg-white p-5">
             <h2 className="font-semibold text-slate-900">What does this mean for you?</h2>
             <p className="mt-1.5 text-sm text-slate-600">
-              North Labs helps companies decide what to build, build it and measure the results.
+              North Labs is an AI consulting company. We help businesses pick what to build with AI, build it and measure the results.
             </p>
             <ButtonLink href={`/contact?from=story&story=${story.slug}`} variant="secondary" className="mt-4 w-full">
               Talk to North Labs

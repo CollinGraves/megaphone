@@ -59,11 +59,11 @@ export function EmailCapture({ source, dark = false, className }: { source: stri
       <p className={cn("mt-2 min-h-5 text-sm", dark ? "text-slate-400" : "text-slate-500")} aria-live="polite">
         {kind === "work" ? (
           <span className={dark ? "text-radar-300" : "text-radar-700"}>
-            We&apos;ll tailor it to {guessCompanyName(emailDomain(email))}.
+            We&apos;ll pick news for {guessCompanyName(emailDomain(email))}.
           </span>
         ) : kind === "personal" && nudged ? (
           <span className={dark ? "text-amber-300" : "text-amber-700"}>
-            A company email lets us track your company&apos;s tools and their deadlines.
+            With a work email, we can warn you about news for your company&apos;s tools.
           </span>
         ) : kind === "disposable" ? (
           <span className={dark ? "text-red-300" : "text-red-700"}>Please use a permanent work email.</span>
