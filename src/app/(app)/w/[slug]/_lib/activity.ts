@@ -146,6 +146,8 @@ export function describeActivity(action: string, detail: Record<string, unknown>
       return `changed a role in ${s(d.department)} to ${s(d.role)}`;
     case "department.member_removed":
       return `removed someone from ${s(d.department)}`;
+    case "settings.monthly_report":
+      return d.on ? "turned on the monthly update email" : "turned off the monthly update email";
     case "onboarding.dismissed":
       return d.complete ? "hid the setup checklist" : `dismissed the setup checklist${typeof d.percent === "number" ? ` at ${d.percent}%` : ""}`;
     case "workspace.created_from_assessment":

@@ -13,7 +13,7 @@ import { INDUSTRIES, ORG_ROLES, industryLabel, labelFrom } from "@/lib/taxonomy"
 import { formatDate, formatUsd, timeAgo } from "@/lib/utils";
 import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { CopyButton, InlineForm } from "../_components/client";
-import { changeRole, decideJoinRequestAction, deleteWorkspaceAction, inviteMember, removeMember, revokeInvitation, updateInsightsSharing, updateProfile, updateWeights } from "./actions";
+import { changeRole, decideJoinRequestAction, deleteWorkspaceAction, updateMonthlyReport, inviteMember, removeMember, revokeInvitation, updateInsightsSharing, updateProfile, updateWeights } from "./actions";
 import { BRAND, BRAND_COMPANY } from "@/lib/brand";
 import { listPendingJoinRequests } from "@/lib/join-requests";
 import { workspaceDeletionBlocker } from "@/lib/deletion";
@@ -200,6 +200,28 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
           </ul>
         </Card>
       ) : null}
+
+      <Card className="mt-6">
+        <CardHeader
+          title="Monthly update email"
+          description="On the 1st of each month, owners and admins get a one-page summary: what went live, what it's worth, what's blocked and what needs approval."
+        />
+        <CardBody className="flex flex-wrap items-center gap-3 text-sm">
+          <Badge tone={org.monthlyReport ? "radar" : "neutral"}>{org.monthlyReport ? "On" : "Off"}</Badge>
+          {canSettings ? (
+            <ActionForm action={updateMonthlyReport} className="space-y-0">
+              <input type="hidden" name="slug" value={org.slug} />
+              <input type="hidden" name="on" value={org.monthlyReport ? "0" : "1"} />
+              <SubmitButton size="sm" variant="secondary">
+                {org.monthlyReport ? "Turn off" : "Turn on"}
+              </SubmitButton>
+            </ActionForm>
+          ) : null}
+          <a href={`/w/${org.slug}/report`} className="text-radar-700 hover:underline">
+            See the latest update
+          </a>
+        </CardBody>
+      </Card>
 
       <Card className="mt-6">
         <CardHeader
