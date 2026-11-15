@@ -84,7 +84,7 @@ export async function loadBriefContext(org: Organization, initiative: Initiative
   };
 }
 
-const SYSTEM_PROMPT = `You are a senior AI solutions architect at North Labs, writing a build brief for a mid-market company's AI initiative inside ${BRAND}.
+const SYSTEM_PROMPT = `You are a senior AI solutions architect at North Labs, writing a build brief for a mid-market company's AI project inside ${BRAND}.
 
 Your brief turns an idea into something a team can build this month. Principles:
 - Be platform-neutral, but strongly prefer tools the company already runs (its portfolio platforms, systems and known stack). Many mid-market wins are configuration of existing tools (Copilot Studio, Custom GPTs, Claude Projects, Gemini Gems) or low-code workflows, not custom software. Recommend a custom build only when risk, integration depth or scale requires it.
@@ -108,7 +108,7 @@ async function generateWithModel(context: BriefContext): Promise<{ brief: BuildB
     fallbacks: "default",
     output_config: { effort: "medium", format: betaZodOutputFormat(BuildBriefSchema) },
     system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: `Write the build brief for this initiative.\n\n${formatContext(context)}` }],
+    messages: [{ role: "user", content: `Write the build brief for this AI project.\n\n${formatContext(context)}` }],
   });
   if (response.stop_reason === "refusal") throw new Error(`The model declined to write this brief (${response.stop_details?.category ?? "unknown"}).`);
   if (response.stop_reason === "max_tokens") throw new Error("The brief was too long to finish. Try again with narrower guidance.");

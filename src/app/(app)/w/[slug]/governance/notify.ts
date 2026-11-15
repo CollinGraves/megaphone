@@ -36,7 +36,7 @@ ${row("Human oversight", i.humanOversight ? labelFrom(HUMAN_OVERSIGHT_LEVELS, i.
 ${row("Most sensitive data", opts.maxSensitivity ? labelFrom(SENSITIVITIES, opts.maxSensitivity) : "No data dependencies")}
 </table>
 ${opts.note ? `<p style="margin:16px 0 0;font-size:14px;line-height:1.5;border-left:3px solid #e2e8f0;padding-left:12px;color:#334155">${escapeHtml(opts.note)}</p>` : ""}
-${button(url, "Review the initiative")}`;
+${button(url, "Review the AI project")}`;
   const text = `${ctx.user.name} asked for an AI governance review of "${i.title}" (${ctx.org.name}). Risk tier: ${labelFrom(RISK_TIERS, i.riskTier)}.${opts.note ? `\nNote: ${opts.note}` : ""}\nReview it: ${url}`;
   const footer = `You're receiving this because you can approve AI governance reviews in ${escapeHtml(ctx.org.name)} on ${BRAND}.`;
   await Promise.allSettled(
@@ -64,7 +64,7 @@ ${row("Decision", status)}
 ${opts.note ? row(noteLabel, opts.note) : ""}
 ${opts.reviewDueOn ? row("Next review due", formatDate(opts.reviewDueOn)) : ""}
 </table>
-${button(url, "Open the initiative")}`;
+${button(url, "Open the AI project")}`;
   const text = `${ctx.user.name} reviewed "${i.title}": ${status}.${opts.note ? `\n${noteLabel}: ${opts.note}` : ""}${opts.reviewDueOn ? `\nNext review due: ${formatDate(opts.reviewDueOn)}` : ""}\n${url}`;
   const res = await sendEmail({ to: requester.email, subject, html: emailLayout({ preheader: subject, body }), text });
   if (res.status === "failed") console.error("[governance] decision email failed", requester.email, res.error);

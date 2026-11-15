@@ -71,7 +71,7 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
 
   return (
     <>
-      <PageHeader eyebrow="Workspace" title="Settings" description="Workspace profile, how initiatives are prioritized, and who has access." />
+      <PageHeader eyebrow="Workspace" title="Settings" description="Workspace profile, how AI projects are prioritized, and who has access." />
       {decided ? (
         <Alert tone="success" className="mb-6">
           {decided === "approved" ? `Request approved. They're now a member${grantedRole ? ` (${grantedRole})` : ""} and we've emailed them.` : "Request declined. We've let them know."}
@@ -134,7 +134,7 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
                     </Field>
                   ))}
                 </div>
-                <p className="text-xs text-slate-500">Changing weights re-ranks every initiative immediately. Manual rank overrides still apply.</p>
+                <p className="text-xs text-slate-500">Changing weights re-ranks every AI project immediately. Manual rank overrides still apply.</p>
                 <SubmitButton size="sm">Save weights</SubmitButton>
               </ActionForm>
             ) : (
@@ -230,8 +230,8 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
         />
         <CardBody className="space-y-3 text-sm text-slate-600">
           <p>
-            Only rounded totals across at least 5 companies are ever shown, such as &ldquo;35% of initiatives are in pilot&rdquo; or
-            &ldquo;Microsoft is used by 60% of companies.&rdquo; Your company name, initiative titles, notes and individual figures are never
+            Only rounded totals across at least 5 companies are ever shown, such as &ldquo;35% of AI projects are in pilot&rdquo; or
+            &ldquo;Microsoft is used by 60% of companies.&rdquo; Your company name, AI project titles, notes and individual figures are never
             shared. You can turn this off at any time.
           </p>
           <div className="flex flex-wrap items-center gap-3">
@@ -407,7 +407,7 @@ export default async function SettingsPage({ params, searchParams }: PageProps<"
 
       {canSettings ? (
         <Card className="mt-6 border-red-200" id="danger-zone">
-          <CardHeader title="Delete this workspace" description="Permanently removes the workspace and everything in it: initiatives, ideas, departments, impact data, activity and API keys. This can't be undone." />
+          <CardHeader title="Delete this workspace" description="Permanently removes the workspace and everything in it: AI projects, ideas, departments, impact data, activity and API keys. This can't be undone." />
           <CardBody>
             {deletionBlocker ? (
               <p className="text-sm text-slate-700">{deletionBlocker}</p>

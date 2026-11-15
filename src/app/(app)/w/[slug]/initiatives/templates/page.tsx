@@ -14,7 +14,7 @@ import { getWorkspaceOrNotFound } from "@/lib/workspace";
 import { ScorePill } from "../../_components/badges";
 import { AddTemplateButton } from "./add-template-button";
 
-export const metadata: Metadata = { title: "Initiative templates" };
+export const metadata: Metadata = { title: "AI project templates" };
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)?.trim() || undefined;
 
@@ -63,16 +63,16 @@ export default async function TemplatesPage({ params, searchParams }: PageProps<
     <>
       <PageHeader
         eyebrow="AI portfolio"
-        title="Initiative templates"
+        title="AI project templates"
         description="Common AI use cases written up the way North Labs scopes them: the problem, typical value drivers, effort and suggested scores. Add one as an idea, then adjust it to your business."
         actions={
           <>
             <ButtonLink href={`${base}/initiatives`} variant="secondary">
-              <ArrowLeft className="size-4" /> Initiatives
+              <ArrowLeft className="size-4" /> AI projects
             </ButtonLink>
             {canWrite ? (
               <ButtonLink href={`${base}/initiatives/new`} variant="secondary">
-                <Plus className="size-4" /> Blank initiative
+                <Plus className="size-4" /> Blank AI project
               </ButtonLink>
             ) : null}
           </>
@@ -129,7 +129,7 @@ export default async function TemplatesPage({ params, searchParams }: PageProps<
         {shown.length} template{shown.length === 1 ? "" : "s"}
         {industry ? ` for ${industryLabel(industry)} (general and industry-specific)` : " across all industries"}
         {addedCount > 0 ? ` · ${addedCount} already in your portfolio` : ""}
-        {limit != null ? ` · ${planFor(ctx.org.plan).name} plan: ${Math.min(activeCount, limit)} of ${limit} initiatives used` : ""}
+        {limit != null ? ` · ${planFor(ctx.org.plan).name} plan: ${Math.min(activeCount, limit)} of ${limit} AI projects used` : ""}
       </p>
 
       {groups.length === 0 ? (

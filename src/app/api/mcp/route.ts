@@ -15,7 +15,7 @@ const handler = createMcpHandler(
     serverInfo: { name: "ai-radar", version: "1.0.0" },
     instructions:
       `${BRAND} by North Labs. Use radar_* tools for curated, deduplicated AI news, the user's company stack and upcoming deadlines. ` +
-      "Use workspace_* tools for the connected company's AI initiative portfolio (priorities, impact, ideas, governance). " +
+      "Use workspace_* tools for the connected company's AI project portfolio (priorities, impact, ideas, governance). " +
       "Workspace tools need a workspace-scoped key; write tools need a read-write key.",
   },
 );

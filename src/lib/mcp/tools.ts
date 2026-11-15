@@ -184,7 +184,7 @@ export function registerRadarTools(server: McpServer) {
     "workspace_portfolio_summary",
     {
       title: "AI portfolio summary",
-      description: "Totals for the connected workspace: initiatives by stage, estimated vs actual annual value, hours saved, ROI, open alerts.",
+      description: "Totals for the connected workspace: AI projects by stage, estimated vs actual annual value, hours saved, ROI, open alerts.",
       inputSchema: z.object({}),
       annotations: READ,
     },
@@ -216,8 +216,8 @@ export function registerRadarTools(server: McpServer) {
   server.registerTool(
     "workspace_list_initiatives",
     {
-      title: "List AI initiatives",
-      description: "The workspace's AI initiatives in priority order, with stage, health, platforms, score and value.",
+      title: "List AI projects",
+      description: "The workspace's AI projects in priority order, with stage, health, platforms, score and value.",
       inputSchema: z.object({
         stage: z.enum(STAGES.map((s) => s.slug) as [string, ...string[]]).optional(),
         search: z.string().max(100).optional(),
@@ -255,15 +255,15 @@ export function registerRadarTools(server: McpServer) {
   server.registerTool(
     "workspace_get_initiative",
     {
-      title: "Get an AI initiative",
-      description: "Everything about one initiative: problem, solution, impact metrics (with metric ids for recording actuals), data dependencies, governance.",
+      title: "Get an AI project",
+      description: "Everything about one AI project: problem, solution, impact metrics (with metric ids for recording actuals), data dependencies, governance.",
       inputSchema: z.object({ id: z.string().min(1).max(64) }),
       annotations: READ,
     },
     withPrincipal(async (a: { id: string }, p) => {
       const ws = requireWorkspace(p, "workspace:view");
       const [i] = await db.select().from(initiatives).where(and(eq(initiatives.id, a.id), eq(initiatives.orgId, ws.org.id))).limit(1);
-      if (!i) return fail("Initiative not found in this workspace.");
+      if (!i) return fail("AI project not found in this workspace.");
       const [metrics, deps] = await Promise.all([
         db.select().from(impactMetrics).where(eq(impactMetrics.initiativeId, i.id)),
         db
@@ -364,7 +364,7 @@ export function registerRadarTools(server: McpServer) {
     {
       title: "Submit an AI idea",
       description:
-        "Submit an idea for an AI initiative to the workspace's AI team for triage. Describe the problem in business terms; include rough time spent today if known.",
+        "Submit an idea for an AI project to the workspace's AI team for triage. Describe the problem in business terms; include rough time spent today if known.",
       inputSchema: z.object({
         title: z.string().min(3).max(150),
         problem: z.string().min(10).max(4000),
@@ -452,7 +452,7 @@ export function registerRadarTools(server: McpServer) {
     "workspace_radar_alerts",
     {
       title: "Radar alerts for the portfolio",
-      description: "Open alerts where AI news (pricing, deprecations, security, regulation…) affects a platform an initiative is built on.",
+      description: "Open alerts where AI news (pricing, deprecations, security, regulation…) affects a platform an AI project is built on.",
       inputSchema: z.object({ limit: z.number().int().min(1).max(50).default(20) }),
       annotations: READ,
     },
@@ -474,7 +474,7 @@ export function registerRadarTools(server: McpServer) {
     "workspace_governance_register",
     {
       title: "AI use-case register",
-      description: "Governance view of every active initiative: risk tier, human oversight, approval status and review dates, plus items needing attention.",
+      description: "Governance view of every active AI project: risk tier, human oversight, approval status and review dates, plus items needing attention.",
       inputSchema: z.object({}),
       annotations: READ,
     },
@@ -517,9 +517,9 @@ export function registerRadarTools(server: McpServer) {
   server.registerTool(
     "workspace_get_build_spec",
     {
-      title: "Get an initiative's build spec",
+      title: "Get an AI project's build spec",
       description:
-        "The latest build brief for an initiative: recommended approach, requirements, data plan, draft system prompt, test cases and developer tickets. Use it as the spec when building the initiative, then report back with workspace_report_progress.",
+        "The latest build brief for an AI project: recommended approach, requirements, data plan, draft system prompt, test cases and developer tickets. Use it as the spec when building the AI project, then report back with workspace_report_progress.",
       inputSchema: z.object({
         initiative_id: z.string().min(1).max(64),
         format: z.enum(["markdown", "json"]).default("markdown").describe("markdown is easiest to follow; json has the structured brief"),
@@ -533,7 +533,7 @@ export function registerRadarTools(server: McpServer) {
         .from(initiatives)
         .where(and(eq(initiatives.id, a.initiative_id), eq(initiatives.orgId, ws.org.id)))
         .limit(1);
-      if (!initiative) return fail("Initiative not found in this workspace.");
+      if (!initiative) return fail("AI project not found in this workspace.");
       const url = `${appUrl()}/w/${ws.org.slug}/initiatives/${initiative.id}/build`;
       const latest = await latestReadyBrief(initiative.id);
       if (!latest) return fail(`No build brief yet for "${initiative.title}". An editor can generate one at ${url}`);
@@ -553,13 +553,13 @@ export function registerRadarTools(server: McpServer) {
     {
       title: "Report build progress",
       description:
-        "Post a progress update on an initiative you're building (shown on its build plan), optionally moving it to a new stage. Stage changes follow the workspace's governance policy, so moving to pilot or production may need an approval first.",
+        "Post a progress update on an AI project you're building (shown on its build plan), optionally moving it to a new stage. Stage changes follow the workspace's governance policy, so moving to pilot or production may need an approval first.",
       inputSchema: z.object({
         initiative_id: z.string().min(1).max(64),
         status: z.enum(["planned", "in_progress", "blocked", "done"]),
         message: z.string().min(3).max(2000).describe("What changed, in a sentence or two"),
         link: z.string().url().max(500).optional().describe("PR, ticket, demo or doc"),
-        stage: z.enum(STAGES.map((s) => s.slug) as [string, ...string[]]).optional().describe("Optionally move the initiative to this stage"),
+        stage: z.enum(STAGES.map((s) => s.slug) as [string, ...string[]]).optional().describe("Optionally move the AI project to this stage"),
       }),
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
@@ -570,7 +570,7 @@ export function registerRadarTools(server: McpServer) {
         .from(initiatives)
         .where(and(eq(initiatives.id, a.initiative_id), eq(initiatives.orgId, ws.org.id), isNull(initiatives.archivedAt)))
         .limit(1);
-      if (!initiative) return fail("Initiative not found in this workspace.");
+      if (!initiative) return fail("AI project not found in this workspace.");
       if (a.link && !/^https?:\/\//i.test(a.link)) return fail("Links must start with http:// or https://");
       const stage = a.stage as typeof initiative.stage | undefined;
       if (stage && stage !== initiative.stage) {

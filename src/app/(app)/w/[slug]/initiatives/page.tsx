@@ -10,7 +10,7 @@ import { HealthBadge, PLATFORM_OPTIONS, PlatformList, ScorePill, StageBadge } fr
 import { ExportCsvButton } from "../_components/export-button";
 import { loadPortfolio } from "../_lib/portfolio";
 
-export const metadata: Metadata = { title: "Initiatives" };
+export const metadata: Metadata = { title: "AI projects" };
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)?.trim() || undefined;
 
@@ -57,8 +57,8 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
     <>
       <PageHeader
         eyebrow="AI portfolio"
-        title={archived ? "Archived initiatives" : "Initiatives"}
-        description={archived ? "Archived initiatives are hidden from the dashboard and rankings." : "Ranked by weighted priority score. Pinned initiatives have a manual rank override. Actual / yr is the annualized run-rate from recorded actuals."}
+        title={archived ? "Archived AI projects" : "AI projects"}
+        description={archived ? "Archived AI projects are hidden from the dashboard and rankings." : "Ranked by weighted priority score. Pinned AI projects have a manual rank override. Actual / yr is the annualized run-rate from recorded actuals."}
         actions={
           <>
             {!archived ? <ExportCsvButton ctx={ctx} /> : null}
@@ -74,7 +74,7 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
             ) : null}
             {ctx.can("initiative:write") && !archived ? (
               <ButtonLink href={`${base}/initiatives/new`}>
-                <Plus className="size-4" /> New initiative
+                <Plus className="size-4" /> New AI project
               </ButtonLink>
             ) : null}
           </>
@@ -158,8 +158,8 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
       {items.length === 0 && !archived ? (
         <EmptyState
           icon={<ListChecks className="size-8" />}
-          title="No initiatives yet"
-          description="Add each AI initiative, from early idea to production. Already have a list somewhere? Paste it in. Not sure where to start? Pick from common use cases."
+          title="No AI projects yet"
+          description="Add each AI project, from early idea to production. Already have a list somewhere? Paste it in. Not sure where to start? Pick from common use cases."
           action={
             ctx.can("initiative:write") ? (
               <div className="flex flex-wrap justify-center gap-2">
@@ -170,21 +170,21 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
                   <LibraryBig className="size-4" /> Start from a template
                 </ButtonLink>
                 <ButtonLink href={`${base}/initiatives/new`} variant="secondary">
-                  <Plus className="size-4" /> New initiative
+                  <Plus className="size-4" /> New AI project
                 </ButtonLink>
               </div>
             ) : undefined
           }
         />
       ) : rows.length === 0 ? (
-        <EmptyState title={archived ? "Nothing archived" : "No initiatives match these filters"} />
+        <EmptyState title={archived ? "Nothing archived" : "No AI projects match these filters"} />
       ) : (
         <Card className="overflow-hidden">
           <Table>
             <thead>
               <tr>
                 <Th className="w-12 text-center">#</Th>
-                <Th>Initiative</Th>
+                <Th>AI project</Th>
                 <Th>Stage</Th>
                 <Th>Health</Th>
                 <Th>Platforms</Th>
@@ -240,7 +240,7 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
             <tfoot>
               <tr className="bg-slate-50 text-sm">
                 <td colSpan={6} className="px-4 py-2.5 text-slate-500">
-                  {rows.length} initiative{rows.length === 1 ? "" : "s"}
+                  {rows.length} AI project{rows.length === 1 ? "" : "s"}
                   {filtered ? ` (of ${items.length})` : ""}
                 </td>
                 <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-slate-900">{formatUsd(totalEstimated, true)}</td>
@@ -254,11 +254,11 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
       <div className="mt-4 text-sm">
         {archived ? (
           <Link href={`${base}/initiatives`} className="font-medium text-radar-700 hover:underline">
-            ← Back to active initiatives
+            ← Back to active AI projects
           </Link>
         ) : (
           <Link href={`${base}/initiatives?view=archived`} className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-800">
-            <Archive className="size-3.5" /> View archived initiatives
+            <Archive className="size-3.5" /> View archived AI projects
           </Link>
         )}
       </div>

@@ -430,7 +430,7 @@ export async function generateInitiativeAlerts(storyIds: Iterable<string>): Prom
         orgId: i.orgId,
         initiativeId: i.id,
         storyId: story.id,
-        reason: `${categoryLabel(category)} news for ${vendors.join(", ")}, a platform this initiative is built on.`,
+        reason: `${categoryLabel(category)} news for ${vendors.join(", ")}, a platform this AI project is built on.`,
       };
     });
     const inserted = await db.insert(initiativeAlerts).values(rows).onConflictDoNothing().returning({ id: initiativeAlerts.id });

@@ -26,7 +26,7 @@ export default async function DepartmentsPage({ params }: PageProps<"/w/[slug]/d
       <PageHeader
         eyebrow="Workspace"
         title="Departments"
-        description="Give each part of the company its own people, leads, initiatives, ideas and radar. Everyone can see every department's work."
+        description="Give each part of the company its own people, leads, AI projects, ideas and radar. Everyone can see every department's work."
       />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0">
@@ -48,7 +48,7 @@ export default async function DepartmentsPage({ params }: PageProps<"/w/[slug]/d
                       {d.description ? <p className="mt-2 line-clamp-2 text-sm text-slate-600">{d.description}</p> : null}
                       <dl className="mt-4 flex gap-6 text-sm">
                         <div>
-                          <dt className="text-xs text-slate-500">Initiatives</dt>
+                          <dt className="text-xs text-slate-500">AI projects</dt>
                           <dd className="font-semibold tabular-nums text-slate-900">{d.initiativeCount}</dd>
                         </div>
                         <div>
@@ -67,7 +67,7 @@ export default async function DepartmentsPage({ params }: PageProps<"/w/[slug]/d
               title="No departments yet"
               description={
                 enabled
-                  ? "Create one for each team that runs its own AI work, like Finance, Sales or Operations. Then assign initiatives and ideas to it."
+                  ? "Create one for each team that runs its own AI work, like Finance, Sales or Operations. Then assign AI projects and ideas to it."
                   : "Departments let Finance, Sales and other teams run their own slice of the portfolio, with leads who can triage ideas and approve reviews."
               }
             />
@@ -115,7 +115,7 @@ export default async function DepartmentsPage({ params }: PageProps<"/w/[slug]/d
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>Add and remove people in their department</li>
               <li>Triage ideas sent to their department</li>
-              <li>Approve governance reviews for their department&apos;s initiatives</li>
+              <li>Approve governance reviews for their department&apos;s AI projects</li>
             </ul>
           </Card>
         </aside>

@@ -75,7 +75,7 @@ async function applyClassification(ctx: WorkspaceContext, initiative: Initiative
     // Guard against a concurrent decision: only reopen the status we looked at.
     .where(and(eq(initiatives.id, initiative.id), eq(initiatives.orgId, ctx.org.id), eq(initiatives.approvalStatus, initiative.approvalStatus)))
     .returning({ id: initiatives.id });
-  if (!updated) throw new ActionError("This initiative’s review status just changed. Reload the page and try again.");
+  if (!updated) throw new ActionError("This AI project’s review status just changed. Reload the page and try again.");
 
   const changes = changed.map((k) => FIELD_LABEL[k](values[k]));
   if (notesChanged) changes.push("notes");
@@ -136,12 +136,12 @@ export async function requestReview(_prev: ActionState, form: FormData): Promise
     const note = zOptText(2000).parse(field(form, "note"));
     const today = isoDate(new Date());
 
-    if (initiative.archivedAt) throw new ActionError("Restore the initiative before requesting a review.");
+    if (initiative.archivedAt) throw new ActionError("Restore the AI project before requesting a review.");
     if (!canRequestReview(initiative, today)) {
       throw new ActionError(
         initiative.approvalStatus === "pending"
           ? "A review is already pending."
-          : "This initiative’s approval is current. A re-review can be requested within 30 days of its review date.",
+          : "This AI project’s approval is current. A re-review can be requested within 30 days of its review date.",
       );
     }
     const missing = [
@@ -166,7 +166,7 @@ export async function requestReview(_prev: ActionState, form: FormData): Promise
       })
       .where(and(eq(initiatives.id, initiative.id), eq(initiatives.orgId, ctx.org.id), eq(initiatives.approvalStatus, initiative.approvalStatus)))
       .returning();
-    if (!updated) throw new ActionError("This initiative’s review status just changed. Reload the page and try again.");
+    if (!updated) throw new ActionError("This AI project’s review status just changed. Reload the page and try again.");
 
     const deps = await loadDependencySensitivities(ctx.org.id, initiative.id);
     await logActivity(
@@ -209,7 +209,7 @@ export async function decideReview(_prev: ActionState, form: FormData): Promise<
       .set({ approvalStatus: decision, approvalDecidedAt: now, approvalDecidedById: ctx.user.id, approvalConditions: note, reviewDueOn })
       .where(and(eq(initiatives.id, initiative.id), eq(initiatives.orgId, ctx.org.id), eq(initiatives.approvalStatus, initiative.approvalStatus)))
       .returning();
-    if (!updated) throw new ActionError("This initiative’s review status just changed. Reload the page and try again.");
+    if (!updated) throw new ActionError("This AI project’s review status just changed. Reload the page and try again.");
 
     const action = decision === "approved" ? "governance.approved" : decision === "conditional" ? "governance.approved_with_conditions" : "governance.rejected";
     await logActivity(

@@ -131,7 +131,7 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
         <Alert tone="neutral" className="flex gap-2 border-violet-200 bg-violet-50 text-violet-950">
           <Lock className="mt-0.5 size-4 shrink-0 text-violet-700" />
           <span>
-            <strong>{plan.name} includes up to {plan.initiativeLimit} active initiatives.</strong> Team includes {PLANS.team.initiativeLimit}, and Business is unlimited.
+            <strong>{plan.name} includes up to {plan.initiativeLimit} active AI projects.</strong> Team includes {PLANS.team.initiativeLimit}, and Business is unlimited.
           </span>
         </Alert>
       ) : null}
@@ -190,7 +190,7 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
           <CardBody className="space-y-4">
             <div>
               <div className="flex items-baseline justify-between gap-2 text-sm">
-                <span className="font-medium text-slate-900">Active initiatives</span>
+                <span className="font-medium text-slate-900">Active AI projects</span>
                 <span className="tabular-nums text-slate-700">
                   <span className="font-semibold text-slate-900">{usage.used}</span>
                   {usage.limit != null ? ` / ${usage.limit}` : " · unlimited"}
@@ -198,7 +198,7 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
               </div>
               {usage.limit != null ? (
                 <>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100" role="meter" aria-valuemin={0} aria-valuemax={usage.limit} aria-valuenow={usage.used} aria-label="Initiatives used">
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100" role="meter" aria-valuemin={0} aria-valuemax={usage.limit} aria-valuenow={usage.used} aria-label="AI projects used">
                     <div
                       className={cn("h-full rounded-full", usage.atLimit ? "bg-amber-500" : "bg-radar-500")}
                       style={{ width: `${Math.max(usage.ratio * 100, usage.used ? 4 : 0)}%` }}
@@ -206,8 +206,8 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
                   </div>
                   <p className={cn("mt-1.5 text-xs", usage.atLimit ? "text-amber-800" : "text-slate-500")}>
                     {usage.atLimit
-                      ? `You’ve reached the ${plan.name} limit. Upgrade or archive an initiative to add more.`
-                      : `${usage.remaining} more before you reach the ${plan.name} limit. Archived initiatives don’t count.`}
+                      ? `You’ve reached the ${plan.name} limit. Upgrade or archive an AI project to add more.`
+                      : `${usage.remaining} more before you reach the ${plan.name} limit. Archived AI projects don’t count.`}
                   </p>
                 </>
               ) : null}

@@ -122,7 +122,7 @@ export async function GovernanceSection({
     <Card id="governance" className="scroll-mt-24">
       <CardHeader
         title="AI governance"
-        description="Risk classification, human oversight and approval. This is the initiative’s entry in the AI use-case register."
+        description="Risk classification, human oversight and approval. This is the AI project’s entry in the AI use-case register."
         action={<ApprovalBadge status={i.approvalStatus} />}
       />
       <CardBody className="space-y-5">
@@ -130,7 +130,7 @@ export async function GovernanceSection({
           <Alert tone="warning" className="flex gap-2">
             <AlertTriangle className="mt-0.5 size-4 shrink-0" />
             <span>
-              Workspace policy requires an approved review for {labelFrom(STAGES, i.stage)}, and this initiative doesn’t have one in force. It can stay where it
+              Workspace policy requires an approved review for {labelFrom(STAGES, i.stage)}, and this AI project doesn’t have one in force. It can stay where it
               is, but it will be flagged in the{" "}
               <Link href={`/w/${slug}/governance`} className="font-medium underline">
                 register

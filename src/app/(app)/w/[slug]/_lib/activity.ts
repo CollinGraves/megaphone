@@ -43,17 +43,17 @@ export function describeActivity(action: string, detail: Record<string, unknown>
   const d = detail ?? {};
   switch (action) {
     case "initiative.created":
-      return d.template ? "created the initiative from a template" : "created the initiative";
+      return d.template ? "created the AI project from a template" : "created the AI project";
     case "initiative.updated": {
       const changes = Array.isArray(d.changes) ? (d.changes as unknown[]).map(s).filter(Boolean) : [];
-      return changes.length ? `updated ${changes.join(", ")}` : "updated the initiative";
+      return changes.length ? `updated ${changes.join(", ")}` : "updated the AI project";
     }
     case "initiative.archived":
-      return "archived the initiative";
+      return "archived the AI project";
     case "initiative.restored":
-      return "restored the initiative";
+      return "restored the AI project";
     case "initiative.deleted":
-      return `deleted the initiative “${s(d.title)}”`;
+      return `deleted the AI project “${s(d.title)}”`;
     case "metric.added":
       return `added impact metric “${s(d.metric)}”`;
     case "metric.updated":
@@ -107,7 +107,7 @@ export function describeActivity(action: string, detail: Record<string, unknown>
     case "idea.notes_updated":
       return `updated triage notes on “${s(d.title)}”`;
     case "idea.accepted":
-      return `turned the idea “${s(d.title)}” into an initiative`;
+      return `turned the idea “${s(d.title)}” into an AI project`;
     case "idea.declined":
       return `declined the idea “${s(d.title)}”`;
     case "idea.duplicate":

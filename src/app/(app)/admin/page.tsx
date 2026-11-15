@@ -195,7 +195,7 @@ export default async function AdminOverviewPage() {
               <div className="text-xs text-slate-500">{formatNumber(workspaces.total - workspaces.active)} suspended</div>
             </div>
             <div>
-              <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Initiatives tracked</div>
+              <div className="text-xs font-medium uppercase tracking-wide text-slate-500">AI projects tracked</div>
               <div className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{formatNumber(initiativeCount.total)}</div>
               <div className="text-xs text-slate-500">Across {admin ? "all clients" : "your clients"}</div>
             </div>

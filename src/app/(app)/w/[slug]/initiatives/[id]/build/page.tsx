@@ -96,7 +96,7 @@ export default async function BuildPage({ params, searchParams }: PageProps<"/w/
               description={
                 canEdit
                   ? "Generate one to see how to build this on the tools you already have, what data it needs, how to test it and the tickets to get started."
-                  : "An editor can generate a build brief for this initiative."
+                  : "An editor can generate a build brief for this AI project."
               }
             />
           ) : null}

@@ -42,7 +42,7 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
       {items.length > 0 ? <ExportCsvButton ctx={ctx} /> : null}
       {ctx.can("initiative:write") ? (
         <ButtonLink href={`${base}/initiatives/new`}>
-          <Plus className="size-4" /> New initiative
+          <Plus className="size-4" /> New AI project
         </ButtonLink>
       ) : null}
     </>
@@ -55,8 +55,8 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
         <OnboardingPanel ctx={ctx} activation={activation} />
         <EmptyState
           icon={<Rocket className="size-8" />}
-          title="No initiatives yet"
-          description="Track every AI initiative in one place: the problem it solves, its stage, the data it needs and what it's worth."
+          title="No AI projects yet"
+          description="Track every AI project in one place: the problem it solves, its stage, the data it needs and what it's worth."
           action={
             ctx.can("initiative:write") ? (
               <div className="flex flex-wrap justify-center gap-2">
@@ -122,7 +122,7 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
       <PageHeader
         eyebrow="AI portfolio"
         title="Dashboard"
-        description={`Every AI initiative at ${ctx.org.name}, on any platform. Status, value and data readiness at a glance.`}
+        description={`Every AI project at ${ctx.org.name}, on any platform. Status, value and data readiness at a glance.`}
         actions={actions}
       />
 
@@ -130,7 +130,7 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat
-          label="Active initiatives"
+          label="Active AI projects"
           value={active.length}
           hint={
             <>
@@ -161,10 +161,10 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
           value={roiActual.roi != null ? formatPct(roiActual.roi) : roiEstimated.roi != null ? formatPct(roiEstimated.roi) : "–"}
           hint={
             roiActual.roi != null
-              ? `On actuals across ${roiActual.count} initiative${roiActual.count === 1 ? "" : "s"} with cost data${roiEstimated.roi != null ? ` · ${formatPct(roiEstimated.roi)} projected portfolio-wide` : ""}`
+              ? `On actuals across ${roiActual.count} AI project${roiActual.count === 1 ? "" : "s"} with cost data${roiEstimated.roi != null ? ` · ${formatPct(roiEstimated.roi)} projected portfolio-wide` : ""}`
               : roiEstimated.roi != null
-                ? `Projected from estimates across ${roiEstimated.count} initiatives with cost data`
-                : "Add build and run costs to initiatives to see ROI"
+                ? `Projected from estimates across ${roiEstimated.count} AI projects with cost data`
+                : "Add build and run costs to AI projects to see ROI"
           }
         />
       </div>
@@ -173,7 +173,7 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
 
       <div className="mt-6 grid gap-6 xl:grid-cols-5 [&>*]:min-w-0">
         <Card className="xl:col-span-3">
-          <CardHeader title="Pipeline by stage" description="Initiative count per stage, split by health" />
+          <CardHeader title="Pipeline by stage" description="AI project count per stage, split by health" />
           <CardBody className="space-y-3">
             {pipeline.map((p) => (
               <Link
@@ -214,7 +214,7 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
             </div>
             {platformMix.length > 0 ? (
               <div className="border-t border-slate-100 pt-4">
-                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Platform mix (active initiatives)</h3>
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Platform mix (active AI projects)</h3>
                 <div className="flex flex-wrap gap-2">
                   {platformMix.map(([slug, n]) => (
                     <Link
@@ -272,10 +272,10 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
 
       <div className="mt-6 grid gap-6 xl:grid-cols-5 [&>*]:min-w-0">
         <Card className="xl:col-span-3">
-          <CardHeader title="Impact by initiative" description="Annualized value: estimate vs. actual run-rate" />
+          <CardHeader title="Impact by AI project" description="Annualized value: estimate vs. actual run-rate" />
           <CardBody>
             {impactRows.length === 0 ? (
-              <p className="text-sm text-slate-500">No impact metrics yet. Add estimated value on an initiative to see it here.</p>
+              <p className="text-sm text-slate-500">No impact metrics yet. Add estimated value on an AI project to see it here.</p>
             ) : (
               <ul className="space-y-4">
                 {impactRows.map((i) => (
@@ -361,7 +361,7 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
         <Card className="xl:col-span-3">
           <CardHeader
             title="Recent Radar alerts"
-            description="Market news that affects platforms your initiatives run on"
+            description="Market news that affects platforms your AI projects run on"
             action={
               <Link href={`${base}/alerts`} className="inline-flex items-center gap-1 text-sm font-medium text-radar-700 hover:underline">
                 All alerts <ArrowRight className="size-3.5" />

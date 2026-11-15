@@ -278,7 +278,7 @@ function Outcome({
               {initiativeLink} <StageBadge stage={linkedInitiative.stage} />
             </div>
           ) : (
-            <p className="text-slate-500">The initiative it became has since been deleted.</p>
+            <p className="text-slate-500">The AI project it became has since been deleted.</p>
           )}
         </OutcomeRow>
       );
@@ -302,7 +302,7 @@ function Outcome({
                 ) : (
                   <span className="font-medium text-slate-900">{duplicateOf.title}</span>
                 )}
-                {linkedInitiative ? <>, now the initiative {initiativeLink}</> : null}.
+                {linkedInitiative ? <>, now the AI project {initiativeLink}</> : null}.
               </>
             ) : linkedInitiative ? (
               <>Already on the roadmap as {initiativeLink}.</>
@@ -353,7 +353,7 @@ function describeIdeaActivity(action: string, detail: Record<string, unknown> | 
     case "idea.notes_updated":
       return "updated the review notes";
     case "idea.accepted":
-      return `converted it to the initiative “${str(d.initiativeTitle)}”`;
+      return `converted it to the AI project “${str(d.initiativeTitle)}”`;
     case "idea.declined":
       return d.notified ? "declined it and emailed the submitter" : "declined it";
     case "idea.duplicate":

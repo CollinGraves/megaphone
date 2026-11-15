@@ -131,7 +131,7 @@ ${deadlinesBlock(opts.deadlines ?? [], opts.companyName)}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${opts.personal.map((s) => storyBlock(s, token, opts.reasons?.get(s.id))).join("")}</table>
 ${opts.also.length ? `<h3 style="margin:24px 0 0;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:#64748b">Also big ${period}</h3><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${opts.also.map((s) => storyBlock(s, token)).join("")}</table>` : ""}
 <div style="margin-top:24px;padding:16px;border-radius:10px;background:#0b1220;color:#e2e8f0;font-size:14px;line-height:1.5">
-<strong style="color:#ffffff">Is your company keeping up?</strong> North Labs helps teams prioritize, build and measure AI initiatives on any platform.
+<strong style="color:#ffffff">Is your company keeping up?</strong> North Labs helps teams prioritize, build and measure AI projects on any platform.
 <a href="${appUrl()}/contact?from=digest" style="color:#6ce5c6">Talk to us →</a></div>
 <img src="${appUrl()}/api/t/open?u=${encodeURIComponent(token)}&d=${opts.digestId}" width="1" height="1" alt="" style="display:block;border:0">`;
   const html = emailLayout({

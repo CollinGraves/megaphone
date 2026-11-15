@@ -299,7 +299,7 @@ function TalkCard() {
     <Card className="p-5">
       <MessagesSquare className="size-5 text-radar-600" aria-hidden />
       <h2 className="mt-3 font-semibold text-slate-900">Want a second opinion?</h2>
-      <p className="mt-1 text-sm text-slate-600">North Labs consultants can review your results with you and help plan the first initiatives.</p>
+      <p className="mt-1 text-sm text-slate-600">North Labs consultants can review your results with you and help plan the first AI projects.</p>
       <ButtonLink href="/contact?from=assessment" variant="secondary" className="mt-4 w-full">
         Talk to North Labs
       </ButtonLink>

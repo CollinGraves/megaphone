@@ -9,7 +9,7 @@ import { departmentOptions } from "@/lib/departments.server";
 import { listBusinessUnits } from "../../../_lib/queries";
 import { InitiativeForm } from "../../initiative-form";
 
-export const metadata: Metadata = { title: "Edit initiative" };
+export const metadata: Metadata = { title: "Edit AI project" };
 
 export default async function EditInitiativePage({ params }: PageProps<"/w/[slug]/initiatives/[id]/edit">) {
   const { slug, id } = await params;
@@ -28,7 +28,7 @@ export default async function EditInitiativePage({ params }: PageProps<"/w/[slug
   const detailHref = `/w/${ctx.org.slug}/initiatives/${initiative.id}`;
   return (
     <div className="max-w-3xl">
-      <PageHeader eyebrow="Edit initiative" title={initiative.title} />
+      <PageHeader eyebrow="Edit AI project" title={initiative.title} />
       <InitiativeForm
         slug={ctx.org.slug}
         initiative={initiative}

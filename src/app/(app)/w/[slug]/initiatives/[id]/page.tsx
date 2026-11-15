@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: PageProps<"/w/[slug]/initiati
   const { slug, id } = await params;
   const ctx = await getWorkspaceOrNotFound(slug);
   const initiative = await loadInitiative(ctx.org.id, id);
-  return { title: initiative?.title ?? "Initiative" };
+  return { title: initiative?.title ?? "AI project" };
 }
 
 export default async function InitiativePage({ params }: PageProps<"/w/[slug]/initiatives/[id]">) {
@@ -96,7 +96,7 @@ export default async function InitiativePage({ params }: PageProps<"/w/[slug]/in
   return (
     <>
       <Link href={`${base}/initiatives`} className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800">
-        <ChevronLeft className="size-4" /> Initiatives
+        <ChevronLeft className="size-4" /> AI projects
       </Link>
 
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -126,7 +126,7 @@ export default async function InitiativePage({ params }: PageProps<"/w/[slug]/in
                   <ArchiveRestore className="size-4" /> Restore
                 </SubmitButton>
               ) : (
-                <ConfirmSubmit message="Archive this initiative? It will be hidden from the dashboard and rankings." variant="ghost" size="md">
+                <ConfirmSubmit message="Archive this AI project? It will be hidden from the dashboard and rankings." variant="ghost" size="md">
                   <Archive className="size-4" /> Archive
                 </ConfirmSubmit>
               )}
@@ -136,7 +136,7 @@ export default async function InitiativePage({ params }: PageProps<"/w/[slug]/in
             <InlineForm action={deleteInitiative}>
               <input type="hidden" name="slug" value={ctx.org.slug} />
               <input type="hidden" name="id" value={initiative.id} />
-              <ConfirmSubmit message="Permanently delete this initiative, its metrics, dependencies and comments? This cannot be undone." variant="danger" size="md">
+              <ConfirmSubmit message="Permanently delete this AI project, its metrics, dependencies and comments? This cannot be undone." variant="danger" size="md">
                 <Trash2 className="size-4" /> Delete
               </ConfirmSubmit>
             </InlineForm>
@@ -325,7 +325,7 @@ export default async function InitiativePage({ params }: PageProps<"/w/[slug]/in
           </Card>
 
           <Card>
-            <CardHeader title="Radar alerts" description="News affecting this initiative’s platforms" />
+            <CardHeader title="Radar alerts" description="News affecting this AI project’s platforms" />
             {alerts.length === 0 ? (
               <CardBody>
                 <p className="text-sm text-slate-500">No open alerts.</p>

@@ -155,7 +155,7 @@ export const METRIC_PERIODS = [
 export const ORG_ROLES = [
   { slug: "owner", label: "Owner", description: "Full control, including members and workspace settings" },
   { slug: "admin", label: "Admin", description: "Manage members, settings and all content" },
-  { slug: "editor", label: "Editor", description: "Create and edit initiatives, systems and impact data" },
+  { slug: "editor", label: "Editor", description: "Create and edit AI projects, systems and impact data" },
   { slug: "viewer", label: "Viewer", description: "Read-only access to the portfolio" },
 ] as const;
 

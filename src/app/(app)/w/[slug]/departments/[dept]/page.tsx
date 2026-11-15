@@ -85,13 +85,13 @@ export default async function DepartmentPage({ params }: PageProps<"/w/[slug]/de
         </div>
         {ctx.can("initiative:write") && enabled ? (
           <ButtonLink href={`${base}/initiatives/new?department=${dept.id}`} size="sm" className="shrink-0">
-            New initiative
+            New AI project
           </ButtonLink>
         ) : null}
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat label="Initiatives" value={String(items.length)} />
+        <Stat label="AI projects" value={String(items.length)} />
         <Stat label="In production" value={String(items.filter((i) => i.stage === "production").length)} />
         <Stat label="Est. annual value" value={formatUsd(value)} />
         <Stat label="Open ideas" value={String(deptIdeas.length)} />
@@ -114,13 +114,13 @@ export default async function DepartmentPage({ params }: PageProps<"/w/[slug]/de
           ) : null}
 
           <Card className="overflow-hidden">
-            <CardHeader title="Initiatives" description="Assign an initiative to this department from its edit form." />
+            <CardHeader title="AI projects" description="Assign an AI project to this department from its edit form." />
             {items.length ? (
               <div className="overflow-x-auto">
                 <Table>
                   <thead>
                     <tr>
-                      <Th>Initiative</Th>
+                      <Th>AI project</Th>
                       <Th>Stage</Th>
                       <Th>Score</Th>
                       <Th className="text-right">Value / yr</Th>
@@ -148,7 +148,7 @@ export default async function DepartmentPage({ params }: PageProps<"/w/[slug]/de
               </div>
             ) : (
               <CardBody>
-                <p className="text-sm text-slate-500">No initiatives yet.</p>
+                <p className="text-sm text-slate-500">No AI projects yet.</p>
               </CardBody>
             )}
           </Card>
@@ -159,7 +159,7 @@ export default async function DepartmentPage({ params }: PageProps<"/w/[slug]/de
               description={
                 platforms.length
                   ? "News that affects the platforms this department builds on."
-                  : "Shows news once this department's initiatives list their platforms."
+                  : "Shows news once this department's AI projects list their platforms."
               }
             />
             {alerts.length ? <AlertList alerts={alerts} slug={ctx.org.slug} canDismiss={ctx.can("initiative:write")} showSummary={false} /> : null}
@@ -290,7 +290,7 @@ export default async function DepartmentPage({ params }: PageProps<"/w/[slug]/de
                     <input type="hidden" name="slug" value={ctx.org.slug} />
                     <input type="hidden" name="departmentId" value={dept.id} />
                     <ConfirmSubmit
-                      message={`Delete ${dept.name}? Its initiatives and ideas stay and become company-wide.`}
+                      message={`Delete ${dept.name}? Its AI projects and ideas stay and become company-wide.`}
                       variant="ghost"
                       size="sm"
                       className="text-red-700"

@@ -34,10 +34,10 @@ export default async function ImportPage({ params }: PageProps<"/w/[slug]/initia
   return (
     <div className="max-w-4xl">
       <Link href={`/w/${ctx.org.slug}/initiatives`} className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900">
-        <ChevronLeft className="size-4" /> Initiatives
+        <ChevronLeft className="size-4" /> AI projects
       </Link>
       <PageHeader
-        eyebrow="Initiatives"
+        eyebrow="AI projects"
         title="Import a list"
         description="Already have your AI projects in a spreadsheet, a doc or your notes? Paste them here. You check everything before it's added."
       />

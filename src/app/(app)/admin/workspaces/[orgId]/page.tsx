@@ -137,7 +137,7 @@ export default async function WorkspaceDetailPage({ params }: PageProps<"/admin/
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="min-w-0 space-y-6 lg:col-span-2">
           <Card>
-            <CardHeader title="Initiatives by stage" description={`${totalInitiatives} active initiatives`} />
+            <CardHeader title="AI projects by stage" description={`${totalInitiatives} active AI projects`} />
             <CardBody className="space-y-2">
               {STAGES.map((s) => {
                 const n = byStage.get(s.slug) ?? 0;

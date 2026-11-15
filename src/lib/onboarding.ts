@@ -113,14 +113,14 @@ export function evaluateActivation(
   const first = opts.targets?.initiativeId ?? null;
   const metricTarget = opts.targets?.metricInitiativeId ?? null;
   const onInitiative = (anchor: string) => (first ? `${base}/initiatives/${first}#${anchor}` : `${base}/initiatives/templates`);
-  const needsInitiative = counts.initiatives === 0 ? "your first initiative" : undefined;
+  const needsInitiative = counts.initiatives === 0 ? "your first AI project" : undefined;
   const intake = hasFeature(org.plan, "intake_link");
   const mcp = hasFeature(org.plan, "mcp_workspace");
 
   const steps: OnboardingStep[] = [
     {
       id: "initiatives",
-      title: `Add ${INITIATIVE_TARGET} initiatives`,
+      title: `Add ${INITIATIVE_TARGET} AI projects`,
       why: "A portfolio needs a few candidates side by side before you can prioritize.",
       done: counts.initiatives >= INITIATIVE_TARGET,
       optional: false,
@@ -164,7 +164,7 @@ export function evaluateActivation(
     },
     {
       id: "risk",
-      title: "Classify risk on one initiative",
+      title: "Classify risk on one AI project",
       why: "A risk tier shows which use cases need human oversight or review before they go live.",
       done: counts.classified > 0,
       optional: false,
@@ -195,7 +195,7 @@ export function evaluateActivation(
       href: metricTarget ? `${base}/initiatives/${metricTarget}#m-value` : onInitiative("new-name"),
       cta: "Record an actual",
       capability: "impact:write",
-      waitingFor: counts.initiatives === 0 ? "your first initiative" : !metricTarget ? "an impact estimate" : undefined,
+      waitingFor: counts.initiatives === 0 ? "your first AI project" : !metricTarget ? "an impact estimate" : undefined,
     },
     mcp
       ? {

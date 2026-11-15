@@ -60,7 +60,7 @@ export default async function WorkspaceLayout({ children, params }: LayoutProps<
   const nav: NavItem[] = [
     { href: base, label: "Dashboard", icon: <LayoutDashboard />, exact: true },
     { href: `${base}/report`, label: "Monthly update", icon: <FileText /> },
-    { href: `${base}/initiatives`, label: "Initiatives", icon: <ListChecks /> },
+    { href: `${base}/initiatives`, label: "AI projects", icon: <ListChecks /> },
     { href: `${base}/departments`, label: "Departments", icon: <Building /> },
     { href: `${base}/ideas`, label: "Ideas", icon: <Lightbulb />, count: ctx.can("ideas:triage") ? newIdeas?.n : undefined },
     { href: `${base}/governance`, label: "Governance", icon: <ShieldCheck />, count: pendingReviews?.n || undefined },

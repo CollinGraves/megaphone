@@ -16,7 +16,7 @@ export async function getOwnedInitiative(ctx: WorkspaceContext, id: string) {
     .from(initiatives)
     .where(and(eq(initiatives.id, id), eq(initiatives.orgId, ctx.org.id)))
     .limit(1);
-  if (!row) throw new ActionError("Initiative not found.");
+  if (!row) throw new ActionError("AI project not found.");
   return row;
 }
 
