@@ -191,7 +191,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
           ) : null}
           {workspaces.length === 0 ? (
             <div className="rounded-xl bg-ink-900 p-5 text-white">
-              <h2 className="font-semibold">Track your own AI initiatives</h2>
+              <h2 className="font-semibold">Track your own AI projects</h2>
               <p className="mt-1.5 text-sm text-slate-300">
                 Bring every AI project, from Claude and ChatGPT to Copilot and in-house builds, into one prioritized portfolio,
                 with measured impact and the data each one depends on.
@@ -200,7 +200,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
                 Create a free AI workspace
               </ButtonLink>
               <p className="mt-2.5 text-center text-xs text-slate-400">
-                Free for up to {PLANS.free.initiativeLimit} initiatives ·{" "}
+                Free for up to {PLANS.free.initiativeLimit} AI projects ·{" "}
                 <Link href="/contact?from=feed_workspace_cta" className="font-medium text-slate-200 underline-offset-2 hover:underline">
                   or have North Labs set it up
                 </Link>

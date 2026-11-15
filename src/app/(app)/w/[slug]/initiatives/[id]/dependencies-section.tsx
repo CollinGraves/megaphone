@@ -36,7 +36,7 @@ export function DependenciesSection({
 }) {
   return (
     <Card>
-      <CardHeader title="Data dependencies" description="Systems of record this initiative reads from or writes to, and where access stands." />
+      <CardHeader title="Data dependencies" description="Systems of record this AI project reads from or writes to, and where access stands." />
       {deps.length === 0 ? (
         <p className="px-5 py-4 text-sm text-slate-500">No data dependencies recorded.</p>
       ) : (

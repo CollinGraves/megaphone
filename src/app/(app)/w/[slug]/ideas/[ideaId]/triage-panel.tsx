@@ -49,10 +49,10 @@ export function TriagePanel({
       <CardBody className="space-y-6">
         <section aria-labelledby="convert-heading">
           <h3 id="convert-heading" className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-            <ArrowRightCircle className="size-4 text-radar-600" /> Convert to initiative
+            <ArrowRightCircle className="size-4 text-radar-600" /> Convert to an AI project
           </h3>
           <p className="mt-0.5 text-sm text-slate-500">
-            Creates an initiative in the <span className="font-medium text-slate-700">Idea</span> stage, prefilled with the problem, sizing and submitter, and marks this idea accepted.
+            Creates an AI project in the <span className="font-medium text-slate-700">Idea</span> stage, prefilled with the problem, sizing and submitter, and marks this idea accepted.
           </p>
           {capMessage ? (
             <Alert tone="warning" className="mt-3">
@@ -69,7 +69,7 @@ export function TriagePanel({
           <ActionForm action={convertIdea} className="mt-3 space-y-3">
             {hidden}
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_14rem]">
-              <Field label="Initiative title" htmlFor="convert-title">
+              <Field label="AI project title" htmlFor="convert-title">
                 <Input id="convert-title" name="title" required minLength={3} maxLength={160} defaultValue={defaults.initiative.title} />
               </Field>
               <Field label="Business unit" htmlFor="convert-bu">
@@ -87,14 +87,14 @@ export function TriagePanel({
                 <span>
                   <span className="font-medium text-slate-900">Add an hours-saved estimate of {formatNumber(defaults.metric.estimatedValue)} h/yr</span>
                   <span className="block text-xs text-slate-500">
-                    {Math.round(DEFAULT_TIME_SAVED_SHARE * 100)}% of the ~{formatNumber(defaults.annualHours)} h/yr spent on this today, per the submitter. You can refine it on the initiative.
+                    {Math.round(DEFAULT_TIME_SAVED_SHARE * 100)}% of the ~{formatNumber(defaults.annualHours)} h/yr spent on this today, per the submitter. You can refine it on the AI project.
                   </span>
                 </span>
               </label>
             ) : (
-              <p className="text-xs text-slate-500">No hours data on this idea, so no hours-saved estimate will be added. You can add impact metrics on the initiative.</p>
+              <p className="text-xs text-slate-500">No hours data on this idea, so no hours-saved estimate will be added. You can add impact metrics on the AI project.</p>
             )}
-            <SubmitButton pendingText="Converting…">Convert to initiative</SubmitButton>
+            <SubmitButton pendingText="Converting…">Convert to an AI project</SubmitButton>
           </ActionForm>
         </section>
 
@@ -158,7 +158,7 @@ export function TriagePanel({
             </summary>
             <ActionForm action={markDuplicate} className="mt-3 space-y-3">
               {hidden}
-              <Field label="Duplicate of" htmlFor="duplicate-target" hint="Pointing at an initiative links this idea to it, so the submitter can follow along.">
+              <Field label="Duplicate of" htmlFor="duplicate-target" hint="Pointing at an AI project links this idea to it, so the submitter can follow along.">
                 <Select
                   id="duplicate-target"
                   name="target"
@@ -166,10 +166,10 @@ export function TriagePanel({
                   defaultValue={idea.status === "duplicate" ? (idea.duplicateOfId ? `idea:${idea.duplicateOfId}` : idea.initiativeId ? `initiative:${idea.initiativeId}` : "") : ""}
                 >
                   <option value="" disabled>
-                    Choose an initiative or idea…
+                    Choose an AI project or idea…
                   </option>
                   {candidates.initiatives.length ? (
-                    <optgroup label="Initiatives">
+                    <optgroup label="AI projects">
                       {candidates.initiatives.map((i) => (
                         <option key={i.id} value={`initiative:${i.id}`}>
                           {i.title}

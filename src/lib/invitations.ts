@@ -66,7 +66,7 @@ export async function createInvitation(opts: {
     to: email,
     subject: `Join ${org.name} on ${BRAND}`,
     html: emailLayout({
-      body: `<p style="font-size:15px">${escapeHtml(opts.invitedByName)} invited you to the <strong>${escapeHtml(org.name)}</strong> AI workspace on ${BRAND}, where your company tracks its AI initiatives.</p>
+      body: `<p style="font-size:15px">${escapeHtml(opts.invitedByName)} invited you to the <strong>${escapeHtml(org.name)}</strong> AI workspace on ${BRAND}, where your company tracks its AI projects.</p>
 <p><a href="${url}" style="display:inline-block;background:#12b393;color:#070b14;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">Accept invitation</a></p>
 <p style="font-size:12px;color:#64748b">This link expires in ${INVITE_TTL_DAYS} days.</p>`,
     }),

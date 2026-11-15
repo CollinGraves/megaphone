@@ -6,7 +6,7 @@ import { departmentOptions } from "@/lib/departments.server";
 import { listBusinessUnits } from "../../_lib/queries";
 import { InitiativeForm } from "../initiative-form";
 
-export const metadata: Metadata = { title: "New initiative" };
+export const metadata: Metadata = { title: "New AI project" };
 
 export default async function NewInitiativePage({ params, searchParams }: PageProps<"/w/[slug]/initiatives/new">) {
   const { slug } = await params;
@@ -17,7 +17,7 @@ export default async function NewInitiativePage({ params, searchParams }: PagePr
   const preset = typeof sp.department === "string" ? departments.find((d) => d.id === sp.department)?.id ?? null : null;
   return (
     <div className="max-w-3xl">
-      <PageHeader eyebrow="Initiatives" title="New initiative" description="Capture the problem, ownership, platforms and how it should be prioritized. You can add impact metrics and data dependencies next." />
+      <PageHeader eyebrow="AI projects" title="New AI project" description="Capture the problem, ownership, platforms and how it should be prioritized. You can add impact metrics and data dependencies next." />
       <InitiativeForm
         slug={ctx.org.slug}
         businessUnits={businessUnits}

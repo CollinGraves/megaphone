@@ -71,16 +71,16 @@ export default async function SystemPage({ params }: PageProps<"/w/[slug]/system
       </div>
 
       <Card className="overflow-hidden">
-        <CardHeader title="Initiatives that depend on this system" description={`${initiativeCount} initiative${initiativeCount === 1 ? "" : "s"} · ${deps.length} dataset${deps.length === 1 ? "" : "s"}`} />
+        <CardHeader title="AI projects that depend on this system" description={`${initiativeCount} AI project${initiativeCount === 1 ? "" : "s"} · ${deps.length} dataset${deps.length === 1 ? "" : "s"}`} />
         {deps.length === 0 ? (
           <CardBody>
-            <EmptyState title="No initiatives depend on this system yet" description="Add a data dependency from an initiative's page." />
+            <EmptyState title="No AI projects depend on this system yet" description="Add a data dependency from an AI project's page." />
           </CardBody>
         ) : (
           <Table>
             <thead>
               <tr>
-                <Th>Initiative</Th>
+                <Th>AI project</Th>
                 <Th>Data</Th>
                 <Th>Sensitivity</Th>
                 <Th>Access</Th>

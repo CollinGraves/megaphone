@@ -26,7 +26,7 @@ export async function GovernanceSettings({ ctx }: { ctx: WorkspaceContext }) {
       <Card>
         <CardHeader
           title="AI governance policy"
-          description="Require an approved governance review before initiatives move to pilot or production, and set how often approvals are re-reviewed."
+          description="Require an approved governance review before AI projects move to pilot or production, and set how often approvals are re-reviewed."
         />
         <CardBody className="space-y-3">
           <UpgradePrompt
@@ -58,7 +58,7 @@ export async function GovernanceSettings({ ctx }: { ctx: WorkspaceContext }) {
         title="AI governance policy"
         description={
           <>
-            When initiatives need an approved governance review, and how often approvals are re-reviewed. Reviews are decided by owners and admins in the{" "}
+            When AI projects need an approved governance review, and how often approvals are re-reviewed. Reviews are decided by owners and admins in the{" "}
             <Link href={`/w/${ctx.org.slug}/governance`} className="underline hover:text-slate-800">
               AI use-case register
             </Link>
@@ -71,7 +71,7 @@ export async function GovernanceSettings({ ctx }: { ctx: WorkspaceContext }) {
           <ActionForm action={updateGovernancePolicy} className="space-y-5">
             <input type="hidden" name="slug" value={ctx.org.slug} />
             <fieldset>
-              <legend className="text-sm font-medium text-slate-700">Require an approved review before an initiative moves to</legend>
+              <legend className="text-sm font-medium text-slate-700">Require an approved review before an AI project moves to</legend>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 {GATEABLE_STAGES.map((s) => (
                   <label key={s} className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 has-checked:border-radar-600 has-checked:bg-radar-50/60">
@@ -81,7 +81,7 @@ export async function GovernanceSettings({ ctx }: { ctx: WorkspaceContext }) {
                       <span className="block text-xs text-slate-500">{STAGE_HINTS[s]}</span>
                       {unapproved[s] > 0 ? (
                         <span className="mt-1 block text-xs text-amber-800">
-                          {unapproved[s]} initiative{unapproved[s] === 1 ? " is" : "s are"} already in {labelFrom(STAGES, s)} without an approval. They stay
+                          {unapproved[s]} AI project{unapproved[s] === 1 ? " is" : "s are"} already in {labelFrom(STAGES, s)} without an approval. They stay
                           put but are flagged in the register.
                         </span>
                       ) : null}

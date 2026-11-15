@@ -74,7 +74,7 @@ const notesSchema = zOptText(5000);
 export async function reviewIdea(_prev: ActionState, form: FormData): Promise<ActionState> {
   return runAction(async () => {
     const { ctx, idea } = await authorizeTriage(form);
-    if (idea.status === "accepted") throw new ActionError("This idea has already been converted to an initiative.");
+    if (idea.status === "accepted") throw new ActionError("This idea has already been converted to an AI project.");
     const triageNotes = notesSchema.parse(field(form, "triageNotes"));
     const reopening = idea.status === "declined" || idea.status === "duplicate";
     await db
@@ -110,7 +110,7 @@ const convertSchema = z.object({
 export async function convertIdea(_prev: ActionState, form: FormData): Promise<ActionState> {
   return runAction(async () => {
     const { ctx, idea } = await authorizeTriage(form);
-    if (idea.status === "accepted") throw new ActionError("This idea has already been converted to an initiative.");
+    if (idea.status === "accepted") throw new ActionError("This idea has already been converted to an AI project.");
     const v = convertSchema.parse({
       title: field(form, "title") ?? idea.title,
       businessUnit: field(form, "businessUnit"),
@@ -136,7 +136,7 @@ export async function convertIdea(_prev: ActionState, form: FormData): Promise<A
         .set({ status: "accepted", triagedById: ctx.user.id, triagedAt: new Date(), declineReason: null, duplicateOfId: null })
         .where(and(eq(ideas.id, idea.id), eq(ideas.orgId, ctx.org.id), ne(ideas.status, "accepted")))
         .returning({ id: ideas.id });
-      if (claimed.length === 0) throw new ActionError("This idea has already been converted to an initiative.");
+      if (claimed.length === 0) throw new ActionError("This idea has already been converted to an AI project.");
 
       const [created] = await tx
         .insert(initiatives)
@@ -172,7 +172,7 @@ const declineSchema = z.object({
 export async function declineIdea(_prev: ActionState, form: FormData): Promise<ActionState> {
   return runAction(async () => {
     const { ctx, idea } = await authorizeTriage(form);
-    if (idea.status === "accepted") throw new ActionError("This idea has already been converted to an initiative.");
+    if (idea.status === "accepted") throw new ActionError("This idea has already been converted to an AI project.");
     const v = declineSchema.parse({ reason: field(form, "reason") ?? "", notify: field(form, "notify") === "1" });
     await db
       .update(ideas)
@@ -194,7 +194,7 @@ const duplicateSchema = z.object({
 export async function markDuplicate(_prev: ActionState, form: FormData): Promise<ActionState> {
   return runAction(async () => {
     const { ctx, idea } = await authorizeTriage(form);
-    if (idea.status === "accepted") throw new ActionError("This idea has already been converted to an initiative.");
+    if (idea.status === "accepted") throw new ActionError("This idea has already been converted to an AI project.");
     const v = duplicateSchema.parse({ target: field(form, "target") ?? "", notify: field(form, "notify") === "1" });
     const [kind, targetId] = v.target.split(":") as ["idea" | "initiative", string];
 
@@ -206,7 +206,7 @@ export async function markDuplicate(_prev: ActionState, form: FormData): Promise
         .from(initiatives)
         .where(and(eq(initiatives.id, targetId), eq(initiatives.orgId, ctx.org.id)))
         .limit(1);
-      if (!target) throw new ActionError("Initiative not found.");
+      if (!target) throw new ActionError("AI project not found.");
       ofTitle = target.title;
       set = { initiativeId: target.id, duplicateOfId: null };
     } else {

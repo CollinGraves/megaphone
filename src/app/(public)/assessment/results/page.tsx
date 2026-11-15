@@ -139,7 +139,7 @@ export default async function AssessmentResultsPage({ searchParams }: PageProps<
             {recs.priorities.length === 0 ? <li className="text-sm text-slate-600">No major gaps. Your report covers how to keep compounding.</li> : null}
           </ol>
           <div className="mt-6 border-t border-slate-100 pt-5">
-            <h2 className="font-semibold text-slate-900">{templates.length} starter initiatives{focus ? ` for ${focus}` : ""}</h2>
+            <h2 className="font-semibold text-slate-900">{templates.length} starter AI projects{focus ? ` for ${focus}` : ""}</h2>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 blur-[3px] select-none" aria-hidden>
               {templates.slice(0, 4).map((t) => (
                 <div key={t.id} className="rounded-lg border border-slate-200 p-3">

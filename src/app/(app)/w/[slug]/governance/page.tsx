@@ -83,10 +83,10 @@ export default async function GovernancePage({ params, searchParams }: PageProps
         <EmptyState
           icon={<ShieldCheck className="size-8" />}
           title="No AI use cases yet"
-          description="Each initiative you add becomes an entry in this register, ready to classify, review and approve."
+          description="Each AI project you add becomes an entry in this register, ready to classify, review and approve."
           action={
             ctx.can("initiative:write") ? (
-              <ButtonLink href={`${base}/initiatives/new`}>Add an initiative</ButtonLink>
+              <ButtonLink href={`${base}/initiatives/new`}>Add an AI project</ButtonLink>
             ) : undefined
           }
         />

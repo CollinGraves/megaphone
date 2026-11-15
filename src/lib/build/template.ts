@@ -75,7 +75,7 @@ export function templateBrief(c: BriefContext): BuildBrief {
   const recommended = highRisk || sensitive ? (integrationHeavy ? 2 : 1) : integrationHeavy ? 1 : 0;
 
   return {
-    summary: `Build "${i.title}" for ${i.businessUnit ?? "the team"}: ${i.problem ? i.problem.split(/(?<=\.)\s/)[0] : "solve the problem described in the initiative."} Recommended path: ${options[recommended].name}. (Template brief. Add an Anthropic API key for one tailored by AI.)`,
+    summary: `Build "${i.title}" for ${i.businessUnit ?? "the team"}: ${i.problem ? i.problem.split(/(?<=\.)\s/)[0] : "solve the problem described in the AI project."} Recommended path: ${options[recommended].name}. (Template brief. Add an Anthropic API key for one tailored by AI.)`,
     recommended_option: recommended,
     options,
     requirements: {
@@ -131,7 +131,7 @@ export function templateBrief(c: BriefContext): BuildBrief {
     ],
     open_questions: ["Who owns this after launch?", "What volume per week should it handle?", ...c.dependencies.filter((d) => d.access !== "granted").map((d) => `When can access to ${d.system} be granted?`)],
     tickets: [
-      { title: "Confirm scope and success metrics", description: "Agree the task boundaries, users and target metrics with the owner.", acceptance: ["Metrics recorded in the initiative"], estimate: "S" },
+      { title: "Confirm scope and success metrics", description: "Agree the task boundaries, users and target metrics with the owner.", acceptance: ["Metrics recorded in the AI project"], estimate: "S" },
       ...c.dependencies.map((d) => ({ title: `Set up read access to ${d.system}`, description: `Service account with least privilege for: ${d.data}.`, acceptance: ["Access granted and documented", "Sensitivity handling agreed"], estimate: "S" as const })),
       { title: `Build first version (${options[recommended].name})`, description: "Implement the recommended option with the drafted prompt and integrations.", acceptance: ["Runs end to end on test data"], estimate: options[recommended].effort },
       { title: "Create the evaluation set and run it", description: "Turn the test cases into a repeatable evaluation.", acceptance: ["Accuracy measured and recorded"], estimate: "S" },

@@ -222,7 +222,7 @@ export function notifySubmitterOfDecision(
     subject = `Your AI idea was accepted: ${idea.title}`;
     body =
       p(`Hi ${first},`) +
-      p(`Good news: ${escapeHtml(org.name)}'s AI team accepted your idea <strong>“${escapeHtml(idea.title)}”</strong>. It's now on the AI roadmap as the initiative <strong>“${escapeHtml(decision.initiativeTitle)}”</strong>, where the team will evaluate it.`) +
+      p(`Good news: ${escapeHtml(org.name)}'s AI team accepted your idea <strong>“${escapeHtml(idea.title)}”</strong>. It's now on the AI roadmap as the AI project <strong>“${escapeHtml(decision.initiativeTitle)}”</strong>, where the team will evaluate it.`) +
       p("Thanks for helping the company find where AI can make a difference.") +
       link;
     text = `${org.name}'s AI team accepted your idea "${idea.title}". It's now on the AI roadmap as "${decision.initiativeTitle}".`;
@@ -237,7 +237,7 @@ export function notifySubmitterOfDecision(
     text = `${org.name}'s AI team reviewed your idea "${idea.title}" and decided not to take it forward right now: ${decision.reason}`;
   } else {
     subject = `An update on your AI idea: ${idea.title}`;
-    const what = decision.isInitiative ? "an initiative already on the AI roadmap" : "an idea the team is already looking at";
+    const what = decision.isInitiative ? "an AI project already on the AI roadmap" : "an idea the team is already looking at";
     body =
       p(`Hi ${first},`) +
       p(`Thanks for submitting <strong>“${escapeHtml(idea.title)}”</strong>. It overlaps with ${what}: <strong>“${escapeHtml(decision.ofTitle)}”</strong>, so the team will track it there.`) +

@@ -140,7 +140,7 @@ export function initiativeCapMessage(dbPlan: DbPlan | string, activeCount: numbe
   if (limit == null || activeCount < limit) return null;
   const plan = planFor(dbPlan);
   const next = plan.id === "free" ? PLANS.team : PLANS.business;
-  return `The ${plan.name} plan includes up to ${limit} initiatives. Upgrade to the ${next.name} plan to add more, or archive one you no longer need.`;
+  return `The ${plan.name} plan includes up to ${limit} AI projects. Upgrade to the ${next.name} plan to add more, or archive one you no longer need.`;
 }
 
 /** Monthly-equivalent price for display. */

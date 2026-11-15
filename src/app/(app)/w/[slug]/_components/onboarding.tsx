@@ -164,7 +164,7 @@ function GuidedLaunchCard({ slug }: { slug: string }) {
         <div className="text-xs font-medium uppercase tracking-wide text-radar-400">Guided Launch</div>
         <h2 className="mt-1 font-semibold">Want {BRAND_COMPANY} to set this up for you?</h2>
         <p className="mt-1.5 max-w-2xl text-sm text-slate-300">
-          In a working session with your team, a {BRAND_COMPANY} consultant loads your initiatives, maps the data they depend on, estimates value and
+          In a working session with your team, a {BRAND_COMPANY} consultant loads your AI projects, maps the data they depend on, estimates value and
           classifies risk, so the portfolio is ready to run.
         </p>
       </div>

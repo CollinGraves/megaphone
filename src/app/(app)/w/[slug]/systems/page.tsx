@@ -23,14 +23,14 @@ export default async function SystemsPage({ params }: PageProps<"/w/[slug]/syste
       <PageHeader
         eyebrow="Data readiness"
         title="Systems & data"
-        description="The systems of record your AI initiatives depend on. Track which initiatives need which data, and where access is blocked."
+        description="The systems of record your AI projects depend on. Track which AI projects need which data, and where access is blocked."
       />
 
       {rows.length === 0 ? (
         <EmptyState
           icon={<Database className="size-8" />}
           title="No systems yet"
-          description="Add the systems your initiatives rely on: CRM, ERP, data warehouse, document stores."
+          description="Add the systems your AI projects rely on: CRM, ERP, data warehouse, document stores."
         />
       ) : (
         <Card className="overflow-hidden">
@@ -40,7 +40,7 @@ export default async function SystemsPage({ params }: PageProps<"/w/[slug]/syste
                 <Th>System</Th>
                 <Th>Category</Th>
                 <Th>Owner</Th>
-                <Th className="text-right">Initiatives</Th>
+                <Th className="text-right">AI projects</Th>
                 <Th>Access</Th>
                 <Th className="text-right">Sensitive datasets</Th>
               </tr>

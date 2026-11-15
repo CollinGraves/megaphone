@@ -30,7 +30,7 @@ export default async function NewWorkspacePage() {
         <div className="text-xs font-medium uppercase tracking-wide text-radar-700">{BRAND} Workspace · Free</div>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Create your company’s AI workspace</h1>
         <p className="mt-2 max-w-xl text-sm text-slate-600 sm:text-base">
-          Prioritize every AI initiative and track its impact and the data it needs. Free for up to {PLANS.free.initiativeLimit} initiatives. No card, no sales call.
+          Prioritize every AI project and track its impact and the data it needs. Free for up to {PLANS.free.initiativeLimit} AI projects. No card, no sales call.
         </p>
 
         <Card className="mt-6 p-5 sm:p-6">
@@ -133,7 +133,7 @@ export default async function NewWorkspacePage() {
             ))}
           </ul>
           <p className="mt-4 text-xs text-slate-500">
-            Need more? Team and Business add more initiatives, company-wide idea intake, governance approvals and MCP access.{" "}
+            Need more? Team and Business add more AI projects, company-wide idea intake, governance approvals and MCP access.{" "}
             <Link href="/pricing" className="font-medium text-radar-700 hover:underline">
               See pricing
             </Link>

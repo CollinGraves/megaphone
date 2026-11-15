@@ -212,7 +212,7 @@ export async function setArchived(_prev: ActionState, form: FormData): Promise<A
     await db.update(initiatives).set({ archivedAt: archive ? new Date() : null }).where(eq(initiatives.id, initiative.id));
     await logActivity(ctx, archive ? "initiative.archived" : "initiative.restored", { title: initiative.title }, initiative.id);
     revalidateWorkspace(ctx.org.slug);
-    return { ok: true, message: archive ? "Initiative archived." : "Initiative restored." };
+    return { ok: true, message: archive ? "AI project archived." : "AI project restored." };
   });
 }
 
@@ -220,7 +220,7 @@ export async function deleteInitiative(_prev: ActionState, form: FormData): Prom
   return runAction(async () => {
     const ctx = await authorize(form, "initiative:delete");
     const initiative = await getOwnedInitiative(ctx, zId().parse(field(form, "id")));
-    if (!initiative.archivedAt) throw new ActionError("Archive the initiative before deleting it.");
+    if (!initiative.archivedAt) throw new ActionError("Archive the AI project before deleting it.");
     await db.delete(initiatives).where(eq(initiatives.id, initiative.id));
     // Logged without initiativeId: the row (and its cascade) is gone.
     await logActivity(ctx, "initiative.deleted", { title: initiative.title });

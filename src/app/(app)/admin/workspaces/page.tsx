@@ -129,7 +129,7 @@ export default async function WorkspacesPage({ searchParams }: PageProps<"/admin
                 <Th>Plan</Th>
                 <Th>Status</Th>
                 <Th className="text-right">Members</Th>
-                <Th className="text-right">Initiatives</Th>
+                <Th className="text-right">AI projects</Th>
                 <Th>Activation</Th>
                 <Th className="hidden md:table-cell">Consultants</Th>
                 <Th className="hidden lg:table-cell">Created</Th>

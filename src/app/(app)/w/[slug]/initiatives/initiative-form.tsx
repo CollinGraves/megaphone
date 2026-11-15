@@ -79,7 +79,7 @@ export function InitiativeForm({
           <Field label="Executive sponsor" htmlFor="sponsor">
             <Input id="sponsor" name="sponsor" maxLength={120} defaultValue={i?.sponsor ?? ""} />
           </Field>
-          <Field label="Initiative owner" htmlFor="ownerName">
+          <Field label="AI project owner" htmlFor="ownerName">
             <Input id="ownerName" name="ownerName" maxLength={120} defaultValue={i?.ownerName ?? ""} />
           </Field>
           <Field label="Build approach" htmlFor="buildApproach">
@@ -146,7 +146,7 @@ export function InitiativeForm({
           <Field
             label="Rank override"
             htmlFor="rankOverride"
-            hint="Optional. Pin this initiative to a position in the ranking (1 = top), e.g. for a mandated project. Leave blank to rank by score."
+            hint="Optional. Pin this AI project to a position in the ranking (1 = top), e.g. for a mandated project. Leave blank to rank by score."
             className="max-w-xs"
           >
             <Input id="rankOverride" name="rankOverride" type="number" min={1} max={999} step={1} defaultValue={i?.rankOverride ?? ""} />
@@ -155,7 +155,7 @@ export function InitiativeForm({
       </Card>
 
       <Card>
-        <CardHeader title="Costs" description="Used for ROI. Impact metrics (hours saved, cost saved, revenue) are added on the initiative page." />
+        <CardHeader title="Costs" description="Used for ROI. Impact metrics (hours saved, cost saved, revenue) are added on the AI project page." />
         <CardBody className="grid gap-4 sm:grid-cols-2">
           <Field label="Estimated build cost (USD)" htmlFor="estimatedBuildCost" hint="One-time: implementation, partner fees, internal effort.">
             <Input id="estimatedBuildCost" name="estimatedBuildCost" type="number" min={0} step="any" defaultValue={i?.estimatedBuildCost ?? ""} placeholder="e.g. 120000" />
@@ -170,7 +170,7 @@ export function InitiativeForm({
         <ButtonLink href={cancelHref} variant="ghost">
           Cancel
         </ButtonLink>
-        <SubmitButton>{i ? "Save changes" : "Create initiative"}</SubmitButton>
+        <SubmitButton>{i ? "Save changes" : "Create AI project"}</SubmitButton>
       </div>
     </ActionForm>
   );

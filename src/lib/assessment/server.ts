@@ -151,9 +151,9 @@ export async function sendClaimEmails(a: Assessment, owner: CurrentUser) {
 <p style="margin:0 0 16px;color:#334155">${escapeHtml(level?.summary ?? "")}</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px">${scoreRowsHtml(a)}</table>
 ${priorities ? `<h2 style="margin:0 0 8px;font-size:16px;color:#0f172a">Where to focus first</h2><ol style="margin:0 0 20px;padding-left:20px;color:#0f172a;font-size:14px">${priorities}</ol>` : ""}
-${starters ? `<h2 style="margin:0 0 8px;font-size:16px;color:#0f172a">Suggested starter initiatives</h2><ul style="margin:0 0 20px;padding-left:20px;color:#0f172a;font-size:14px">${starters}</ul>` : ""}
+${starters ? `<h2 style="margin:0 0 8px;font-size:16px;color:#0f172a">Suggested starter AI projects</h2><ul style="margin:0 0 20px;padding-left:20px;color:#0f172a;font-size:14px">${starters}</ul>` : ""}
 <p style="margin:0 0 20px"><a href="${reportUrl}" style="display:inline-block;background:#0b1220;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600">View your full report</a></p>
-<p style="margin:0;color:#475569;font-size:14px">From the report you can create a free AI portfolio workspace pre-filled with these initiatives, or <a href="${appUrl()}/contact?from=assessment" style="color:#0b7363">talk to North Labs</a> about your results.</p>`;
+<p style="margin:0;color:#475569;font-size:14px">From the report you can create a free AI portfolio workspace pre-filled with these AI projects, or <a href="${appUrl()}/contact?from=assessment" style="color:#0b7363">talk to North Labs</a> about your results.</p>`;
 
   const text = [
     `Your AI readiness: ${levelLabel} (${overall}/100)`,

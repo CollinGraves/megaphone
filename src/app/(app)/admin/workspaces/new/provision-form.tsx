@@ -17,7 +17,7 @@ type Consultant = { id: string; name: string; email: string };
 const PLAN_HINTS: Record<keyof typeof PLAN_LABELS, string> = {
   engagement: "Managed: included with a North Labs engagement (all features)",
   enterprise: "Custom contract (all features)",
-  trial: "Free plan (5 initiatives); the customer can upgrade themselves",
+  trial: "Free plan (5 AI projects); the customer can upgrade themselves",
   team: "Team plan without Stripe billing (comped)",
   business: "Business plan without Stripe billing (comped)",
   pro: "Legacy; prefer Business",

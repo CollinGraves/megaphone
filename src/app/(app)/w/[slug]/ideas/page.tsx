@@ -103,7 +103,7 @@ export default async function IdeasPage({ params, searchParams }: PageProps<"/w/
         title={canTriage ? "Ideas" : "My ideas"}
         description={
           canTriage
-            ? "AI ideas from across the company. Review them, convert the promising ones into initiatives, and let submitters know what happened."
+            ? "AI ideas from across the company. Review them, convert the promising ones into AI projects, and let submitters know what happened."
             : `Ideas you’ve submitted to ${ctx.org.name}’s AI team, and where they stand.`
         }
         actions={

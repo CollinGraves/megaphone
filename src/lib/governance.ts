@@ -152,7 +152,7 @@ export function stageChangeBlocked(input: {
   const { policy, fromStage, toStage } = input;
   if (fromStage === toStage || !stageRequiresApproval(policy, toStage)) return null;
   const stageLabel = labelFrom(STAGES, toStage);
-  const required = `Workspace policy requires an approved AI governance review before an initiative moves to ${stageLabel}.`;
+  const required = `Workspace policy requires an approved AI governance review before an AI project moves to ${stageLabel}.`;
   if (fromStage == null) return `${required} Create it in an earlier stage, classify it and request a review first.`;
   if (approvalInForce(input, input.today)) return null;
   switch (input.approvalStatus) {
