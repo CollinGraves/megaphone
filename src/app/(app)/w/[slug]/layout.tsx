@@ -1,5 +1,5 @@
 import { and, count, eq, inArray, isNull } from "drizzle-orm";
-import { BellRing, Building, CreditCard, Database, Lightbulb, LayoutDashboard, ListChecks, Settings, ShieldCheck } from "lucide-react";
+import { BellRing, Building, CreditCard, FileText, Database, Lightbulb, LayoutDashboard, ListChecks, Settings, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui";
 import { db } from "@/db";
@@ -59,6 +59,7 @@ export default async function WorkspaceLayout({ children, params }: LayoutProps<
 
   const nav: NavItem[] = [
     { href: base, label: "Dashboard", icon: <LayoutDashboard />, exact: true },
+    { href: `${base}/report`, label: "Monthly update", icon: <FileText /> },
     { href: `${base}/initiatives`, label: "Initiatives", icon: <ListChecks /> },
     { href: `${base}/departments`, label: "Departments", icon: <Building /> },
     { href: `${base}/ideas`, label: "Ideas", icon: <Lightbulb />, count: ctx.can("ideas:triage") ? newIdeas?.n : undefined },

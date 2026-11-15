@@ -231,3 +231,16 @@ export async function deleteWorkspaceAction(_prev: ActionState, form: FormData):
     redirect("/feed?deleted=workspace");
   });
 }
+
+/* ───────────────────────────── Monthly update email ───────────────────────────── */
+
+export async function updateMonthlyReport(_prev: ActionState, form: FormData): Promise<ActionState> {
+  return runAction(async () => {
+    const ctx = await authorize(form, "settings:manage");
+    const on = form.get("on") === "1";
+    await db.update(organizations).set({ monthlyReport: on }).where(eq(organizations.id, ctx.org.id));
+    await logActivity(ctx, "settings.monthly_report", { on });
+    revalidateWorkspace(ctx.org.slug);
+    return { ok: true, message: on ? "Owners and admins will get the monthly update by email." : "Monthly update emails are off. The page is still there any time." };
+  });
+}
