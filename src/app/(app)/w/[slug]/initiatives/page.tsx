@@ -1,7 +1,7 @@
-import { Archive, LibraryBig, ListChecks, Pin, Plus, Search } from "lucide-react";
+import { Archive, ClipboardPaste, LibraryBig, ListChecks, Pin, Plus, Search } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ButtonLink, Card, EmptyState, Input, PageHeader, Select, Table, Td, Th, buttonClass } from "@/components/ui";
+import { Alert, ButtonLink, Card, EmptyState, Input, PageHeader, Select, Table, Td, Th, buttonClass } from "@/components/ui";
 import { HEALTH, STAGES } from "@/lib/taxonomy";
 import { cn, formatUsd } from "@/lib/utils";
 import { departmentOptions } from "@/lib/departments.server";
@@ -63,6 +63,11 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
           <>
             {!archived ? <ExportCsvButton ctx={ctx} /> : null}
             {ctx.can("initiative:write") && !archived ? (
+              <ButtonLink href={`${base}/initiatives/import`} variant="secondary">
+                <ClipboardPaste className="size-4" /> Import a list
+              </ButtonLink>
+            ) : null}
+            {ctx.can("initiative:write") && !archived ? (
               <ButtonLink href={`${base}/initiatives/templates`} variant="secondary">
                 <LibraryBig className="size-4" /> Start from a template
               </ButtonLink>
@@ -75,6 +80,11 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
           </>
         }
       />
+      {Number(one(sp.imported)) > 0 ? (
+        <Alert tone="success" className="mb-4">
+          Added {Number(one(sp.imported))} AI project{Number(one(sp.imported)) === 1 ? "" : "s"} from your list. Open each one to add details, scores and impact estimates.
+        </Alert>
+      ) : null}
 
       <form
         method="get"
@@ -149,11 +159,14 @@ export default async function InitiativesPage({ params, searchParams }: PageProp
         <EmptyState
           icon={<ListChecks className="size-8" />}
           title="No initiatives yet"
-          description="Add each AI initiative, from early idea to production. Not sure where to start? Pick from common use cases."
+          description="Add each AI initiative, from early idea to production. Already have a list somewhere? Paste it in. Not sure where to start? Pick from common use cases."
           action={
             ctx.can("initiative:write") ? (
               <div className="flex flex-wrap justify-center gap-2">
-                <ButtonLink href={`${base}/initiatives/templates`}>
+                <ButtonLink href={`${base}/initiatives/import`}>
+                  <ClipboardPaste className="size-4" /> Import a list
+                </ButtonLink>
+                <ButtonLink href={`${base}/initiatives/templates`} variant="secondary">
                   <LibraryBig className="size-4" /> Start from a template
                 </ButtonLink>
                 <ButtonLink href={`${base}/initiatives/new`} variant="secondary">

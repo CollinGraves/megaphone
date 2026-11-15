@@ -556,6 +556,8 @@ export const organizations = pgTable("organizations", {
    * domain are pointed here (request to join) instead of creating a second workspace. Null for personal email.
    */
   emailDomain: text("email_domain"),
+  /** Owners and admins get the monthly one-page update by email. */
+  monthlyReport: boolean("monthly_report").notNull().default(true),
   /** Opt-in: anonymized, aggregate stats from this workspace may feed North Labs research (the show, reports). */
   shareAggregateInsights: boolean("share_aggregate_insights").notNull().default(false),
   provisionedById: text("provisioned_by_id").references(() => user.id, { onDelete: "set null" }),
@@ -975,6 +977,31 @@ export const departmentMembers = pgTable(
   (t) => [primaryKey({ columns: [t.departmentId, t.userId] }), index("department_members_user_idx").on(t.userId)],
 );
 
+/* ─────────────────────────────── Monthly update ─────────────────────────────── */
+
+/**
+ * A saved monthly update per workspace: the numbers and the written summary, so the in-app page and
+ * the email always match. `sentAt` makes the monthly email idempotent.
+ */
+export const workspaceReports = pgTable(
+  "workspace_reports",
+  {
+    id: id(),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    /** "YYYY-MM" */
+    month: text("month").notNull(),
+    data: jsonb("data").$type<Record<string, unknown>>().notNull(),
+    summary: text("summary").notNull(),
+    generator: text("generator").notNull(),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [uniqueIndex("workspace_reports_org_month_idx").on(t.orgId, t.month)],
+);
+
 /* ─────────────────────────────── Join requests ─────────────────────────────── */
 
 export const joinRequestStatus = pgEnum("join_request_status", ["pending", "approved", "declined", "cancelled"]);
@@ -1110,6 +1137,7 @@ export type Story = typeof stories.$inferSelect;
 export type Episode = typeof episodes.$inferSelect;
 export type JoinRequest = typeof joinRequests.$inferSelect;
 export type Department = typeof departments.$inferSelect;
+export type WorkspaceReport = typeof workspaceReports.$inferSelect;
 export type DepartmentRole = (typeof departmentRole.enumValues)[number];
 export type Source = typeof sources.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;

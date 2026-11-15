@@ -128,6 +128,7 @@ export function evaluateActivation(
       href: `${base}/initiatives/templates`,
       cta: "Start from a template",
       capability: "initiative:write",
+      secondary: { href: `${base}/initiatives/import`, cta: "Import a list", capability: "initiative:write" },
     },
     {
       id: "dependency",
