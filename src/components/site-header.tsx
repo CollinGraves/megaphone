@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { Logo } from "./logo";
 import { ButtonLink } from "./ui";
 import { BRAND } from "@/lib/brand";
+import { startFreeHref } from "@/lib/marketing";
 
 export async function SiteHeader({ dark = false }: { dark?: boolean }) {
   const user = await getCurrentUser();
@@ -12,20 +13,14 @@ export async function SiteHeader({ dark = false }: { dark?: boolean }) {
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:gap-6 sm:px-6">
         <Logo dark={dark} />
         <nav className="ml-4 hidden items-center gap-6 md:flex">
-          <Link href="/news" className={link}>
-            Top stories
-          </Link>
-          <Link href="/assessment?src=nav" className={`${link} hidden whitespace-nowrap lg:inline`}>
-            AI readiness check
-          </Link>
-          <Link href="/show" className={link}>
-            Show
-          </Link>
-          <Link href="/workspace" className={link}>
-            For companies
+          <Link href="/workspace" className={`${link} whitespace-nowrap`}>
+            How it works
           </Link>
           <Link href="/pricing" className={link}>
             Pricing
+          </Link>
+          <Link href="/show" className={link}>
+            Show
           </Link>
           <Link href="/contact" className={link}>
             Contact
@@ -34,15 +29,15 @@ export async function SiteHeader({ dark = false }: { dark?: boolean }) {
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
           {user ? (
             <ButtonLink href="/feed" variant={dark ? "accent" : "primary"} size="sm">
-              Open my feed
+              Open {BRAND}
             </ButtonLink>
           ) : (
             <>
               <Link href="/sign-in" className={`${link} whitespace-nowrap px-2`}>
                 Sign in
               </Link>
-              <ButtonLink href="/sign-up?src=header" variant={dark ? "accent" : "primary"} size="sm">
-                Get AI news
+              <ButtonLink href={startFreeHref("header")} variant={dark ? "accent" : "primary"} size="sm">
+                Start free
               </ButtonLink>
             </>
           )}
@@ -60,26 +55,26 @@ export function SiteFooter() {
           <span className="font-medium text-slate-700">{BRAND}</span> is built and run by North Labs.
         </div>
         <nav className="flex flex-wrap gap-x-5 gap-y-2">
-          <Link href="/news" className="hover:text-slate-900">
-            Top stories
-          </Link>
-          <Link href="/assessment?src=footer" className="hover:text-slate-900">
-            AI readiness check
-          </Link>
           <Link href="/workspace" className="hover:text-slate-900">
-            For companies
-          </Link>
-          <Link href="/show" className="hover:text-slate-900">
-            The show
+            How it works
           </Link>
           <Link href="/pricing" className="hover:text-slate-900">
             Pricing
           </Link>
+          <Link href="/news" className="hover:text-slate-900">
+            AI news
+          </Link>
+          <Link href="/assessment?src=footer" className="hover:text-slate-900">
+            AI readiness check
+          </Link>
+          <Link href="/show" className="hover:text-slate-900">
+            AI Office Hours
+          </Link>
           <Link href="/contact" className="hover:text-slate-900">
             Contact
           </Link>
-          <Link href="/sign-up?src=footer" className="hover:text-slate-900">
-            Sign up
+          <Link href={startFreeHref("footer")} className="hover:text-slate-900">
+            Start free
           </Link>
         </nav>
       </div>

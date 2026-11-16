@@ -24,7 +24,7 @@ import { BRAND, BRAND_COMPANY } from "@/lib/brand";
 import { PLANS } from "@/lib/plans";
 
 export const metadata: Metadata = {
-  title: `The ${BRAND} Workspace: one list for every AI project`,
+  title: `How ${BRAND} works: one list for every AI project`,
   description:
     "Rank every AI project by value, effort and risk. Track hours and dollars saved, the data each one needs and approvals. Free for up to 5 AI projects.",
   alternates: { canonical: "/workspace" },
@@ -40,7 +40,7 @@ export default function WorkspaceProductPage() {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(18,179,147,0.18),transparent_55%)]" />
         <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:py-20">
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-radar-300">{BRAND} Workspace</div>
+            <div className="text-sm font-semibold text-radar-300">{BRAND}</div>
             <h1 className="mt-2 text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">One list for every AI project at your company.</h1>
             <p className="mt-5 max-w-lg text-lg text-slate-300">
               See what each AI project does, what it&apos;s worth, what data it needs and if it&apos;s approved. The list is ranked, so you know what to do
@@ -87,7 +87,7 @@ export default function WorkspaceProductPage() {
           icon={<ClipboardList />}
           eyebrow="Pick what's next"
           title="Rank every AI project so you know what to do next"
-          body="In the Workspace, you score each AI project from 1 to 5 on value, effort, fit and risk. You choose how much each one counts. The best projects rise to the top, and you can pin one that must go first."
+          body={`In ${BRAND}, you score each AI project from 1 to 5 on value, effort, fit and risk. You choose how much each one counts. The best projects rise to the top, and you can pin one that must go first.`}
           points={["Follow each project from idea to live", "Use your own scoring rules for every project", "Filter by stage, AI tool, team or department"]}
           visual={<ScoreVisual />}
         />
@@ -96,7 +96,7 @@ export default function WorkspaceProductPage() {
           icon={<TrendingUp />}
           eyebrow="Measure"
           title="See what each AI project is worth, in hours and dollars"
-          body="Start with a guess of what an AI project will save. Each month, write down what really happened. The Workspace turns hours into dollars and adds up your costs, so you see what you get back for what you spend."
+          body={`Start with a guess of what an AI project will save. Each month, write down what really happened. ${BRAND} turns hours into dollars and adds up your costs, so you see what you get back for what you spend.`}
           points={["Hours saved, money saved, money made, or your own number", "Your guess next to what really happened, month by month", "Totals your leaders can read in one minute"]}
           visual={<ImpactVisual />}
         />
@@ -104,7 +104,7 @@ export default function WorkspaceProductPage() {
           icon={<Lightbulb />}
           eyebrow="Collect ideas"
           title="Get AI ideas from people across your company"
-          body="People send AI ideas through the Workspace. They describe the task, how often it happens and how many hours it takes. You sort through the ideas and turn good ones into projects. Each person hears back."
+          body={`People send AI ideas through ${BRAND}. They describe the task, how often it happens and how many hours it takes. You sort through the ideas and turn good ones into projects. Each person hears back.`}
           points={[
             "With the Team plan, share one link anyone at work can use, with no account",
             "Turn an idea into a project, say no with a reason, or mark it as a repeat",
@@ -117,7 +117,7 @@ export default function WorkspaceProductPage() {
           icon={<Hammer />}
           eyebrow="Build"
           title="Get a step-by-step plan to build any AI project"
-          body="With one click, the Workspace writes a build plan for an AI project. It compares a few ways to build it and picks the best fit for the tools you already use. It lists the data you need, plus a prompt, tests and a to-do list."
+          body={`With one click, ${BRAND} writes a build plan for an AI project. It compares a few ways to build it and picks the best fit for the tools you already use. It lists the data you need, plus a prompt, tests and a to-do list.`}
           points={["Uses tools you already pay for when it can", "Download the plan, or send the to-do list to Jira", "AI coding tools can read the plan and report progress"]}
           visual={<BuildVisual />}
         />
@@ -148,10 +148,10 @@ export default function WorkspaceProductPage() {
       <section className="border-y border-slate-200 bg-white">
         <div className="mx-auto grid max-w-7xl gap-6 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-4">
           {[
-            { icon: Bell, title: "News alerts for your AI tools", body: "When news affects an AI tool you use, like a price change or a model shutting down, the Workspace flags each project that uses it." },
+            { icon: Bell, title: "News alerts for your AI tools", body: `When news affects an AI tool you use, like a price change or a model shutting down, ${BRAND} flags each project that uses it.` },
             { icon: Building, title: "Departments", body: "With the Business plan, Finance, Sales and other teams each get their own people, leads, AI projects, ideas and news." },
             { icon: Plug, title: "Ask Claude or ChatGPT", body: "With the Team plan, ask Claude, Cursor or ChatGPT about your AI projects. With the Business plan, add ideas and results from them too." },
-            { icon: Download, title: "Your data stays yours", body: "With the Team plan or higher, download every AI project as a spreadsheet. The Workspace never connects to your company's systems." },
+            { icon: Download, title: "Your data stays yours", body: `With the Team plan or higher, download every AI project as a spreadsheet. ${BRAND} never connects to your company's systems.` },
           ].map(({ icon: Icon, title, body }) => (
             <div key={title} className="min-w-0">
               <Icon className="size-5 text-radar-600" aria-hidden />
@@ -164,7 +164,7 @@ export default function WorkspaceProductPage() {
 
       {/* 5. How to start */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-        <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Set up the Workspace in an afternoon</h2>
+        <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Set up {BRAND} in an afternoon</h2>
         <ol className="mt-8 grid gap-6 md:grid-cols-3">
           {[
             ["Create your workspace", "It takes two minutes with your work email. Coworkers with the same email domain can ask to join."],
@@ -220,7 +220,7 @@ export default function WorkspaceProductPage() {
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-14 sm:px-6 md:flex-row md:items-center md:justify-between">
           <div className="max-w-2xl">
             <Sparkles className="size-5 text-radar-400" aria-hidden />
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight">Want {BRAND_COMPANY} to set up the Workspace for you?</h2>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight">Want {BRAND_COMPANY} to set up {BRAND} for you?</h2>
             <p className="mt-2 text-slate-300">
               {BRAND_COMPANY}, the company behind {BRAND}, can meet with your leaders to list every AI project. We set up your workspace and help build
               the first projects. This help is optional, and the workspace stays yours.
@@ -260,14 +260,14 @@ export default function WorkspaceProductPage() {
 }
 
 const FAQ: [string, string][] = [
-  ["Does the Workspace work with any AI tool?", "Yes. Track AI projects on any tool: ChatGPT, Copilot, Claude, Gemini, free open models or tools you built."],
+  [`Does ${BRAND} work with any AI tool?`, "Yes. Track AI projects on any tool: ChatGPT, Copilot, Claude, Gemini, free open models or tools you built."],
   [
-    "Does the Workspace connect to our systems or read our data?",
-    "No. You write short notes about what each project uses. The Workspace keeps your notes, scores and numbers. It never stores your company's data.",
+    `Does ${BRAND} connect to our systems or read our data?`,
+    `No. You write short notes about what each project uses. ${BRAND} keeps your notes, scores and numbers. It never stores your company's data.`,
   ],
   [
     "How is this different from a spreadsheet or Jira?",
-    "The Workspace does one job: it tracks AI projects. Scores, savings, data needs, approvals and AI news stay together and stay up to date. Your team can still build in Jira. Build plans send their to-do lists there.",
+    `${BRAND} does one job: it tracks AI projects. Scores, savings, data needs, approvals and AI news stay together and stay up to date. Your team can still build in Jira. Build plans send their to-do lists there.`,
   ],
   [
     "Who can see what?",
