@@ -187,7 +187,7 @@ export default async function PricingPage({ searchParams }: PageProps<"/pricing"
             ))}
           </div>
           <div className="mt-10 flex flex-wrap items-center gap-3">
-            <ButtonLink href={target.kind === "signed_out" ? START_FREE : target.kind === "no_workspace" ? "/workspaces/new" : "/feed"} size="lg">
+            <ButtonLink href={target.kind === "signed_out" ? START_FREE : target.kind === "no_workspace" ? "/workspaces/new" : "/home"} size="lg">
               {target.kind === "signed_out" || target.kind === "no_workspace" ? "Start free" : "Back to the app"}
             </ButtonLink>
             <ButtonLink href="/contact?from=pricing_faq" variant="secondary" size="lg">

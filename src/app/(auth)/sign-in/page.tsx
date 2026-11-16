@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function SignInPage({ searchParams }: PageProps<"/sign-in">) {
   const { next, email, error } = await searchParams;
   const nextPath = safeNextPath(next, "") || undefined;
-  if (await getCurrentUser()) redirect(nextPath ?? "/feed");
+  if (await getCurrentUser()) redirect(nextPath ?? "/home");
   return (
     <AuthForm
       mode="sign-in"

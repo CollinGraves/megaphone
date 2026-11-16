@@ -16,7 +16,7 @@ const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : u
 export default async function SignUpPage({ searchParams }: PageProps<"/sign-up">) {
   const params = await searchParams;
   const nextPath = safeNextPath(params.next, "") || undefined;
-  if (await getCurrentUser()) redirect(nextPath ?? "/feed");
+  if (await getCurrentUser()) redirect(nextPath ?? "/home");
   const source = one(params.src) ?? (one(params.utm_source) ? `utm:${one(params.utm_source)}` : undefined);
   return (
     <AuthForm

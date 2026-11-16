@@ -50,14 +50,14 @@ export function AuthForm({
     setError(null);
     start(async () => {
       const result = isSignUp
-        ? await authClient.signUp.email({ email: email.trim(), password, name, callbackURL: "/feed" })
+        ? await authClient.signUp.email({ email: email.trim(), password, name, callbackURL: "/home" })
         : await authClient.signIn.email({ email: email.trim(), password });
       if (result.error) {
         setError(result.error.message ?? "Something went wrong. Please try again.");
         return;
       }
       if (isSignUp) await recordSignupContext({ ref: referral, source });
-      router.push(safeNextPath(next, isSignUp ? "/onboarding" : "/feed"));
+      router.push(safeNextPath(next, "/home"));
       router.refresh();
     });
   }
@@ -67,15 +67,15 @@ export function AuthForm({
   const ssoNewUserUrl = next ? safeNextPath(next, "/onboarding") : `/onboarding?${newUserParams.toString()}`;
   return (
     <Card className="p-6">
-      <h1 className="text-lg font-semibold text-slate-900">{isSignUp ? `Get ${BRAND} free` : "Welcome back"}</h1>
+      <h1 className="text-lg font-semibold text-slate-900">{isSignUp ? `Start with ${BRAND} free` : "Welcome back"}</h1>
       <p className="mt-1 text-sm text-slate-500">
         {isSignUp
-          ? "Use your work email. We'll pick AI news that fits your company's tools and industry."
-          : "Sign in to see your news and your workspaces."}
+          ? "Use your work email. Next, you'll set up your company's workspace, or ask to join it if a teammate already has."
+          : "Sign in to your company's workspace."}
       </p>
       <div className="mt-6">
         {errorMessage ? <Alert tone="error" className="mb-3">{errorMessage}</Alert> : null}
-        <SsoButtons providers={providers} callbackURL={safeNextPath(next, "/feed")} newUserCallbackURL={ssoNewUserUrl} />
+        <SsoButtons providers={providers} callbackURL={safeNextPath(next, "/home")} newUserCallbackURL={ssoNewUserUrl} />
         <div className="my-5 flex items-center gap-3 text-xs text-slate-400">
           <span className="h-px flex-1 bg-slate-200" /> or with your work email <span className="h-px flex-1 bg-slate-200" />
         </div>

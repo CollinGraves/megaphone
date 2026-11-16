@@ -20,9 +20,8 @@ export const metadata: Metadata = {
 };
 
 const DIGEST_OPTIONS = [
-  { value: "weekly", label: "Weekly digest", hint: "Mondays" },
-  { value: "daily", label: "Daily briefing", hint: "Weekday mornings" },
-  { value: "off", label: "No email", hint: "Just the feed" },
+  { value: "weekly", label: "Weekly email", hint: "Mondays" },
+  { value: "off", label: "No email", hint: "You can turn it on later" },
 ] as const;
 
 /** Profile step for people who signed up through the assessment gate (replaces /onboarding for them). */
@@ -63,9 +62,9 @@ export default async function AssessmentSetupPage({ params }: PageProps<"/assess
             </Card>
             <Card className="p-6">
               <fieldset>
-                <legend className="font-semibold text-slate-900">{BRAND} briefing</legend>
-                <p className="mt-0.5 text-sm text-slate-500">The AI news that matters to your industry and tools, in one short email.</p>
-                <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                <legend className="font-semibold text-slate-900">{BRAND} weekly email</legend>
+                <p className="mt-0.5 text-sm text-slate-500">What changed for the AI tools your projects use, plus any new alerts. One short email on Mondays.</p>
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
                   {DIGEST_OPTIONS.map((o) => (
                     <label key={o.value} className="cursor-pointer">
                       <input type="radio" name="digestFrequency" value={o.value} defaultChecked={o.value === "weekly"} className="peer sr-only" />

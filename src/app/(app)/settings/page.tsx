@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { eq } from "drizzle-orm";
 import { ActionForm, SubmitButton } from "@/components/forms";
-import { InterestFields, ProfileFields } from "@/components/preferences-fields";
+import { ProfileFields } from "@/components/preferences-fields";
 import { CreateApiKeyForm } from "@/components/api-keys";
 import { StackCard } from "@/components/stack/stack-card";
 import { Badge, Button, Card, PageHeader } from "@/components/ui";
@@ -28,18 +28,38 @@ export default async function SettingsPage() {
   const mcpUrl = `${appUrl()}/api/mcp`;
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <PageHeader title="Settings & preferences" description={`Signed in as ${user.email}`} />
+      <PageHeader title="Your settings" description={`Signed in as ${user.email}`} />
       <ActionForm action={updateSettings} className="space-y-6">
         <Card className="p-6">
           <h2 className="mb-5 font-semibold text-slate-900">Profile</h2>
           <ProfileFields d={defaults} />
         </Card>
         <Card className="p-6">
-          <h2 className="mb-5 font-semibold text-slate-900">Feed &amp; digest</h2>
-          <InterestFields d={defaults} />
+          <h2 className="font-semibold text-slate-900">Weekly email</h2>
+          <p className="mt-1 mb-4 text-sm text-slate-500">
+            Every Monday: what changed this week for the AI tools your workspace&apos;s projects use, and any new alerts.
+          </p>
+          <fieldset className="space-y-2">
+            <legend className="sr-only">Weekly email</legend>
+            {[
+              { value: "weekly", label: "Send me the weekly email" },
+              { value: "off", label: "Don't send it" },
+            ].map((o) => (
+              <label key={o.value} className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="radio"
+                  name="digestFrequency"
+                  value={o.value}
+                  defaultChecked={(defaults.digestFrequency === "off" ? "off" : "weekly") === o.value}
+                  className="accent-radar-600"
+                />
+                {o.label}
+              </label>
+            ))}
+          </fieldset>
         </Card>
         <div className="flex justify-end">
-          <SubmitButton>Save preferences</SubmitButton>
+          <SubmitButton>Save settings</SubmitButton>
         </div>
       </ActionForm>
       {stack ? (

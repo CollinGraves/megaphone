@@ -137,7 +137,7 @@ function Shell({ title, icon, children }: { title: string; icon?: ReactNode; chi
 function Footer({ signedIn }: { signedIn: boolean }) {
   return (
     <p className="mt-4 text-sm">
-      <Link href={signedIn ? "/feed" : "/"} className="font-medium text-radar-700 hover:underline">
+      <Link href={signedIn ? "/home" : "/"} className="font-medium text-radar-700 hover:underline">
         {signedIn ? "Go to your feed" : `Learn about ${BRAND}`}
       </Link>
     </p>

@@ -2,7 +2,7 @@ import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse, type NextRequest } from "next/server";
 
 /** Signed-in areas. Visitors without a session cookie are sent to sign-in first. */
-const PROTECTED = ["/feed", "/settings", "/onboarding", "/w/", "/admin", "/workspaces"];
+const PROTECTED = ["/home", "/feed", "/settings", "/onboarding", "/w/", "/admin", "/workspaces"];
 
 const canonicalHost = (() => {
   try {

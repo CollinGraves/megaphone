@@ -14,9 +14,9 @@ describe("isDigestDue", () => {
     expect(isDigestDue({ digestFrequency: "weekly", lastDigestSentAt: null }, saturday)).toBe(false);
     expect(isDigestDue({ digestFrequency: "weekly", lastDigestSentAt: new Date("2026-11-13T12:00:00Z") }, monday)).toBe(false);
   });
-  it("sends daily digests on weekdays with a 20h gap", () => {
-    expect(isDigestDue({ digestFrequency: "daily", lastDigestSentAt: new Date("2026-11-15T12:00:00Z") }, monday)).toBe(true);
-    expect(isDigestDue({ digestFrequency: "daily", lastDigestSentAt: new Date("2026-11-16T02:00:00Z") }, monday)).toBe(false);
+  it("treats the old daily setting as weekly", () => {
+    expect(isDigestDue({ digestFrequency: "daily", lastDigestSentAt: null }, monday)).toBe(true);
+    expect(isDigestDue({ digestFrequency: "daily", lastDigestSentAt: new Date("2026-11-13T12:00:00Z") }, monday)).toBe(false);
     expect(isDigestDue({ digestFrequency: "daily", lastDigestSentAt: null }, saturday)).toBe(false);
   });
   it("never sends when off", () => {
