@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Mic, PlayCircle } from "lucide-react";
 import { ButtonLink, Card } from "@/components/ui";
-import { BRAND_COMPANY, SHOW_HOST, SHOW_NAME, SHOW_TAGLINE } from "@/lib/brand";
+import { BRAND, BRAND_COMPANY, SHOW_HOST, SHOW_NAME, SHOW_TAGLINE } from "@/lib/brand";
 import { listEpisodes } from "@/lib/show/server";
 import { youtubeId } from "@/lib/show/rundown";
 import { formatDate } from "@/lib/utils";
@@ -10,8 +10,8 @@ import { formatDate } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: SHOW_NAME,
-  description: `${SHOW_TAGLINE} A video show about the week's AI news, what it means for mid-size companies, and a viewer's AI idea built live.`,
+  title: { absolute: SHOW_NAME },
+  description: `${SHOW_TAGLINE} A weekly video show where ${SHOW_HOST} of ${BRAND_COMPANY} answers viewers' AI questions, builds an AI idea live and covers the AI news that matters to mid-size companies.`,
   alternates: { canonical: "/show" },
 };
 
@@ -27,15 +27,15 @@ export default async function ShowPage() {
           <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">{SHOW_NAME}</h1>
           <p className="mt-3 max-w-2xl text-lg text-slate-300">{SHOW_TAGLINE}</p>
           <p className="mt-2 max-w-2xl text-sm text-slate-400">
-            A video show about the week&apos;s AI news and what it means for companies with 200 to 2,000 people. In each episode, we also build a
-            viewer&apos;s AI idea live. Hosted by {SHOW_HOST} at {BRAND_COMPANY}.
+            A weekly video show for people at companies with 200 to 2,000 employees who have to make AI work. Send in a question or an AI idea.{" "}
+            {SHOW_HOST} of {BRAND_COMPANY} answers it on air, and sometimes builds it live. Plus the AI news that matters that week.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <ButtonLink href="/sign-up?src=show" variant="accent">
-              Get AI news by email, free
+            <ButtonLink href="/contact?from=show" variant="accent">
+              Send your AI question
             </ButtonLink>
-            <ButtonLink href="/contact?from=show" variant="secondary">
-              Send us an idea to build on the show
+            <ButtonLink href="/sign-up?src=show" variant="secondary">
+              Track your AI projects with {BRAND}, free
             </ButtonLink>
           </div>
         </div>

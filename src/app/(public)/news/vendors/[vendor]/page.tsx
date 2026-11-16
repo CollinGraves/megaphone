@@ -6,18 +6,18 @@ import { PAGE_SIZE, pageFrom } from "@/lib/pagination";
 import { categoryCounts, listStories } from "@/lib/stories";
 import { VENDORS } from "@/lib/taxonomy";
 
-export async function generateMetadata({ params }: PageProps<"/radar/vendors/[vendor]">): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/news/vendors/[vendor]">): Promise<Metadata> {
   const { vendor } = await params;
   const v = VENDORS.find((x) => x.slug === vendor);
   if (!v) return {};
   return {
     title: `${v.label} AI news`,
     description: `${v.label} AI news: new models and products, prices and deals.`,
-    alternates: { canonical: `/radar/vendors/${v.slug}` },
+    alternates: { canonical: `/news/vendors/${v.slug}` },
   };
 }
 
-export default async function VendorPage({ params, searchParams }: PageProps<"/radar/vendors/[vendor]">) {
+export default async function VendorPage({ params, searchParams }: PageProps<"/news/vendors/[vendor]">) {
   const { vendor } = await params;
   const v = VENDORS.find((x) => x.slug === vendor);
   if (!v) notFound();
@@ -34,7 +34,7 @@ export default async function VendorPage({ params, searchParams }: PageProps<"/r
       stories={stories.slice(0, PAGE_SIZE)}
       hasMore={stories.length > PAGE_SIZE}
       page={page}
-      basePath={`/radar/vendors/${v.slug}`}
+      basePath={`/news/vendors/${v.slug}`}
       activeVendor={v.slug}
       categoryCounts={counts}
       signedIn={Boolean(user)}

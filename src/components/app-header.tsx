@@ -25,7 +25,7 @@ export async function AppHeader({ user }: { user: CurrentUser }) {
           <Link href="/feed" className={navLink}>
             Feed
           </Link>
-          <Link href="/radar" className={navLink}>
+          <Link href="/news" className={navLink}>
             Top stories
           </Link>
           {workspaces.length === 1 ? (

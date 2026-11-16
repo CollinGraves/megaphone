@@ -386,7 +386,7 @@ export default async function DashboardPage({ params }: PageProps<"/w/[slug]">) 
                     ))}
                     <span>· {timeAgo(a.storyPublishedAt)}</span>
                   </div>
-                  <Link href={`/radar/${a.storySlug}`} className="mt-0.5 block text-sm font-medium text-slate-900 hover:text-radar-700 hover:underline">
+                  <Link href={`/news/${a.storySlug}`} className="mt-0.5 block text-sm font-medium text-slate-900 hover:text-radar-700 hover:underline">
                     {a.storyTitle}
                   </Link>
                   <p className="mt-0.5 text-xs text-slate-500">

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * AI Radar design tokens.
+ * Radar design tokens.
  * Neutral ink + a single "radar" accent. Light UI; marketing hero uses the dark ink surface.
  */
 @theme {

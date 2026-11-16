@@ -119,7 +119,7 @@ export default async function StoriesPage({ searchParams }: PageProps<"/admin/st
                       <div className="flex items-start gap-2">
                         {s.featured ? <Star className="mt-0.5 size-4 shrink-0 fill-amber-400 text-amber-500" aria-label="Featured" /> : null}
                         <Link
-                          href={`/radar/${s.slug}`}
+                          href={`/news/${s.slug}`}
                           className={cn("font-medium hover:text-radar-700 hover:underline", hidden ? "text-slate-500 line-through" : "text-slate-900")}
                         >
                           {s.title}

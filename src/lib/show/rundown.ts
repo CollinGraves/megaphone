@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { APPROACH_LABELS, BuildBriefSchema, type BuildBrief } from "@/lib/build/schema";
 import { STAGES, labelFrom, vendorLabel } from "@/lib/taxonomy";
+import { BRAND } from "@/lib/brand";
 
 /**
  * Show prep: the rundown format, deterministic builders for each segment type, and the run sheet /
@@ -348,7 +349,7 @@ export function rundownToMarkdown(
     lines.push(`## ${i + 1}. ${SEGMENT_LABELS[s.kind]}: ${s.title} (${s.minutes} min)`);
     for (const id of s.story_ids) {
       const st = storiesById.get(id);
-      if (st) lines.push(`Story: ${st.title} (${baseUrl}/radar/${st.slug})`);
+      if (st) lines.push(`Story: ${st.title} (${baseUrl}/news/${st.slug})`);
     }
     lines.push(...s.talking_points.map((p) => `- ${p}`));
     if (s.hot_take) lines.push(`**Hot take:** ${s.hot_take}`);
@@ -368,7 +369,7 @@ export function rundownToMarkdown(
 export function showNotesFromRundown(r: Rundown, storiesById: ReadonlyMap<string, StoryRef>, baseUrl: string): string {
   const items = r.segments.flatMap((s) => {
     if (s.kind === "news") {
-      return s.story_ids.map((id) => storiesById.get(id)).filter((x): x is StoryRef => !!x).map((st) => `- ${st.title.replace(/[.!?:;,]+$/, "")}: ${baseUrl}/radar/${st.slug}`);
+      return s.story_ids.map((id) => storiesById.get(id)).filter((x): x is StoryRef => !!x).map((st) => `- ${st.title.replace(/[.!?:;,]+$/, "")}: ${baseUrl}/news/${st.slug}`);
     }
     if (s.kind === "regulation") return [`- Deadline watch: ${s.talking_points.length} upcoming date${s.talking_points.length === 1 ? "" : "s"} to know`];
     return [`- ${s.kind === "custom" ? s.title : `${SEGMENT_LABELS[s.kind]}: ${s.title.replace(/^(Build it live|By the numbers):\s*/, "")}`}`];
@@ -379,7 +380,8 @@ export function showNotesFromRundown(r: Rundown, storiesById: ReadonlyMap<string
     "In this episode:",
     ...items,
     "",
-    `Get the daily AI radar, free: ${baseUrl}/sign-up?src=show`,
+    `Send your AI question for a future episode: ${baseUrl}/contact?from=show`,
+    `Track your company's AI projects with ${BRAND}, free: ${baseUrl}/sign-up?src=show`,
     `How ready is your company for AI? Take the 3-minute assessment: ${baseUrl}/assessment?src=show`,
   ].join("\n");
 }

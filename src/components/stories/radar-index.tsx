@@ -91,7 +91,7 @@ export function RadarIndex({
             <ul className="space-y-0.5">
               <li>
                 <Link
-                  href="/radar"
+                  href="/news"
                   className={cn("flex justify-between rounded-md px-2 py-1.5 text-sm hover:bg-slate-100", !activeCategory && !activeVendor && "bg-slate-100 font-medium")}
                 >
                   All top stories
@@ -100,7 +100,7 @@ export function RadarIndex({
               {CATEGORIES.map((c) => (
                 <li key={c.slug}>
                   <Link
-                    href={`/radar/topics/${c.slug}`}
+                    href={`/news/topics/${c.slug}`}
                     className={cn(
                       "flex justify-between rounded-md px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-100",
                       activeCategory === c.slug && "bg-slate-100 font-medium text-slate-900",
@@ -119,7 +119,7 @@ export function RadarIndex({
               {VENDORS.map((v) => (
                 <Link
                   key={v.slug}
-                  href={`/radar/vendors/${v.slug}`}
+                  href={`/news/vendors/${v.slug}`}
                   className={cn(
                     "rounded-full border px-2.5 py-1 text-xs",
                     activeVendor === v.slug ? "border-radar-600 bg-radar-50 text-radar-900" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300",

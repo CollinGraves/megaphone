@@ -234,7 +234,7 @@ function ThisWeek({ stories, total }: { stories: Story[]; total: number }) {
       <ul>
         {stories.map((s) => (
           <li key={s.id}>
-            <Link href={`/radar/${s.slug}`} className="block rounded-xl px-3 py-3 transition-colors hover:bg-white/[0.06]">
+            <Link href={`/news/${s.slug}`} className="block rounded-xl px-3 py-3 transition-colors hover:bg-white/[0.06]">
               <div className="text-xs text-slate-400">
                 {[s.primarySourceName, s.vendors[0] ? vendorLabel(s.vendors[0]) : null, timeAgo(s.publishedAt)].filter(Boolean).join(" · ")}
               </div>
@@ -244,7 +244,7 @@ function ThisWeek({ stories, total }: { stories: Story[]; total: number }) {
           </li>
         ))}
       </ul>
-      <Link href="/radar" className="block px-3 pt-1 pb-2 text-sm font-medium text-radar-300 hover:text-radar-200">
+      <Link href="/news" className="block px-3 pt-1 pb-2 text-sm font-medium text-radar-300 hover:text-radar-200">
         All top stories →
       </Link>
     </div>

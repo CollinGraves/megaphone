@@ -34,7 +34,7 @@ export function DeadlinesCard({ deadlines, companyName }: { deadlines: Deadline[
                   {d.inStack && companyName ? ` · ${companyName} uses this` : ""}
                 </div>
                 {d.storySlug ? (
-                  <Link href={`/radar/${d.storySlug}`} className="text-xs text-radar-700 hover:underline">
+                  <Link href={`/news/${d.storySlug}`} className="text-xs text-radar-700 hover:underline">
                     Details →
                   </Link>
                 ) : null}

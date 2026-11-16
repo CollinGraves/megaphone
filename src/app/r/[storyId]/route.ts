@@ -10,7 +10,7 @@ import { track, verifyUserToken } from "@/lib/tracking";
 export async function GET(request: NextRequest, ctx: RouteContext<"/r/[storyId]">) {
   const { storyId } = await ctx.params;
   const [story] = await db.select({ id: stories.id, url: stories.primaryUrl }).from(stories).where(eq(stories.id, storyId)).limit(1);
-  if (!story) return NextResponse.redirect(new URL("/radar", appUrl()));
+  if (!story) return NextResponse.redirect(new URL("/news", appUrl()));
 
   const tokenUser = verifyUserToken(request.nextUrl.searchParams.get("u"));
   const fromDigest = request.nextUrl.searchParams.get("src") === "digest";

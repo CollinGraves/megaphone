@@ -20,7 +20,7 @@ const handler = createMcpHandler(
   },
 );
 
-/** API keys created in AI Radar → Settings → API & MCP. Sent as `Authorization: Bearer radar_…`. */
+/** API keys created in Radar → Settings → API & MCP. Sent as `Authorization: Bearer radar_…`. */
 const authed = withMcpAuth(
   handler,
   async (_req, bearerToken) => {

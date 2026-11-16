@@ -38,7 +38,7 @@ export function AlertList({
                 {timeAgo(a.storyPublishedAt)}
               </span>
             </div>
-            <Link href={`/radar/${a.storySlug}`} className="mt-1 inline-flex items-start gap-1 text-sm font-semibold text-slate-900 hover:text-radar-700 hover:underline">
+            <Link href={`/news/${a.storySlug}`} className="mt-1 inline-flex items-start gap-1 text-sm font-semibold text-slate-900 hover:text-radar-700 hover:underline">
               {a.storyTitle}
               <ExternalLink className="mt-0.5 size-3.5 shrink-0 text-slate-400" aria-hidden />
             </Link>

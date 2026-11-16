@@ -67,7 +67,7 @@ const storyOut = (s: typeof stories.$inferSelect) => ({
   published_at: s.publishedAt.toISOString(),
   sources: s.articleCount,
   slug: s.slug,
-  url: `${appUrl()}/radar/${s.slug}`,
+  url: `${appUrl()}/news/${s.slug}`,
   original_url: s.primaryUrl,
 });
 
@@ -172,7 +172,7 @@ export function registerRadarTools(server: McpServer) {
       return ok({
         company: stack?.companyName ?? null,
         stack: (stack?.items ?? []).map((i) => ({ name: i.entity.name, status: i.status, confidence: Number(i.confidence.toFixed(2)) })),
-        deadlines: deadlines.map((d) => ({ what: d.entityName, change: d.predicate, date: d.date, affects_your_stack: d.inStack, story: d.storySlug ? `${appUrl()}/radar/${d.storySlug}` : null })),
+        deadlines: deadlines.map((d) => ({ what: d.entityName, change: d.predicate, date: d.date, affects_your_stack: d.inStack, story: d.storySlug ? `${appUrl()}/news/${d.storySlug}` : null })),
         note: stack ? undefined : "Sign up with a company email to get a company stack.",
       });
     }),

@@ -7,10 +7,10 @@ import { categoryCounts, listStories } from "@/lib/stories";
 export const metadata: Metadata = {
   title: "Top AI stories this week",
   description: "This week's most important AI news: new AI models, price changes, new laws, how companies use AI, and research.",
-  alternates: { canonical: "/radar" },
+  alternates: { canonical: "/news" },
 };
 
-export default async function RadarPage({ searchParams }: PageProps<"/radar">) {
+export default async function RadarPage({ searchParams }: PageProps<"/news">) {
   const page = pageFrom(await searchParams);
   const [stories, counts, user] = await Promise.all([
     listStories({ sinceDays: 7, minImportance: 2, order: "top", limit: PAGE_SIZE + 1, offset: (page - 1) * PAGE_SIZE }),
@@ -24,7 +24,7 @@ export default async function RadarPage({ searchParams }: PageProps<"/radar">) {
       stories={stories.slice(0, PAGE_SIZE)}
       hasMore={stories.length > PAGE_SIZE}
       page={page}
-      basePath="/radar"
+      basePath="/news"
       categoryCounts={counts}
       signedIn={Boolean(user)}
     />

@@ -98,7 +98,7 @@ async function run(opts: { sourceIds?: string[] }): Promise<RunState> {
   } finally {
     revalidateSources();
     revalidatePath("/admin/stories");
-    revalidatePath("/radar");
+    revalidatePath("/news");
     revalidatePath("/feed");
   }
 }

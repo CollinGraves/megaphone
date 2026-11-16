@@ -157,7 +157,7 @@ export default async function LeadDetailPage({ params }: PageProps<"/admin/leads
                       {ev.storyTitle && ev.storySlug ? (
                         <>
                           {" · "}
-                          <Link href={`/radar/${ev.storySlug}`} className="text-slate-900 hover:text-radar-700 hover:underline">
+                          <Link href={`/news/${ev.storySlug}`} className="text-slate-900 hover:text-radar-700 hover:underline">
                             {ev.storyTitle}
                           </Link>
                         </>

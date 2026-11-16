@@ -157,15 +157,15 @@ describe("run sheet and show notes", () => {
     expect(md).toContain("# Episode 3: The big one");
     expect(md).toContain("about 16 minutes");
     expect(md).toContain("## 1. News: Story a (6 min)");
-    expect(md).toContain("Story: Story a (https://radar.test/radar/story-a)");
+    expect(md).toContain("Story: Story a (https://radar.test/news/story-a)");
     expect(md).toContain("**Hot take:**");
     expect(md).toContain("## 4. Deadline watch: Deadline watch (3 min)");
   });
 
   it("drafts show notes with story links and calls to action", () => {
     const notes = showNotesFromRundown(insertSegment(base(), customSegment({ title: "Mailbag", minutes: 5, points: "x" }, "c")), byId, "https://radar.test");
-    expect(notes).toContain("- Story a: https://radar.test/radar/story-a");
-    expect(notes).toContain("- Story c: https://radar.test/radar/story-c");
+    expect(notes).toContain("- Story a: https://radar.test/news/story-a");
+    expect(notes).toContain("- Story c: https://radar.test/news/story-c");
     expect(notes).toContain("- Mailbag");
     expect(notes).toContain("- Deadline watch: 1 upcoming date to know");
     expect(notes).toContain("https://radar.test/sign-up?src=show");

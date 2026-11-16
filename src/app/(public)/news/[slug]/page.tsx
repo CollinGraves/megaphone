@@ -14,7 +14,7 @@ import { categoryLabel, industryLabel, vendorLabel } from "@/lib/taxonomy";
 import { track } from "@/lib/tracking";
 import { formatDate, timeAgo } from "@/lib/utils";
 
-export async function generateMetadata({ params }: PageProps<"/radar/[slug]">): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/news/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const found = await getStoryBySlug(slug);
   if (!found) return {};
@@ -22,13 +22,13 @@ export async function generateMetadata({ params }: PageProps<"/radar/[slug]">): 
   return {
     title: story.title,
     description: story.summary.slice(0, 300),
-    alternates: { canonical: `/radar/${story.slug}` },
+    alternates: { canonical: `/news/${story.slug}` },
     openGraph: { title: story.title, description: story.summary, type: "article", publishedTime: story.publishedAt.toISOString() },
     twitter: { card: "summary", title: story.title, description: story.summary },
   };
 }
 
-export default async function StoryPage({ params }: PageProps<"/radar/[slug]">) {
+export default async function StoryPage({ params }: PageProps<"/news/[slug]">) {
   const { slug } = await params;
   const found = await getStoryBySlug(slug);
   if (!found) notFound();
@@ -45,7 +45,7 @@ export default async function StoryPage({ params }: PageProps<"/radar/[slug]">) 
     description: story.summary,
     datePublished: story.publishedAt.toISOString(),
     dateModified: story.updatedAt.toISOString(),
-    mainEntityOfPage: `${appUrl()}/radar/${story.slug}`,
+    mainEntityOfPage: `${appUrl()}/news/${story.slug}`,
     publisher: { "@type": "Organization", name: "North Labs" },
     isBasedOn: coverage.map((c) => c.url),
   };
@@ -53,7 +53,7 @@ export default async function StoryPage({ params }: PageProps<"/radar/[slug]">) 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
-      <Link href="/radar" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900">
+      <Link href="/news" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900">
         <ArrowLeft className="size-4" /> Top stories
       </Link>
       <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_320px]">
@@ -72,12 +72,12 @@ export default async function StoryPage({ params }: PageProps<"/radar/[slug]">) 
           <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-4xl">{story.title}</h1>
           <div className="mt-4 flex flex-wrap gap-1.5">
             {story.categories.map((c) => (
-              <Link key={c} href={`/radar/topics/${c}`}>
+              <Link key={c} href={`/news/topics/${c}`}>
                 <Badge>{categoryLabel(c)}</Badge>
               </Link>
             ))}
             {story.vendors.map((v) => (
-              <Link key={v} href={`/radar/vendors/${v}`}>
+              <Link key={v} href={`/news/vendors/${v}`}>
                 <Badge tone="radar">{vendorLabel(v)}</Badge>
               </Link>
             ))}

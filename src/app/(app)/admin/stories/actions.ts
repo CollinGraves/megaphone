@@ -18,8 +18,8 @@ async function updateStory(id: string, set: Partial<Pick<typeof stories.$inferIn
   revalidatePath("/admin/stories");
   if (updated) {
     // Public surfaces that list or render stories.
-    revalidatePath(`/radar/${updated.slug}`);
-    revalidatePath("/radar");
+    revalidatePath(`/news/${updated.slug}`);
+    revalidatePath("/news");
     revalidatePath("/feed");
     revalidatePath("/");
   }
