@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { Story } from "@/db/schema";
 import { CATEGORIES, VENDORS } from "@/lib/taxonomy";
+import { BRAND } from "@/lib/brand";
+import { startFreeHref } from "@/lib/marketing";
 import { cn } from "@/lib/utils";
 import { ButtonLink, EmptyState } from "../ui";
 import { StoryCard } from "./story-card";
@@ -65,12 +67,12 @@ export function RadarIndex({
         <aside className="space-y-6">
           {!signedIn ? (
             <div className="rounded-xl bg-ink-900 p-5 text-white">
-              <h2 className="font-semibold">Get it filtered for you</h2>
+              <h2 className="font-semibold">Only care about the tools you use?</h2>
               <p className="mt-1.5 text-sm text-slate-300">
-                Pick your topics and vendors. We&apos;ll email a short digest of just those.
+                {BRAND} tracks your company&apos;s AI projects and alerts you when news affects a tool one of them uses.
               </p>
-              <ButtonLink href="/sign-up?src=radar_sidebar" variant="accent" className="mt-4 w-full">
-                Sign up free
+              <ButtonLink href={startFreeHref("news_sidebar")} variant="accent" className="mt-4 w-full">
+                Track your AI projects free
               </ButtonLink>
             </div>
           ) : null}
@@ -140,11 +142,11 @@ function InlineCta() {
   return (
     <div className="mt-4 flex flex-col items-start gap-3 rounded-xl border border-radar-200 bg-radar-50 p-5 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <div className="font-semibold text-slate-900">Only want what affects you?</div>
-        <div className="text-sm text-slate-600">Get a weekly digest filtered to your company. Free.</div>
+        <div className="font-semibold text-slate-900">Only want news that affects your AI projects?</div>
+        <div className="text-sm text-slate-600">Track them in {BRAND} and get an alert when a vendor changes something. Free to start.</div>
       </div>
-      <ButtonLink href="/sign-up?src=radar_inline" variant="primary">
-        Filter my radar
+      <ButtonLink href={startFreeHref("news_inline")} variant="primary">
+        Start free
       </ButtonLink>
     </div>
   );

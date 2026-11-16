@@ -11,6 +11,8 @@ import { appUrl } from "@/lib/env";
 import { episodesForStory } from "@/lib/show/server";
 import { getRelatedStories, getStoryBySlug } from "@/lib/stories";
 import { categoryLabel, industryLabel, vendorLabel } from "@/lib/taxonomy";
+import { BRAND } from "@/lib/brand";
+import { startFreeHref } from "@/lib/marketing";
 import { track } from "@/lib/tracking";
 import { formatDate, timeAgo } from "@/lib/utils";
 
@@ -141,12 +143,14 @@ export default async function StoryPage({ params }: PageProps<"/news/[slug]">) {
           ) : null}
           {!user ? (
             <div className="rounded-xl bg-ink-900 p-5 text-white">
-              <h2 className="font-semibold">Get stories like this by email</h2>
+              <h2 className="font-semibold">
+                {story.vendors[0] ? `Using ${vendorLabel(story.vendors[0])}?` : "Does this affect your AI projects?"}
+              </h2>
               <p className="mt-1.5 text-sm text-slate-300">
-                We pick the stories that matter to your industry and the AI tools your company uses.
+                {BRAND} tracks every AI project at your company and alerts you when news like this affects one of them.
               </p>
-              <ButtonLink href="/sign-up?src=story_sidebar" variant="accent" className="mt-4 w-full">
-                Get AI news by email
+              <ButtonLink href={startFreeHref("story_sidebar")} variant="accent" className="mt-4 w-full">
+                Track your AI projects free
               </ButtonLink>
             </div>
           ) : null}

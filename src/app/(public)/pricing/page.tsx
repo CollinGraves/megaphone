@@ -13,7 +13,7 @@ import { PLANS, isManaged, planRank, type BillingInterval, type PlanDefinition }
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: `${BRAND} pricing. The news radar is free. The Workspace for tracking your AI projects starts free, then $399 or $999 a month. One price for your whole company.`,
+  description: `${BRAND} pricing. Track your company's AI projects free, then $399 or $999 a month. One price for your whole company.`,
   alternates: { canonical: "/pricing" },
 };
 
@@ -102,8 +102,8 @@ export default async function PricingPage({ searchParams }: PageProps<"/pricing"
         <div className="mx-auto max-w-2xl text-center">
           <h1 className="text-3xl font-semibold tracking-tight text-balance text-slate-900 sm:text-4xl">Pricing</h1>
           <p className="mt-3 text-slate-600">
-            The AI news radar is always free. The Workspace, where your company tracks its AI projects, starts free too. You pay one price for your
-            whole company, not for each person. Change or cancel any time.
+            Start free and track up to {PLANS.free.initiativeLimit} AI projects. You pay one price for your whole company, not for each person.
+            Change or cancel any time.
           </p>
         </div>
 
