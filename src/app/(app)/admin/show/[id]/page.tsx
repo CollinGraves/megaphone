@@ -297,7 +297,7 @@ function SegmentCard({
           <h2 className="mt-1 font-semibold text-slate-900">{s.title}</h2>
           {stories.map((st) => (
             <div key={st.slug} className="mt-0.5 flex flex-wrap gap-x-3 text-xs">
-              <Link href={`/radar/${st.slug}`} target="_blank" className="text-radar-700 hover:underline">
+              <Link href={`/news/${st.slug}`} target="_blank" className="text-radar-700 hover:underline">
                 {st.title}
               </Link>
               <a href={st.primaryUrl} target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:underline">

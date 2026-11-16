@@ -12,7 +12,7 @@ export async function SiteHeader({ dark = false }: { dark?: boolean }) {
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:gap-6 sm:px-6">
         <Logo dark={dark} />
         <nav className="ml-4 hidden items-center gap-6 md:flex">
-          <Link href="/radar" className={link}>
+          <Link href="/news" className={link}>
             Top stories
           </Link>
           <Link href="/assessment?src=nav" className={`${link} hidden whitespace-nowrap lg:inline`}>
@@ -60,7 +60,7 @@ export function SiteFooter() {
           <span className="font-medium text-slate-700">{BRAND}</span> is built and run by North Labs.
         </div>
         <nav className="flex flex-wrap gap-x-5 gap-y-2">
-          <Link href="/radar" className="hover:text-slate-900">
+          <Link href="/news" className="hover:text-slate-900">
             Top stories
           </Link>
           <Link href="/assessment?src=footer" className="hover:text-slate-900">

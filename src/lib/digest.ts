@@ -98,7 +98,7 @@ function deadlinesBlock(deadlines: Deadline[], companyName?: string) {
   if (!deadlines.length) return "";
   const rows = deadlines
     .map(
-      (d) => `<tr><td style="padding:6px 0;font-size:14px;color:#0f172a"><strong>${escapeHtml(d.entityName)}</strong> ${deadlineLabel(d.predicate)} in <strong>${daysUntil(d.date)} days</strong> <span style="color:#64748b">(${escapeHtml(d.date)}${d.inStack && companyName ? ` · ${escapeHtml(companyName)} uses this` : ""})</span>${d.storySlug ? ` · <a href="${appUrl()}/radar/${d.storySlug}" style="color:#0b7363">details</a>` : ""}</td></tr>`,
+      (d) => `<tr><td style="padding:6px 0;font-size:14px;color:#0f172a"><strong>${escapeHtml(d.entityName)}</strong> ${deadlineLabel(d.predicate)} in <strong>${daysUntil(d.date)} days</strong> <span style="color:#64748b">(${escapeHtml(d.date)}${d.inStack && companyName ? ` · ${escapeHtml(companyName)} uses this` : ""})</span>${d.storySlug ? ` · <a href="${appUrl()}/news/${d.storySlug}" style="color:#0b7363">details</a>` : ""}</td></tr>`,
     )
     .join("");
   return `<div style="margin:0 0 16px;padding:12px 14px;border:1px solid #fde68a;background:#fffbeb;border-radius:10px">
@@ -142,7 +142,7 @@ ${opts.also.length ? `<h3 style="margin:24px 0 0;font-size:13px;text-transform:u
   const text = [
     `Hi ${first}, here's what mattered in AI ${period}:`,
     "",
-    ...[...opts.personal, ...opts.also].map((s) => `• ${s.title}\n  ${s.summary}\n  ${appUrl()}/radar/${s.slug}`),
+    ...[...opts.personal, ...opts.also].map((s) => `• ${s.title}\n  ${s.summary}\n  ${appUrl()}/news/${s.slug}`),
     "",
     `Unsubscribe: ${appUrl()}/unsubscribe?u=${token}`,
   ].join("\n");

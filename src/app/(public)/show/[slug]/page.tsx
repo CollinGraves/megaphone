@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: PageProps<"/show/[slug]">): P
   const description = (ep.showNotes ?? "").split("\n")[0].slice(0, 300) || `Episode ${ep.number} of ${SHOW_NAME}.`;
   const vid = youtubeId(ep.videoUrl);
   return {
-    title: `${ep.title} · ${SHOW_NAME}`,
+    title: { absolute: `${ep.title} · ${SHOW_NAME}` },
     description,
     alternates: { canonical: `/show/${ep.slug}` },
     openGraph: {
@@ -71,7 +71,7 @@ export default async function EpisodePage({ params }: PageProps<"/show/[slug]">)
           },
         }
       : {}),
-    mentions: list.map((s) => ({ "@type": "NewsArticle", headline: s.title, url: `${appUrl()}/radar/${s.slug}` })),
+    mentions: list.map((s) => ({ "@type": "NewsArticle", headline: s.title, url: `${appUrl()}/news/${s.slug}` })),
   };
 
   return (

@@ -7,7 +7,7 @@ import { ensureVendorEntity, findEntityByName, upsertEntity } from "./entities";
 /**
  * A company's AI/tech stack, inferred from several signals and confirmed by its people.
  *  - enrichment: technographics returned by the enrichment provider
- *  - workspace:  platforms and systems in the company's AI Radar Workspace
+ *  - workspace:  platforms and systems in the company's Radar workspace
  *  - colleagues: vendors that at least two people at the company follow (aggregate only, never attributed)
  *  - user:       added or confirmed by someone at the company
  */

@@ -32,7 +32,7 @@ export function StoryTimeline({ ctx }: { ctx: Ctx }) {
             {links.map((l) => (
               <li key={`${l.slug}-${l.direction}`} className="text-sm">
                 <Badge tone={l.direction === "later" ? "amber" : "neutral"}>{l.direction === "later" ? "Newer update" : "Updates earlier story"}</Badge>{" "}
-                <Link href={`/radar/${l.slug}`} className="font-medium text-slate-900 hover:text-radar-700">
+                <Link href={`/news/${l.slug}`} className="font-medium text-slate-900 hover:text-radar-700">
                   {l.title}
                 </Link>{" "}
                 <span className="text-xs text-slate-500">{formatDate(l.publishedAt)}</span>
@@ -59,7 +59,7 @@ export function StoryTimeline({ ctx }: { ctx: Ctx }) {
                       <>
                         {" "}
                         ·{" "}
-                        <Link href={`/radar/${storySlug}`} className="text-radar-700 hover:underline">
+                        <Link href={`/news/${storySlug}`} className="text-radar-700 hover:underline">
                           source story
                         </Link>
                       </>
@@ -76,7 +76,7 @@ export function StoryTimeline({ ctx }: { ctx: Ctx }) {
             <ul className="space-y-1.5">
               {timeline.map((t) => (
                 <li key={t.id} className="flex justify-between gap-3 text-sm">
-                  <Link href={`/radar/${t.slug}`} className="text-slate-800 hover:text-radar-700">
+                  <Link href={`/news/${t.slug}`} className="text-slate-800 hover:text-radar-700">
                     {t.title}
                   </Link>
                   <span className="shrink-0 text-xs text-slate-400">{formatDate(t.publishedAt)}</span>

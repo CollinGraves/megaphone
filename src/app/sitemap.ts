@@ -23,15 +23,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .limit(1000);
   return [
     { url: `${base}/`, changeFrequency: "daily", priority: 1 },
-    { url: `${base}/radar`, changeFrequency: "hourly", priority: 0.9 },
+    { url: `${base}/news`, changeFrequency: "hourly", priority: 0.9 },
     { url: `${base}/workspace`, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/show`, changeFrequency: "daily", priority: 0.8 },
     ...shows.map((e) => ({ url: `${base}/show/${e.slug}`, lastModified: e.updatedAt, changeFrequency: "monthly" as const, priority: 0.7 })),
     { url: `${base}/assessment`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/pricing`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/contact`, changeFrequency: "monthly", priority: 0.5 },
-    ...CATEGORIES.map((c) => ({ url: `${base}/radar/topics/${c.slug}`, changeFrequency: "hourly" as const, priority: 0.7 })),
-    ...VENDORS.map((v) => ({ url: `${base}/radar/vendors/${v.slug}`, changeFrequency: "daily" as const, priority: 0.6 })),
-    ...recent.map((s) => ({ url: `${base}/radar/${s.slug}`, lastModified: s.updatedAt, changeFrequency: "weekly" as const, priority: 0.6 })),
+    ...CATEGORIES.map((c) => ({ url: `${base}/news/topics/${c.slug}`, changeFrequency: "hourly" as const, priority: 0.7 })),
+    ...VENDORS.map((v) => ({ url: `${base}/news/vendors/${v.slug}`, changeFrequency: "daily" as const, priority: 0.6 })),
+    ...recent.map((s) => ({ url: `${base}/news/${s.slug}`, lastModified: s.updatedAt, changeFrequency: "weekly" as const, priority: 0.6 })),
   ];
 }

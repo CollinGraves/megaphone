@@ -5,7 +5,7 @@ import { Card, Field, Input, Textarea } from "@/components/ui";
 import { getCurrentUser } from "@/lib/auth/session";
 import { track } from "@/lib/tracking";
 import { submitContactRequest } from "./actions";
-import { BRAND } from "@/lib/brand";
+import { BRAND, SHOW_NAME } from "@/lib/brand";
 
 export const metadata: Metadata = {
   title: "Talk to North Labs",
@@ -49,10 +49,10 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
         </ul>
       </div>
       <Card className="p-6">
-        <h2 className="text-lg font-semibold text-slate-900">{pitch ? "Send us an idea to build live on the show" : "Talk to North Labs"}</h2>
+        <h2 className="text-lg font-semibold text-slate-900">{pitch ? `Send a question to ${SHOW_NAME}` : "Talk to North Labs"}</h2>
         <p className="mt-1 text-sm text-slate-500">
           {pitch
-            ? "Tell us the problem, the team it's for and the tools you already use. We may build it on the show. We'll leave your company's name out unless you say it's OK."
+            ? "Ask anything about making AI work at your company, or send an AI idea you want built live. Tell us the team it's for and the tools you already use. We'll leave your company's name out unless you say it's OK."
             : "Tell us a little about what you're working on."}
         </p>
         <ActionForm action={submitContactRequest} className="mt-6" resetOnSuccess>

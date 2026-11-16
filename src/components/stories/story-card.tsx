@@ -46,7 +46,7 @@ export function StoryCard({
         </div>
       ) : null}
       <h3 className={cn("mt-2 font-semibold leading-snug text-slate-900", compact ? "text-[15px]" : "text-lg")}>
-        <Link href={`/radar/${story.slug}`} className="hover:text-radar-700">
+        <Link href={`/news/${story.slug}`} className="hover:text-radar-700">
           {story.title}
         </Link>
       </h3>
@@ -61,14 +61,14 @@ export function StoryCard({
       ) : null}
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
         {story.categories.slice(0, 3).map((c) => (
-          <Link key={c} href={`/radar/topics/${c}`}>
+          <Link key={c} href={`/news/topics/${c}`}>
             <Badge tone="neutral" className="hover:bg-slate-200">
               {categoryLabel(c)}
             </Badge>
           </Link>
         ))}
         {story.vendors.slice(0, 3).map((v) => (
-          <Link key={v} href={`/radar/vendors/${v}`}>
+          <Link key={v} href={`/news/vendors/${v}`}>
             <Badge tone="radar" className="hover:bg-radar-100">
               {vendorLabel(v)}
             </Badge>
