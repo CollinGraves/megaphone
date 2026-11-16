@@ -20,14 +20,8 @@ export async function AppHeader({ user }: { user: CurrentUser }) {
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:px-6">
-        <Logo href="/feed" />
+        <Logo href="/home" />
         <nav className="ml-4 hidden items-center gap-1 md:flex">
-          <Link href="/feed" className={navLink}>
-            Feed
-          </Link>
-          <Link href="/news" className={navLink}>
-            Top stories
-          </Link>
           {workspaces.length === 1 ? (
             <Link href={`/w/${workspaces[0].slug}`} className={navLink}>
               Workspace
@@ -64,9 +58,6 @@ export async function AppHeader({ user }: { user: CurrentUser }) {
                 <div className="truncate text-xs text-slate-500">{user.email}</div>
               </div>
               <nav className="py-1 md:hidden">
-                <Link href="/feed" className="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">
-                  Feed
-                </Link>
                 {workspaces.map((w) => (
                   <Link key={w.id} href={`/w/${w.slug}`} className="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">
                     {w.name}
@@ -82,7 +73,7 @@ export async function AppHeader({ user }: { user: CurrentUser }) {
                 Create a workspace
               </Link>
               <Link href="/settings" className="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">
-                Settings &amp; preferences
+                Your settings
               </Link>
               <SignOutButton />
             </div>

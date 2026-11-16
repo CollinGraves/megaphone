@@ -14,10 +14,11 @@ import { checkWorkspaceCreation } from "@/lib/workspace-creation";
 import { cancelJoinRequestAction, createWorkspace, requestToJoin } from "./actions";
 import { loadCreationFacts } from "./data";
 
-export const metadata: Metadata = { title: "Create a free AI workspace" };
+export const metadata: Metadata = { title: "Set up your workspace" };
 
-export default async function NewWorkspacePage() {
+export default async function NewWorkspacePage({ searchParams }: PageProps<"/workspaces/new">) {
   const me = await requireUser("/workspaces/new");
+  const deleted = (await searchParams).deleted === "workspace";
   const facts = await loadCreationFacts(db, me);
   const check = checkWorkspaceCreation(facts);
   const domainWs = facts.domainWorkspace;
@@ -27,10 +28,11 @@ export default async function NewWorkspacePage() {
   return (
     <div className="mx-auto grid max-w-5xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:py-14">
       <div className="min-w-0">
-        <div className="text-xs font-medium uppercase tracking-wide text-radar-700">{BRAND} Workspace · Free</div>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Create your company’s AI workspace</h1>
+        {deleted ? <Alert tone="success" className="mb-4">The workspace was deleted.</Alert> : null}
+        <div className="text-xs font-medium uppercase tracking-wide text-radar-700">{BRAND} · Free plan</div>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Set up your company’s workspace</h1>
         <p className="mt-2 max-w-xl text-sm text-slate-600 sm:text-base">
-          Prioritize every AI project and track its impact and the data it needs. Free for up to {PLANS.free.initiativeLimit} AI projects. No card, no sales call.
+          This is where your company tracks every AI project: who owns it, how risky it is, whether it’s approved and what it’s worth. Free for up to {PLANS.free.initiativeLimit} AI projects. No card, no sales call.
         </p>
 
         <Card className="mt-6 p-5 sm:p-6">

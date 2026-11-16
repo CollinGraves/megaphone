@@ -19,7 +19,7 @@ export function VerifyEmailBanner({ email }: { email: string }) {
         className="shrink-0 font-medium text-sky-800 underline-offset-2 hover:underline disabled:no-underline disabled:opacity-70"
         onClick={() =>
           start(async () => {
-            await authClient.sendVerificationEmail({ email, callbackURL: "/feed" });
+            await authClient.sendVerificationEmail({ email, callbackURL: "/home" });
             setSent(true);
           })
         }

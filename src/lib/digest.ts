@@ -1,12 +1,14 @@
 import "server-only";
-import { and, eq, isNotNull, ne } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { digests, user, userPreferences, type Story } from "@/db/schema";
+import { digests, memberships, organizations, user, userPreferences, type Story } from "@/db/schema";
+import { loadOpenAlerts, type OpenAlert } from "@/app/(app)/w/[slug]/_lib/alerts";
 import { emailLayout, escapeHtml, sendEmail } from "./email";
 import { appUrl } from "./env";
-import { daysUntil, deadlineLabel, getStackContext, stackReasons, stackRelevance, upcomingDeadlines, type Deadline, type StackContext } from "./graph/personalize";
+import { daysUntil, deadlineLabel, upcomingDeadlines, type Deadline } from "./graph/personalize";
 import { listStories } from "./stories";
 import { categoryLabel, vendorLabel } from "./taxonomy";
+import { usedByLabel, workspaceVendors } from "./workspace-news";
 import { signUserToken } from "./tracking";
 import { BRAND } from "@/lib/brand";
 
@@ -36,52 +38,165 @@ export function diversify<T extends { id: string; vendors: string[]; primarySour
   return out;
 }
 const MAX_ALSO = 3;
+const MAX_ALERTS = 6;
 
-type Prefs = typeof userPreferences.$inferSelect;
-type Recipient = { id: string; name: string; email: string; company?: string | null; companyDomain?: string | null };
+type Prefs = Pick<typeof userPreferences.$inferSelect, "digestFrequency" | "lastDigestSentAt">;
+type Recipient = { id: string; name: string; email: string };
+type Workspace = { id: string; name: string; slug: string };
 
-/** Is this user's digest due at `now`? Daily = weekdays, weekly = Mondays (UTC). */
-export function isDigestDue(prefs: Pick<Prefs, "digestFrequency" | "lastDigestSentAt">, now: Date): boolean {
-  const day = now.getUTCDay();
+/**
+ * Is this person's weekly email due at `now`? Mondays (UTC), at most once a week. "daily" is a
+ * setting from the old personal news digest and now gets the weekly email too.
+ */
+export function isDigestDue(prefs: Prefs, now: Date): boolean {
+  if (prefs.digestFrequency === "off") return false;
   const last = prefs.lastDigestSentAt?.getTime() ?? 0;
-  const hoursSince = (now.getTime() - last) / 36e5;
-  if (prefs.digestFrequency === "daily") return day >= 1 && day <= 5 && hoursSince >= 20;
-  if (prefs.digestFrequency === "weekly") return day === 1 && hoursSince >= 24 * 6;
-  return false;
+  return now.getUTCDay() === 1 && (now.getTime() - last) / 36e5 >= 24 * 6;
 }
 
-export async function selectDigestStories(prefs: Prefs, now = new Date(), stack: StackContext | null = null) {
-  const windowDays = prefs.digestFrequency === "daily" ? 1.5 : 7;
-  const sinceDays = prefs.lastDigestSentAt
-    ? Math.min(windowDays, Math.max(1, (now.getTime() - prefs.lastDigestSentAt.getTime()) / 864e5))
-    : windowDays;
-  const pool = await listStories({
-    categories: prefs.categories,
-    vendors: prefs.vendors,
-    industries: prefs.industries,
-    matchAny: true,
-    alsoMatch: stackRelevance(stack),
-    minImportance: prefs.minImportance,
-    sinceDays,
-    order: "top",
-    limit: MAX_PERSONAL * 4,
-  });
-  // Stories about a specific product/system in the company stack always make the cut.
-  const direct = new Set<string>();
-  if (stack) {
-    const specificIds = stack.items.filter((i) => i.entity.kind !== "vendor").map((i) => i.entity.id);
-    const reasons = await stackReasons(pool, { ...stack, items: stack.items.filter((i) => specificIds.includes(i.entity.id)), entityIds: specificIds, vendorSlugs: [] });
-    for (const id of reasons.keys()) direct.add(id);
+/** This week's news for a workspace: stories about its AI tools, new alerts, a few big stories. */
+export async function selectWorkspaceDigest(ws: Workspace, sinceDays = 7) {
+  const vendors = await workspaceVendors(ws.id);
+  const usedBy = new Map(vendors.map((v) => [v.vendor, v.projects]));
+  const since = new Date(Date.now() - sinceDays * 864e5);
+  const [pool, alerts] = await Promise.all([
+    vendors.length
+      ? listStories({ vendors: vendors.map((v) => v.vendor), minImportance: 2, sinceDays, order: "top", limit: MAX_PERSONAL * 4 })
+      : Promise.resolve([] as Story[]),
+    loadOpenAlerts(ws.id, { limit: 50 }).then((rows) => rows.filter((a) => a.createdAt >= since).slice(0, MAX_ALERTS)),
+  ]);
+  const personal = diversify(pool, MAX_PERSONAL);
+  const reasons = new Map<string, string>();
+  for (const s of personal) {
+    const v = s.vendors.find((x) => usedBy.has(x));
+    if (v) reasons.set(s.id, `${vendorLabel(v)}: ${usedByLabel(usedBy.get(v)!)}`);
   }
-  const personal = diversify(pool, MAX_PERSONAL, direct);
-  // A couple of major stories outside the reader's interests, so nobody misses a big one.
   const seen = new Set(personal.map((s) => s.id));
-  const also = (await listStories({ minImportance: 4, sinceDays, order: "top", limit: MAX_ALSO + MAX_PERSONAL }))
-    .filter((s) => !seen.has(s.id))
-    .slice(0, MAX_ALSO);
-  return { personal, also };
+  const also = (await listStories({ minImportance: 4, sinceDays, order: "top", limit: MAX_ALSO + MAX_PERSONAL })).filter((s) => !seen.has(s.id)).slice(0, MAX_ALSO);
+  return { vendors: vendors.map((v) => v.vendor), personal, also, alerts, reasons };
 }
 
+function alertsBlock(alerts: OpenAlert[], ws: Workspace) {
+  if (!alerts.length) return "";
+  const rows = alerts
+    .map(
+      (a) => `<tr><td style="padding:6px 0;font-size:14px;color:#0f172a;line-height:1.45"><strong>${escapeHtml(a.initiativeTitle)}</strong>: <a href="${appUrl()}/news/${a.storySlug}" style="color:#0b7363">${escapeHtml(a.storyTitle)}</a></td></tr>`,
+    )
+    .join("");
+  return `<div style="margin:0 0 16px;padding:12px 14px;border:1px solid #fecaca;background:#fef2f2;border-radius:10px">
+<div style="font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#991b1b;font-weight:600">New alerts for your AI projects</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
+<a href="${appUrl()}/w/${ws.slug}/alerts" style="display:inline-block;margin-top:6px;font-size:13px;color:#0b7363">See all alerts →</a></div>`;
+}
+
+export function renderDigest(opts: {
+  recipient: Recipient;
+  workspace: Workspace;
+  personal: Story[];
+  also: Story[];
+  alerts: OpenAlert[];
+  digestId: string;
+  reasons?: Map<string, string>;
+  deadlines?: Deadline[];
+}) {
+  const ws = opts.workspace;
+  const token = signUserToken(opts.recipient.id);
+  const first = opts.recipient.name.split(" ")[0] || "there";
+  const urgent = (opts.deadlines ?? []).find((d) => d.inStack && daysUntil(d.date) <= 14);
+  const subject = urgent
+    ? `Heads up: ${urgent.entityName} ${deadlineLabel(urgent.predicate)} in ${daysUntil(urgent.date)} days`
+    : opts.alerts.length
+      ? `${opts.alerts.length} new alert${opts.alerts.length === 1 ? "" : "s"} for ${ws.name}'s AI projects`
+      : opts.personal[0]
+        ? `This week for your AI tools: ${opts.personal[0].title}`
+        : `What changed in AI this week`;
+  const body = `<p style="margin:0 0 4px;font-size:15px">Hi ${escapeHtml(first)},</p>
+<p style="margin:0 0 12px;font-size:15px;color:#334155">Here's what changed this week for the AI tools ${escapeHtml(ws.name)}'s projects use.</p>
+${alertsBlock(opts.alerts, ws)}
+${deadlinesBlock(opts.deadlines ?? [], ws.name)}
+${opts.personal.length ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${opts.personal.map((s) => storyBlock(s, token, opts.reasons?.get(s.id))).join("")}</table>` : `<p style="margin:0 0 12px;font-size:14px;color:#64748b">No news about your AI tools this week.</p>`}
+${opts.also.length ? `<h3 style="margin:24px 0 0;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:#64748b">Also big this week</h3><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${opts.also.map((s) => storyBlock(s, token)).join("")}</table>` : ""}
+<p style="margin:24px 0 0"><a href="${appUrl()}/w/${ws.slug}/news" style="display:inline-block;background:#0f172a;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none">Open ${escapeHtml(ws.name)} in ${BRAND}</a></p>
+<img src="${appUrl()}/api/t/open?u=${encodeURIComponent(token)}&d=${opts.digestId}" width="1" height="1" alt="" style="display:block;border:0">`;
+  const html = emailLayout({
+    preheader: opts.alerts[0] ? `${opts.alerts[0].initiativeTitle}: ${opts.alerts[0].storyTitle}` : (opts.personal[0]?.summary ?? ""),
+    body,
+    footer: `You get this weekly email as a member of ${escapeHtml(ws.name)} on ${BRAND}. <a href="${appUrl()}/settings" style="color:#64748b">Change settings</a> · <a href="${appUrl()}/unsubscribe?u=${encodeURIComponent(token)}" style="color:#64748b">Unsubscribe</a>`,
+  });
+  const text = [
+    `Hi ${first}, here's what changed this week for the AI tools ${ws.name}'s projects use.`,
+    "",
+    ...(opts.alerts.length ? ["New alerts:", ...opts.alerts.map((a) => `• ${a.initiativeTitle}: ${a.storyTitle}\n  ${appUrl()}/news/${a.storySlug}`), ""] : []),
+    ...[...opts.personal, ...opts.also].map((s) => `• ${s.title}\n  ${s.summary}\n  ${appUrl()}/news/${s.slug}`),
+    "",
+    `Open ${ws.name}: ${appUrl()}/w/${ws.slug}/news`,
+    `Unsubscribe: ${appUrl()}/unsubscribe?u=${token}`,
+  ].join("\n");
+  return { subject, html, text };
+}
+
+export async function sendDigestTo(recipient: Recipient, workspace: Workspace, prefs: Prefs, now = new Date()) {
+  const sinceDays = prefs.lastDigestSentAt ? Math.min(7, Math.max(1, (now.getTime() - prefs.lastDigestSentAt.getTime()) / 864e5)) : 7;
+  const { vendors, personal, also, alerts, reasons } = await selectWorkspaceDigest(workspace, sinceDays);
+  const deadlines = vendors.length ? await upcomingDeadlines({ vendorSlugs: vendors, includeRegulation: true, days: 60, limit: 4 }) : [];
+  const digestId = crypto.randomUUID();
+  if (personal.length + alerts.length + deadlines.length === 0) {
+    await db.insert(digests).values({ id: digestId, userId: recipient.id, storyIds: [], status: "skipped" });
+    return "skipped" as const;
+  }
+  const { subject, html, text } = renderDigest({ recipient, workspace, personal, also, alerts, digestId, reasons, deadlines });
+  const result = await sendEmail({ to: recipient.email, subject, html, text });
+  await db.insert(digests).values({
+    id: digestId,
+    userId: recipient.id,
+    storyIds: [...personal, ...also].map((s) => s.id),
+    status: result.status,
+    error: result.error ?? null,
+  });
+  if (result.status !== "failed") {
+    await db
+      .insert(userPreferences)
+      .values({ userId: recipient.id, lastDigestSentAt: now })
+      .onConflictDoUpdate({ target: userPreferences.userId, set: { lastDigestSentAt: now } });
+  }
+  return result.status;
+}
+
+/** Weekly email for every workspace member (Mondays). Each person gets it for the workspace they joined most recently. */
+export async function sendDueDigests(opts: { now?: Date; force?: boolean } = {}) {
+  const now = opts.now ?? new Date();
+  const rows = await db
+    .select({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      digestFrequency: userPreferences.digestFrequency,
+      lastDigestSentAt: userPreferences.lastDigestSentAt,
+      wsId: organizations.id,
+      wsName: organizations.name,
+      wsSlug: organizations.slug,
+    })
+    .from(memberships)
+    .innerJoin(user, eq(user.id, memberships.userId))
+    .innerJoin(organizations, and(eq(organizations.id, memberships.orgId), eq(organizations.status, "active")))
+    .leftJoin(userPreferences, eq(userPreferences.userId, user.id))
+    .orderBy(user.id, desc(memberships.createdAt));
+  const tally = { considered: 0, sent: 0, logged: 0, skipped: 0, failed: 0, notDue: 0 };
+  const seen = new Set<string>();
+  for (const row of rows) {
+    if (seen.has(row.id)) continue; // one email per person
+    seen.add(row.id);
+    tally.considered++;
+    const prefs: Prefs = { digestFrequency: row.digestFrequency ?? "weekly", lastDigestSentAt: row.lastDigestSentAt ?? null };
+    if (prefs.digestFrequency === "off" || (!opts.force && !isDigestDue(prefs, now))) {
+      tally.notDue++;
+      continue;
+    }
+    const status = await sendDigestTo({ id: row.id, name: row.name, email: row.email }, { id: row.wsId, name: row.wsName, slug: row.wsSlug }, prefs, now);
+    tally[status]++;
+  }
+  return tally;
+}
 function storyBlock(s: Story, token: string, reason?: string) {
   const href = `${appUrl()}/r/${s.id}?src=digest&u=${encodeURIComponent(token)}`;
   const tags = [...s.vendors.slice(0, 2).map(vendorLabel), ...s.categories.slice(0, 2).map(categoryLabel)].join(" · ");
@@ -106,111 +221,3 @@ function deadlinesBlock(deadlines: Deadline[], companyName?: string) {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table></div>`;
 }
 
-export function renderDigest(opts: {
-  recipient: Recipient;
-  frequency: "daily" | "weekly";
-  personal: Story[];
-  also: Story[];
-  digestId: string;
-  reasons?: Map<string, string>;
-  deadlines?: Deadline[];
-  companyName?: string;
-}) {
-  const token = signUserToken(opts.recipient.id);
-  const first = opts.recipient.name.split(" ")[0] || "there";
-  const period = opts.frequency === "daily" ? "today" : "this week";
-  const urgent = (opts.deadlines ?? []).find((d) => d.inStack && daysUntil(d.date) <= 14);
-  const subject = urgent
-    ? `Heads up: ${urgent.entityName} ${deadlineLabel(urgent.predicate)} in ${daysUntil(urgent.date)} days`
-    : opts.personal[0] != null
-      ? `${opts.personal[0].title}${opts.personal.length + opts.also.length > 1 ? ` + ${opts.personal.length + opts.also.length - 1} more` : ""}`
-      : `Your ${BRAND} for ${period}`;
-  const body = `<p style="margin:0 0 4px;font-size:15px">Hi ${escapeHtml(first)},</p>
-<p style="margin:0 0 12px;font-size:15px;color:#334155">Here's what mattered in AI ${period}, filtered to your interests.</p>
-${deadlinesBlock(opts.deadlines ?? [], opts.companyName)}
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${opts.personal.map((s) => storyBlock(s, token, opts.reasons?.get(s.id))).join("")}</table>
-${opts.also.length ? `<h3 style="margin:24px 0 0;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:#64748b">Also big ${period}</h3><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${opts.also.map((s) => storyBlock(s, token)).join("")}</table>` : ""}
-<div style="margin-top:24px;padding:16px;border-radius:10px;background:#0b1220;color:#e2e8f0;font-size:14px;line-height:1.5">
-<strong style="color:#ffffff">Is your company keeping up?</strong> North Labs helps teams prioritize, build and measure AI projects on any platform.
-<a href="${appUrl()}/contact?from=digest" style="color:#6ce5c6">Talk to us →</a></div>
-<img src="${appUrl()}/api/t/open?u=${encodeURIComponent(token)}&d=${opts.digestId}" width="1" height="1" alt="" style="display:block;border:0">`;
-  const html = emailLayout({
-    preheader: opts.personal[0]?.summary ?? "",
-    body,
-    footer: `You're receiving the ${opts.frequency} ${BRAND} digest. <a href="${appUrl()}/settings" style="color:#64748b">Change preferences</a> · <a href="${appUrl()}/unsubscribe?u=${encodeURIComponent(token)}" style="color:#64748b">Unsubscribe</a>`,
-  });
-  const text = [
-    `Hi ${first}, here's what mattered in AI ${period}:`,
-    "",
-    ...[...opts.personal, ...opts.also].map((s) => `• ${s.title}\n  ${s.summary}\n  ${appUrl()}/news/${s.slug}`),
-    "",
-    `Unsubscribe: ${appUrl()}/unsubscribe?u=${token}`,
-  ].join("\n");
-  return { subject, html, text };
-}
-
-export async function sendDigestTo(recipient: Recipient, prefs: Prefs, now = new Date()) {
-  const frequency = prefs.digestFrequency === "daily" ? "daily" : "weekly";
-  const stack = await getStackContext({ companyDomain: recipient.companyDomain ?? null, company: recipient.company ?? null });
-  const { personal, also } = await selectDigestStories(prefs, now, stack);
-  const digestId = crypto.randomUUID();
-  const [reasons, deadlines] = await Promise.all([
-    stackReasons(personal, stack),
-    upcomingDeadlines({
-      entityIds: stack?.entityIds,
-      vendorSlugs: [...new Set([...(stack?.vendorSlugs ?? []), ...prefs.vendors])],
-      includeRegulation: prefs.categories.includes("regulation"),
-      days: 60,
-      limit: 4,
-    }),
-  ]);
-  if (personal.length + also.length + deadlines.length === 0) {
-    await db.insert(digests).values({ id: digestId, userId: recipient.id, storyIds: [], status: "skipped" });
-    return "skipped" as const;
-  }
-  const { subject, html, text } = renderDigest({
-    recipient,
-    frequency,
-    personal,
-    also,
-    digestId,
-    reasons,
-    deadlines,
-    companyName: stack?.companyName,
-  });
-  const result = await sendEmail({ to: recipient.email, subject, html, text });
-  await db.insert(digests).values({
-    id: digestId,
-    userId: recipient.id,
-    storyIds: [...personal, ...also].map((s) => s.id),
-    status: result.status,
-    error: result.error ?? null,
-  });
-  if (result.status !== "failed") {
-    await db.update(userPreferences).set({ lastDigestSentAt: now }).where(eq(userPreferences.userId, recipient.id));
-  }
-  return result.status;
-}
-
-export async function sendDueDigests(opts: { now?: Date; force?: boolean } = {}) {
-  const now = opts.now ?? new Date();
-  const rows = await db
-    .select({ prefs: userPreferences, id: user.id, name: user.name, email: user.email, company: user.company, companyDomain: user.companyDomain })
-    .from(userPreferences)
-    .innerJoin(user, eq(user.id, userPreferences.userId))
-    .where(and(ne(userPreferences.digestFrequency, "off"), isNotNull(user.onboardedAt)));
-  const tally = { considered: rows.length, sent: 0, logged: 0, skipped: 0, failed: 0, notDue: 0 };
-  for (const row of rows) {
-    if (!opts.force && !isDigestDue(row.prefs, now)) {
-      tally.notDue++;
-      continue;
-    }
-    const status = await sendDigestTo(
-      { id: row.id, name: row.name, email: row.email, company: row.company, companyDomain: row.companyDomain },
-      row.prefs,
-      now,
-    );
-    tally[status]++;
-  }
-  return tally;
-}

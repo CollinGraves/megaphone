@@ -165,7 +165,7 @@ export async function removeMember(_prev: ActionState, form: FormData): Promise<
     await logActivity(ctx, "member.removed", { name: member.name, email: member.email });
     revalidateWorkspace(ctx.org.slug);
     // Removing yourself (as a plain member) ends your access.
-    if (member.userId === ctx.user.id && ctx.access.via === "membership") redirect("/feed");
+    if (member.userId === ctx.user.id && ctx.access.via === "membership") redirect("/home");
   });
 }
 
@@ -228,7 +228,7 @@ export async function deleteWorkspaceAction(_prev: ActionState, form: FormData):
       if (err instanceof DeletionBlocked) throw new ActionError(err.message);
       throw err;
     }
-    redirect("/feed?deleted=workspace");
+    redirect("/home?deleted=workspace");
   });
 }
 

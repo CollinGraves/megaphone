@@ -28,7 +28,7 @@ export async function SiteHeader({ dark = false }: { dark?: boolean }) {
         </nav>
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
           {user ? (
-            <ButtonLink href="/feed" variant={dark ? "accent" : "primary"} size="sm">
+            <ButtonLink href="/home" variant={dark ? "accent" : "primary"} size="sm">
               Open {BRAND}
             </ButtonLink>
           ) : (

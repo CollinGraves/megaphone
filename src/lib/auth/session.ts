@@ -25,7 +25,7 @@ export async function requireUser(next?: string): Promise<CurrentUser> {
 /** North Labs staff (admins and consultants). */
 export async function requireStaff(): Promise<CurrentUser> {
   const current = await requireUser("/admin");
-  if (current.platformRole !== "admin" && current.platformRole !== "consultant") redirect("/feed");
+  if (current.platformRole !== "admin" && current.platformRole !== "consultant") redirect("/home");
   return current;
 }
 
