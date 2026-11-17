@@ -146,6 +146,12 @@ export function describeActivity(action: string, detail: Record<string, unknown>
       return `changed a role in ${s(d.department)} to ${s(d.role)}`;
     case "department.member_removed":
       return `removed someone from ${s(d.department)}`;
+    case "costs.connected":
+      return `connected ${s(d.provider)} billing`;
+    case "costs.disconnected":
+      return `disconnected ${s(d.provider)} billing`;
+    case "costs.matched":
+      return `matched ${s(d.name)} spend to ${s(d.to)}`;
     case "settings.monthly_report":
       return d.on ? "turned on the monthly update email" : "turned off the monthly update email";
     case "onboarding.dismissed":

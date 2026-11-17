@@ -242,7 +242,7 @@ const FAQ = [
   },
   {
     q: `Does ${BRAND} connect to our systems or read our data?`,
-    a: `No. ${BRAND} keeps your notes, scores and numbers about each AI project. It never connects to your company's systems or reads your files.`,
+    a: `${BRAND} never reads your business data or files. On the Business plan, you can connect your AI vendors' billing, like OpenAI or Anthropic, read-only. Then ${BRAND} sees what your AI costs, and nothing else.`,
   },
   {
     q: `Does ${BRAND} work with any AI tool?`,

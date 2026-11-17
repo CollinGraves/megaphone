@@ -18,6 +18,7 @@ export const FEATURES = [
   "governance_workflow", // review requests, approvals, policy stage gate, reminders
   "governance_export", // AI use-case inventory CSV for auditors
   "departments", // departments with their own members, leads, initiatives, ideas and radar
+  "ai_spend", // read-only connections to AI vendors' billing (OpenAI, Anthropic, Microsoft 365 Copilot)
 ] as const;
 export type Feature = (typeof FEATURES)[number];
 
@@ -93,6 +94,7 @@ export const PLANS = {
       "Require approval before a test or launch",
       "A list of every AI tool, ready for auditors",
       "Departments with their own leads",
+      "See real AI spend from OpenAI and Anthropic billing",
       "Add ideas and results from Claude or ChatGPT",
     ],
   },
@@ -198,6 +200,7 @@ export const FEATURE_LABELS: Record<Feature, { name: string; description: string
   governance_workflow: { name: "Approvals and safety checks", description: "Ask for a review, then approve or reject it. Require approval before a test or launch, and get reminders when reviews are due." },
   governance_export: { name: "AI tool list for auditors", description: "A spreadsheet of every AI tool you use: how risky it is, who checks it and whether it was approved." },
   departments: { name: "Departments", description: "Give Finance, Sales and other teams their own people, leads, AI projects, ideas and news." },
+  ai_spend: { name: "AI spend", description: "Connect your OpenAI or Anthropic billing, read-only. See what each AI project really costs, with no typing." },
 };
 
 /** User-facing error when a server action needs a feature the workspace's plan doesn't include. */
