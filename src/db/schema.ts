@@ -1002,6 +1002,87 @@ export const workspaceReports = pgTable(
   (t) => [uniqueIndex("workspace_reports_org_month_idx").on(t.orgId, t.month)],
 );
 
+/* ─────────────────────────────── AI spend (vendor billing) ─────────────────────────────── */
+
+export const costProvider = pgEnum("cost_provider", ["openai", "anthropic", "microsoft"]);
+export const costConnectionStatus = pgEnum("cost_connection_status", ["active", "error"]);
+
+/** A read-only link to one AI vendor's billing for a workspace. The credential is encrypted at rest. */
+export const costConnections = pgTable(
+  "cost_connections",
+  {
+    id: id(),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    provider: costProvider("provider").notNull(),
+    status: costConnectionStatus("status").notNull().default("active"),
+    /** The vendor account's name, e.g. the OpenAI organization. */
+    label: text("label"),
+    /** Encrypted with COST_ENCRYPTION_KEY (see lib/costs/secret). Never sent to the browser. */
+    secret: text("secret"),
+    /** Last 4 characters of the key, so people can tell which key is connected. */
+    secretHint: text("secret_hint"),
+    settings: jsonb("settings").$type<Record<string, unknown>>().notNull().default({}),
+    lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
+    lastError: text("last_error"),
+    createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [uniqueIndex("cost_connections_org_provider_idx").on(t.orgId, t.provider)],
+);
+
+/** One day of spend for one vendor project/workspace (and line item), in USD. */
+export const costLines = pgTable(
+  "cost_lines",
+  {
+    id: id(),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    connectionId: text("connection_id")
+      .notNull()
+      .references(() => costConnections.id, { onDelete: "cascade" }),
+    day: date("day").notNull(),
+    /** Stable key for what the vendor bills against, e.g. "project:proj_abc" or "workspace:default". */
+    dimensionKey: text("dimension_key").notNull(),
+    dimensionName: text("dimension_name"),
+    lineItem: text("line_item").notNull().default(""),
+    amountUsd: doublePrecision("amount_usd").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("cost_lines_unique_idx").on(t.connectionId, t.day, t.dimensionKey, t.lineItem),
+    index("cost_lines_org_day_idx").on(t.orgId, t.day),
+  ],
+);
+
+/** Which AI project a vendor project/workspace's spend belongs to (or that it isn't one). */
+export const costMappings = pgTable(
+  "cost_mappings",
+  {
+    id: id(),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    connectionId: text("connection_id")
+      .notNull()
+      .references(() => costConnections.id, { onDelete: "cascade" }),
+    dimensionKey: text("dimension_key").notNull(),
+    initiativeId: text("initiative_id").references(() => initiatives.id, { onDelete: "set null" }),
+    /** True when someone marked this spend as not belonging to any AI project. */
+    ignored: boolean("ignored").notNull().default(false),
+    createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [uniqueIndex("cost_mappings_dimension_idx").on(t.connectionId, t.dimensionKey)],
+);
+
+export type CostConnection = typeof costConnections.$inferSelect;
+export type CostProvider = (typeof costProvider.enumValues)[number];
+
 /* ─────────────────────────────── Join requests ─────────────────────────────── */
 
 export const joinRequestStatus = pgEnum("join_request_status", ["pending", "approved", "declined", "cancelled"]);

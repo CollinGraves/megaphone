@@ -151,7 +151,7 @@ export default function WorkspaceProductPage() {
             { icon: Bell, title: "News alerts for your AI tools", body: `When news affects an AI tool you use, like a price change or a model shutting down, ${BRAND} flags each project that uses it.` },
             { icon: Building, title: "Departments", body: "With the Business plan, Finance, Sales and other teams each get their own people, leads, AI projects, ideas and news." },
             { icon: Plug, title: "Ask Claude or ChatGPT", body: "With the Team plan, ask Claude, Cursor or ChatGPT about your AI projects. With the Business plan, add ideas and results from them too." },
-            { icon: Download, title: "Your data stays yours", body: `With the Team plan or higher, download every AI project as a spreadsheet. ${BRAND} never connects to your company's systems.` },
+            { icon: Download, title: "Your data stays yours", body: `With the Team plan or higher, download every AI project as a spreadsheet. ${BRAND} never reads your business data.` },
           ].map(({ icon: Icon, title, body }) => (
             <div key={title} className="min-w-0">
               <Icon className="size-5 text-radar-600" aria-hidden />
@@ -263,7 +263,7 @@ const FAQ: [string, string][] = [
   [`Does ${BRAND} work with any AI tool?`, "Yes. Track AI projects on any tool: ChatGPT, Copilot, Claude, Gemini, free open models or tools you built."],
   [
     `Does ${BRAND} connect to our systems or read our data?`,
-    `No. You write short notes about what each project uses. ${BRAND} keeps your notes, scores and numbers. It never stores your company's data.`,
+    `${BRAND} never reads your business data. You write short notes about what each project uses, and ${BRAND} keeps your notes, scores and numbers. On the Business plan, you can also connect your AI vendors' billing, like OpenAI or Anthropic, read-only, so ${BRAND} sees what your AI really costs.`,
   ],
   [
     "How is this different from a spreadsheet or Jira?",
